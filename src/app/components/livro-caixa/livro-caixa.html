@@ -1,0 +1,296 @@
+<div class="container my-4">
+
+  <header class="d-flex justify-content-between align-items-center mb-4 p-3 bg-primary text-white rounded shadow-sm">
+    <h2 class="h4 mb-0">Preencher Livro Caixa</h2>
+    <a href="/" class="text-white" title="Voltar ao Início">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+      </svg>
+    </a>
+  </header>
+
+  <form [formGroup]="caixaForm">
+
+    <!-- VALORES INICIAIS -->
+    <div class="card mb-4 shadow-sm" formGroupName="dadosIniciais">
+      <div class="card-header bg-secondary text-white font-weight-bold fw-bold">
+        VALORES INICIAIS
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-striped table-hover mb-0">
+            <tbody>
+              <tr>
+                <td style="width: 50px;"><strong>00</strong></td>
+                <td>Número da Ata</td>
+                <td style="width: 150px;">
+                  <input type="number" formControlName="numeroAta" class="form-control form-control-sm text-end">
+                </td>
+              </tr>
+              <tr>
+                <td><strong>00</strong></td>
+                <td>Data da Reunião</td>
+                <td>
+                  <input type="date" formControlName="dataReuniao" class="form-control form-control-sm text-end">
+                </td>
+              </tr>
+              <tr>
+                <td><strong>14</strong></td>
+                <td>Saldo final da semana anterior</td>
+                <td>
+                  <input type="number" step="0.01" formControlName="saldoAnterior" class="form-control form-control-sm text-end">
+                </td>
+              </tr>
+              <tr>
+                <td><strong>34</strong></td>
+                <td>Décimas acumuladas (repasses)</td>
+                <td>
+                  <input type="number" step="0.01" formControlName="decimasAcumuladas" class="form-control form-control-sm text-end">
+                </td>
+              </tr>
+              <tr>
+                <td><strong>35</strong></td>
+                <td>Outras contribuições para enviar ao Conselho</td>
+                <td>
+                  <input type="number" step="0.01" formControlName="outrasContribuicoes" class="form-control form-control-sm text-end">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SELETOR DE LANÇAMENTOS -->
+    <div class="card mb-4 bg-light shadow-sm">
+      <div class="card-body">
+        <label for="cbx-fields" class="form-label fw-bold">Adicionar Lançamento no Livro Caixa:</label>
+        <div class="input-group">
+          <select id="cbx-fields" class="form-select" [(ngModel)]="campoSelecionado" [ngModelOptions]="{standalone: true}">
+            <option value="field-0" disabled selected>Selecione o lançamento...</option>
+            <optgroup label="--- RECEITAS ---">
+              <option value="vf1">01 - Coleta na reunião</option>
+              <option value="vf2">02 - Subscritores/benfeitores</option>
+              <option value="vf3">03 - Outras doações</option>
+              <option value="vf4">04 - Resultado Liq. (Bazar/Eventos)</option>
+              <option value="vf5">05 - Outras Receitas 1/10</option>
+              <option value="vf7">07 - Subvenção oficial</option>
+              <option value="vf8">08 - Solidariedade / Ozanam</option>
+              <option value="vf9">09 - União Fraternal</option>
+              <option value="vf10">10 - Outros (Receita 1)</option>
+              <option value="vf11">11 - Outros (Receita 2)</option>
+              <option value="vf12">12 - Recebimentos p/ repasses R$</option>
+            </optgroup>
+            <optgroup label="--- DESPESAS ---">
+              <option value="vf16">16 - Cestas básicas / Higiene</option>
+              <option value="vf17">17 - Moradia assistidos</option>
+              <option value="vf18">18 - Contas assistidos (Água/Luz)</option>
+              <option value="vf19">19 - Obras especiais</option>
+              <option value="vf20">20 - União Fraternal (Saída)</option>
+              <option value="vf21">21 - Outras despesas 1</option>
+              <option value="vf22">22 - Outras despesas 2</option>
+              <option value="vf23">23 - Despesas administrativas</option>
+              <option value="vf25">25 - Outros (Despesa 3)</option>
+            </optgroup>
+          </select>
+          <button class="btn btn-primary" type="button" (click)="exibirCampo()">Exibir Campo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABELA RECEITAS -->
+    <div class="card mb-4 shadow-sm" formGroupName="receitas">
+      <div class="card-header bg-success text-white font-weight-bold fw-bold">RECEITAS</div>
+      <div class="table-responsive">
+        <table class="table table-striped table-hover mb-0">
+          <tbody>
+            <tr *ngIf="camposVisiveis['vf1']">
+              <td style="width: 50px;"><strong>01</strong></td>
+              <td>Coleta na reunião</td>
+              <td style="width: 150px;"><input type="number" step="0.01" formControlName="vf1" class="form-control form-control-sm text-end"></td>
+            </tr>
+            <tr *ngIf="camposVisiveis['vf2']">
+              <td><strong>02</strong></td>
+              <td>Subscritores e Benfeitores</td>
+              <td><input type="number" step="0.01" formControlName="vf2" class="form-control form-control-sm text-end"></td>
+            </tr>
+            <tr *ngIf="camposVisiveis['vf3']">
+              <td><strong>03</strong></td>
+              <td>Doações recebidas</td>
+              <td><input type="number" step="0.01" formControlName="vf3" class="form-control form-control-sm text-end"></td>
+            </tr>
+            <tr *ngIf="camposVisiveis['vf4']">
+              <td><strong>04</strong></td>
+              <td>Resultados Líquidos c/ realização de eventos</td>
+              <td><input type="number" step="0.01" formControlName="vf4" class="form-control form-control-sm text-end"></td>
+            </tr>
+            <tr *ngIf="camposVisiveis['vf5']">
+              <td><strong>05</strong></td>
+              <td>Outras receitas sujeitas a Décimas</td>
+              <td><input type="number" step="0.01" formControlName="vf5" class="form-control form-control-sm text-end"></td>
+            </tr>
+
+            <!-- SUBTOTAL CALCULADO (CAMPO 06) -->
+            <tr class="table-info font-weight-bold fw-bold">
+              <td><strong>06</strong></td>
+              <td>Subtotal Base Décima</td>
+              <td class="text-end pe-3">{{ totais.subtotalBaseDecima | currency:'BRL' }}</td>
+            </tr>
+
+            <tr *ngIf="camposVisiveis['vf7']">
+              <td><strong>07</strong></td>
+              <td>Subvenção oficial dos Poderes Públicos</td>
+              <td><input type="number" step="0.01" formControlName="vf7" class="form-control form-control-sm text-end"></td>
+            </tr>
+            <tr *ngIf="camposVisiveis['vf8']">
+              <td><strong>08</strong></td>
+              <td>Contribuição da sociedade e Coleta da Ozanam</td>
+              <td><input type="number" step="0.01" formControlName="vf8" class="form-control form-control-sm text-end"></td>
+            </tr>
+            <tr *ngIf="camposVisiveis['vf9']">
+              <td><strong>09</strong></td>
+              <td>União Fraternal</td>
+              <td><input type="number" step="0.01" formControlName="vf9" class="form-control form-control-sm text-end"></td>
+            </tr>
+
+            <!-- CAMPOS "OUTROS" COM DESCRIÇÃO EDITÁVEL -->
+            <tr *ngIf="camposVisiveis['vf10']" formGroupName="vf10">
+              <td><strong>10</strong></td>
+              <td><input type="text" formControlName="descricaoCustomizada" placeholder="Outros 1 (Receita)" class="form-control form-control-sm input-transparente"></td>
+              <td><input type="number" step="0.01" formControlName="valor" class="form-control form-control-sm text-end"></td>
+            </tr>
+            <tr *ngIf="camposVisiveis['vf11']" formGroupName="vf11">
+              <td><strong>11</strong></td>
+              <td><input type="text" formControlName="descricaoCustomizada" placeholder="Outros 2 (Receita)" class="form-control form-control-sm input-transparente"></td>
+              <td><input type="number" step="0.01" formControlName="valor" class="form-control form-control-sm text-end"></td>
+            </tr>
+
+            <tr *ngIf="camposVisiveis['vf12']">
+              <td><strong>12</strong></td>
+              <td>Recebimentos para repasses (exclusivamente em R$)</td>
+              <td><input type="number" step="0.01" formControlName="vf12" class="form-control form-control-sm text-end"></td>
+            </tr>
+
+            <!-- FECHAMENTO RECEITAS (13, 14, 15) -->
+            <tr class="table-success fw-bold">
+              <td><strong>13</strong></td>
+              <td>Soma Receita Semana</td>
+              <td class="text-end pe-3">{{ totais.somaReceitaSemana | currency:'BRL' }}</td>
+            </tr>
+            <tr class="table-success fw-bold">
+              <td><strong>15</strong></td>
+              <td>Balanço Total Receita</td>
+              <td class="text-end pe-3">{{ totais.balancoTotalReceita | currency:'BRL' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TABELA DESPESAS -->
+    <div class="card mb-4 shadow-sm" formGroupName="despesas">
+      <div class="card-header bg-danger text-white font-weight-bold fw-bold">DESPESAS</div>
+      <div class="table-responsive">
+        <table class="table table-striped table-hover mb-0">
+          <tbody>
+            <tr *ngIf="camposVisiveis['vf16']">
+              <td style="width: 50px;"><strong>16</strong></td>
+              <td>Cestas básicas / Higiene / Limpeza</td>
+              <td style="width: 150px;"><input type="number" step="0.01" formControlName="vf16" class="form-control form-control-sm text-end"></td>
+            </tr>
+            <tr *ngIf="camposVisiveis['vf17']">
+              <td><strong>17</strong></td>
+              <td>Moradia dos assistidos</td>
+              <td><input type="number" step="0.01" formControlName="vf17" class="form-control form-control-sm text-end"></td>
+            </tr>
+            <tr *ngIf="camposVisiveis['vf18']">
+              <td><strong>18</strong></td>
+              <td>Contas dos assistidos (Água/Luz)</td>
+              <td><input type="number" step="0.01" formControlName="vf18" class="form-control form-control-sm text-end"></td>
+            </tr>
+            <tr *ngIf="camposVisiveis['vf19']">
+              <td><strong>19</strong></td>
+              <td>Obras especiais</td>
+              <td><input type="number" step="0.01" formControlName="vf19" class="form-control form-control-sm text-end"></td>
+            </tr>
+            <tr *ngIf="camposVisiveis['vf20']">
+              <td><strong>20</strong></td>
+              <td>União Fraternal (Saída)</td>
+              <td><input type="number" step="0.01" formControlName="vf20" class="form-control form-control-sm text-end"></td>
+            </tr>
+
+            <!-- DESPESA "OUTROS" COM DESCRIÇÃO EDITÁVEL -->
+            <tr *ngIf="camposVisiveis['vf21']" formGroupName="vf21">
+              <td><strong>21</strong></td>
+              <td><input type="text" formControlName="descricaoCustomizada" placeholder="Outros 1 (Despesa)" class="form-control form-control-sm input-transparente"></td>
+              <td><input type="number" step="0.01" formControlName="valor" class="form-control form-control-sm text-end"></td>
+            </tr>
+            <tr *ngIf="camposVisiveis['vf22']" formGroupName="vf22">
+              <td><strong>22</strong></td>
+              <td><input type="text" formControlName="descricaoCustomizada" placeholder="Outros 2 (Despesa)" class="form-control form-control-sm input-transparente"></td>
+              <td><input type="number" step="0.01" formControlName="valor" class="form-control form-control-sm text-end"></td>
+            </tr>
+
+            <tr *ngIf="camposVisiveis['vf23']">
+              <td><strong>23</strong></td>
+              <td>Despesas administrativas / Consumo</td>
+              <td><input type="number" step="0.01" formControlName="vf23" class="form-control form-control-sm text-end"></td>
+            </tr>
+
+            <!-- CÁLCULOS AUTOMÁTICOS DE DESPESAS (24, 26, 27) -->
+            <tr class="table-warning">
+              <td><strong>24</strong></td>
+              <td>Décimas pagas ao C.P. (10%)</td>
+              <td class="text-end pe-3">{{ totais.decimasPagas | currency:'BRL' }}</td>
+            </tr>
+
+            <tr *ngIf="camposVisiveis['vf25']" formGroupName="vf25">
+              <td><strong>25</strong></td>
+              <td><input type="text" formControlName="descricaoCustomizada" placeholder="Outros 3 (Despesa)" class="form-control form-control-sm input-transparente"></td>
+              <td><input type="number" step="0.01" formControlName="valor" class="form-control form-control-sm text-end"></td>
+            </tr>
+
+            <tr class="table-warning">
+              <td><strong>26</strong></td>
+              <td>Repasse contribuição solidariedade/Ozanam</td>
+              <td class="text-end pe-3">{{ totais.repasseOzanam | currency:'BRL' }}</td>
+            </tr>
+            <tr class="table-warning">
+              <td><strong>27</strong></td>
+              <td>Repasse referente à Linha 12</td>
+              <td class="text-end pe-3">{{ totais.repasseLinha12 | currency:'BRL' }}</td>
+            </tr>
+
+            <!-- FECHAMENTO DESPESAS E SALDO FINAL (28, 29) -->
+            <tr class="table-danger fw-bold">
+              <td><strong>28</strong></td>
+              <td>Soma das Despesas da Semana</td>
+              <td class="text-end pe-3">{{ totais.somaDespesaSemana | currency:'BRL' }}</td>
+            </tr>
+            <tr class="table-primary fw-bold fs-5">
+              <td><strong>29</strong></td>
+              <td>Saldo Final Semana Atual</td>
+              <td class="text-end pe-3">{{ totais.saldoFinalSemana | currency:'BRL' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BOTÕES DE AÇÃO -->
+    <div class="d-flex gap-2 justify-content-end mb-5">
+      <button type="button" class="btn btn-outline-danger" (click)="limparTudo()">
+        Encerrar / Limpar
+      </button>
+
+      <!-- NOVO BOTÃO WHATSAPP -->
+      <button type="button" class="btn btn-success d-flex align-items-center gap-2" (click)="exportarWhatsapp()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592z"/>
+        </svg>
+        Exportar para WhatsApp
+      </button>
+    </div>
+
+  </form>
+</div>
