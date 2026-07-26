@@ -1,0 +1,97 @@
+// Estilos do Cabeçalho
+.header-principal {
+  background-color: #0064b6;
+  color: white;
+  padding: 15px 0;
+
+  .header-container-flex {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .logo-principal-ssvp {
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+  }
+}
+
+// Estilos da Grade de Menu (Mobile First)
+.menu-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; // Duas colunas lado a lado
+  gap: 16px;
+  padding: 20px 15px;
+  margin-top: 10px;
+}
+
+.menu-card {
+  background: white;
+  border-radius: 14px;
+  padding: 25px 10px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  text-decoration: none;
+  color: #0064b6;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 2px solid #0064b6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  // Efeito ao tocar no celular / passar mouse no PC
+  &:active, &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 100, 182, 0.2);
+    color: #004d8c;
+  }
+}
+
+.icon-box {
+  font-size: 2.8rem;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 3.5rem;
+}
+
+.menu-icon-img {
+  width: 2.8rem;
+  height: 2.8rem;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+// Rodapé Fixo
+.footer-fixo {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+  padding: 10px 15px;
+  font-size: 0.75rem;
+  color: #6c757d;
+  text-align: center;
+
+  .footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .version-tag {
+    font-weight: bold;
+    background: #e9ecef;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+}
