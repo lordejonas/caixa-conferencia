@@ -1,3 +1,5 @@
+export type PerfilUsuario = 'membro' | 'tesoureiro';
+
 export interface FirebaseUserConfig {
   apiKey: string;
   authDomain: string;
@@ -5,4 +7,5 @@ export interface FirebaseUserConfig {
   storageBucket: string;
   messagingSenderId: string;
   appId: string;
+  perfil: PerfilUsuario; // <-- 'membro' ou 'tesoureiro'
 }

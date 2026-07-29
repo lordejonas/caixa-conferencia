@@ -11,63 +11,48 @@
 
 <main class="container pb-5">
   <div class="card shadow-sm p-4 mb-4">
-    <div class="d-flex align-items-center mb-3">
-      <span class="fs-2 me-3">☁️</span>
-      <div>
-        <h2 class="h6 mb-1 fw-bold">Banco de Dados Próprio</h2>
-        <p class="small text-muted mb-0">
-          Insira abaixo as chaves do Firebase da sua Conferência para habilitar backup e sincronização em nuvem.
-        </p>
-      </div>
-    </div>
-
-    <div *ngIf="estaConectado" class="alert alert-success d-flex align-items-center mb-4">
-      <span class="me-2">✅</span>
-      <div>
-        <strong>Status: Conectado!</strong> Seus dados estão sendo salvos localmente e sincronizados com a nuvem.
-      </div>
-    </div>
-
-    <div *ngIf="!estaConectado" class="alert alert-warning d-flex align-items-center mb-4">
-      <span class="me-2">📱</span>
-      <div>
-        <strong>Status: Modo Local.</strong> Seus dados estão salvos apenas no armazenamento interno deste celular.
-      </div>
+    <!-- Status de Conexão -->
+    <div *ngIf="estaConectado" class="alert alert-success mb-4">
+      <strong>Status: Conectado!</strong> Perfil ativo:
+      <span class="badge bg-primary text-uppercase">{{ config.perfil }}</span>
     </div>
 
     <form (ngSubmit)="salvarEConectar()">
+      <!-- Campos do Firebase (API Key, Project ID, etc.) -->
       <div class="mb-3">
         <label class="form-label small fw-bold">API Key</label>
-        <input type="text" class="form-control" [(ngModel)]="config.apiKey" name="apiKey" placeholder="AIzaSy..." required>
+        <input type="text" class="form-control" [(ngModel)]="config.apiKey" name="apiKey" required>
       </div>
 
       <div class="mb-3">
         <label class="form-label small fw-bold">Project ID</label>
-        <input type="text" class="form-control" [(ngModel)]="config.projectId" name="projectId" placeholder="tesouraria-conferencia" required>
+        <input type="text" class="form-control" [(ngModel)]="config.projectId" name="projectId" required>
       </div>
 
       <div class="mb-3">
         <label class="form-label small fw-bold">App ID</label>
-        <input type="text" class="form-control" [(ngModel)]="config.appId" name="appId" placeholder="1:123456789:web:abcdef...">
+        <input type="text" class="form-control" [(ngModel)]="config.appId" name="appId">
       </div>
 
-      <div class="mb-3">
-        <label class="form-label small fw-bold">Auth Domain (Opcional)</label>
-        <input type="text" class="form-control" [(ngModel)]="config.authDomain" name="authDomain" placeholder="projeto.firebaseapp.com">
+      <!-- SELEÇÃO DE PERFIL (COMBOBOX) -->
+      <div class="mb-3 p-3 border rounded bg-light">
+        <label class="form-label fw-bold text-primary">Perfil de Acesso</label>
+        <select class="form-select" [(ngModel)]="perfilSelecionado" (change)="aoMudarPerfil()" name="perfil">
+          <option value="membro">Membro (Apenas Leitura)</option>
+          <option value="tesoureiro">Tesoureiro (Leitura e Escrita)</option>
+        </select>
+        <small class="text-muted d-block mt-1">
+          * Membros acompanham os dados sem alterar a nuvem. Tesoureiros podem criar e editar lançamentos.
+        </small>
       </div>
 
-      <div class="row mb-3">
-        <div class="col-6">
-          <label class="form-label small fw-bold">Storage Bucket</label>
-          <input type="text" class="form-control" [(ngModel)]="config.storageBucket" name="storageBucket" placeholder="projeto.appspot.com">
-        </div>
-        <div class="col-6">
-          <label class="form-label small fw-bold">Messaging Sender ID</label>
-          <input type="text" class="form-control" [(ngModel)]="config.messagingSenderId" name="messagingSenderId" placeholder="123456789">
-        </div>
+      <!-- CAMPO DE SENHA (Apenas se selecionar Tesoureiro) -->
+      <div *ngIf="perfilSelecionado === 'tesoureiro'" class="mb-3">
+        <label class="form-label small fw-bold text-danger">Senha da Tesouraria</label>
+        <input type="password" class="form-control border-danger" [(ngModel)]="senhaDigitada" name="senha" placeholder="Digite a senha para habilitar o modo Tesoureiro" required>
       </div>
 
-      <p *ngIf="mensagemStatus" class="small text-info fw-bold mt-2">{{ mensagemStatus }}</p>
+      <p *ngIf="mensagemStatus" class="small text-danger fw-bold mt-2">{{ mensagemStatus }}</p>
 
       <div class="d-grid gap-2 mt-4">
         <button type="submit" class="btn btn-primary fw-bold">
@@ -75,7 +60,7 @@
         </button>
 
         <button *ngIf="estaConectado" type="button" (click)="desconectar()" class="btn btn-outline-danger btn-sm">
-          Desconectar e Voltar para Modo 100% Local
+          Desconectar
         </button>
       </div>
     </form>
