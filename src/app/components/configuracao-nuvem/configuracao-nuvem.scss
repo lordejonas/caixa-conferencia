@@ -1,0 +1,15 @@
+.header-principal {
+  background-color: #0064b6;
+  color: white;
+  padding: 15px 0;
+
+  .header-container-flex {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.card {
+  border-radius: 12px;
+  border: 1px solid #dee2e6;
+}

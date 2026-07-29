@@ -12,7 +12,7 @@ export class App {
   protected readonly title = signal('caixa-conferencia');
 }*/
 
-
+/*
 import { Component } from '@angular/core';
 import { LivroCaixaComponent } from './components/livro-caixa/livro-caixa'; // <-- 1. IMPORTAR AQUI (ajuste o caminho se necessário)
 
@@ -24,6 +24,22 @@ import { LivroCaixaComponent } from './components/livro-caixa/livro-caixa'; // <
   ],
   templateUrl: './app.html', // ou ./app.component.html
   styleUrls: ['./app.scss']  // ou ./app.component.scss
+})
+export class App {
+  title = 'livro-caixa';
+}
+*/
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router'; // <-- USA O ROUTER OUTLET
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [
+    RouterOutlet // <-- IMPORTANTE
+  ],
+  templateUrl: './app.html',
+  styleUrl: './app.scss'
 })
 export class App {
   title = 'livro-caixa';

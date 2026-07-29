@@ -1,0 +1,47 @@
+<header class="header-principal shadow-sm">
+  <div class="header-container-flex container">
+    <img src="assets/icons/logo-ssvp-global.png" alt="Logo SSVP" class="logo-principal-ssvp">
+
+    <div class="header-titulos">
+      <h1 class="h4 mb-0 fw-bold">Tesouraria Conferência</h1>
+      <p class="mb-0 text-white-50 small">Conferência Santa Perpétua e Santa Felicidade - DF</p>
+    </div>
+  </div>
+</header>
+
+<main class="menu-grid container">
+  <a [routerLink]="['/chave-pix']" class="menu-card">
+    <div class="icon-box">
+      <img src="assets/icons/icons8-pix-50.png" alt="Ícone PIX" class="menu-icon-img">
+    </div>
+    <span>Chave Pix Conferência</span>
+  </a>
+
+  <a [routerLink]="['/caixa']" class="menu-card">
+    <div class="icon-box">📘</div>
+    <span>Livro Caixa</span>
+  </a>
+
+  <a [routerLink]="['/contador']" class="menu-card">
+    <div class="icon-box">💵</div>
+    <span>Contar Dinheiro</span>
+  </a>
+
+  <a [routerLink]="['/contador-parcial']" class="menu-card">
+    <div class="icon-box">💰</div>
+    <span>Contar Dinheiro (Parcial)</span>
+  </a>
+
+  <!-- 5º CARTÃO: CONECTAR NUVEM -->
+  <a [routerLink]="['/configuracao-nuvem']" class="menu-card card-nuvem">
+    <div class="icon-box">☁️</div>
+    <span>Conectar Nuvem</span>
+  </a>
+</main>
+
+<footer class="footer-fixo">
+  <div class="footer-content">
+    <span>Conferência Santa Perpétua e Santa Felicidade - DF</span>
+    <span class="version-tag">v2.0.0-Beta</span>
+  </div>
+</footer>

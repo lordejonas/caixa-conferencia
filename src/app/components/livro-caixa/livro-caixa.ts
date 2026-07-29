@@ -6,14 +6,15 @@ import { takeUntil } from 'rxjs/operators';
 import { CaixaService } from '../../services/caixa.service';
 import { ExportWhatsappService } from '../../services/export-whatsapp.service';
 import { LivroCaixa, TotaisCaixa } from '../../models/livro-caixa.model';
-
+import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-livro-caixa',
   standalone: true, // Indica que é um componente Standalone
   imports: [
     CommonModule,          // Para *ngIf e | currency
     ReactiveFormsModule,   // Para formGroup e formControlName
-    FormsModule            // Para [(ngModel)] no seletor de campos
+    FormsModule,
+    RouterLink            // Para [(ngModel)] no seletor de campos
   ],
   templateUrl: './livro-caixa.html',
   styleUrls: ['./livro-caixa.scss']
