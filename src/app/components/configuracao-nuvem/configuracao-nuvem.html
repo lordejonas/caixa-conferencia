@@ -12,10 +12,12 @@
 <main class="container pb-5">
   <div class="card shadow-sm p-4 mb-4">
     <!-- Status de Conexão -->
-    <div *ngIf="estaConectado" class="alert alert-success mb-4">
-      <strong>Status: Conectado!</strong> Perfil ativo:
-      <span class="badge bg-primary text-uppercase">{{ config.perfil }}</span>
-    </div>
+    @if (estaConectado) {
+      <div class="alert alert-success mb-4">
+        <strong>Status: Conectado!</strong> Perfil ativo:
+        <span class="badge bg-primary text-uppercase">{{ config.perfil }}</span>
+      </div>
+    }
 
     <form (ngSubmit)="salvarEConectar()">
       <!-- Campos do Firebase (API Key, Project ID, etc.) -->
@@ -46,22 +48,34 @@
         </small>
       </div>
 
-      <!-- CAMPO DE SENHA (Apenas se selecionar Tesoureiro) -->
-      <div *ngIf="perfilSelecionado === 'tesoureiro'" class="mb-3">
-        <label class="form-label small fw-bold text-danger">Senha da Tesouraria</label>
-        <input type="password" class="form-control border-danger" [(ngModel)]="senhaDigitada" name="senha" placeholder="Digite a senha para habilitar o modo Tesoureiro" required>
-      </div>
+      <!-- CAMPO DE SENHA (Apenas se a senha for exigida na alteração de perfil) -->
+      @if (perfilSelecionado === 'tesoureiro' && senhaExigida) {
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-danger">Senha da Tesouraria</label>
+          <input
+            type="password"
+            class="form-control border-danger"
+            [(ngModel)]="senhaDigitada"
+            name="senha"
+            placeholder="Digite a senha para habilitar o modo Tesoureiro"
+            required>
+        </div>
+      }
 
-      <p *ngIf="mensagemStatus" class="small text-danger fw-bold mt-2">{{ mensagemStatus }}</p>
+      @if (mensagemStatus) {
+        <p class="small text-danger fw-bold mt-2">{{ mensagemStatus }}</p>
+      }
 
       <div class="d-grid gap-2 mt-4">
         <button type="submit" class="btn btn-primary fw-bold">
           Salvar e Conectar
         </button>
 
-        <button *ngIf="estaConectado" type="button" (click)="desconectar()" class="btn btn-outline-danger btn-sm">
-          Desconectar
-        </button>
+        @if (estaConectado) {
+          <button type="button" (click)="desconectar()" class="btn btn-outline-danger btn-sm">
+            Desconectar
+          </button>
+        }
       </div>
     </form>
   </div>

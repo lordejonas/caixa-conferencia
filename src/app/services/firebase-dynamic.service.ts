@@ -1,11 +1,8 @@
 import { Injectable } from '@angular/core';
-import { initializeApp, FirebaseApp, deleteApp, getApps, getApp } from 'firebase/app';
+import { initializeApp, FirebaseApp, deleteApp, getApps } from 'firebase/app';
 import {
   Firestore,
-  initializeFirestore,
-  persistentLocalCache,
-  doc,
-  getDoc,
+  getFirestore,
   collection,
   addDoc
 } from 'firebase/firestore';
@@ -28,23 +25,14 @@ export class FirebaseDynamicService {
 
     if (userConfig && userConfig.apiKey && userConfig.projectId) {
       try {
-        const APP_NAME = 'conferencia-app';
-
-        // 1. Se a aplicação já existir na memória, encerra/deleta antes de recriar
-        const appsExistentes = getApps();
-        const appExistente = appsExistentes.find(a => a.name === APP_NAME);
-
-        if (appExistente) {
-          deleteApp(appExistente);
+        // Limpa instâncias anteriores antes de recriar
+        const apps = getApps();
+        for (const app of apps) {
+          deleteApp(app);
         }
 
-        // 2. Inicializa a instância do Firebase com as configurações atualizadas
-        this.app = initializeApp(userConfig, APP_NAME);
-
-        // 3. Ativa o Firestore com suporte offline
-        this.db = initializeFirestore(this.app, {
-          localCache: persistentLocalCache()
-        });
+        this.app = initializeApp(userConfig);
+        this.db = getFirestore(this.app);
 
         return true;
       } catch (error) {
@@ -56,44 +44,66 @@ export class FirebaseDynamicService {
   }
 
   /**
-   * Valida a senha digitada pelo usuário comparando com o documento salvo na nuvem.
+   * Valida a senha usando a API REST do Firestore via fetch (evita travamentos de SDK/Cache).
    */
-  public async validarSenhaTesoureiro(configTemporaria: FirebaseUserConfig, senhaDigitada: string): Promise<boolean> {
-    const TEMP_APP_NAME = 'temp-auth-app';
-    let tempApp: FirebaseApp | null = null;
+  public async validarSenhaTesoureiro(config: FirebaseUserConfig, senhaDigitada: string): Promise<boolean> {
+    const projectId = config.projectId?.trim();
+    const apiKey = config.apiKey?.trim();
+
+    if (!projectId || !apiKey) {
+      console.error('Projeto ou API Key ausentes.');
+      return false;
+    }
+
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/configuracoes/geral?key=${apiKey}`;
+
+    console.log('Iniciando validação de senha via REST em:', url);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.warn('Timeout atingido, abortando fetch...');
+      controller.abort();
+    }, 3000); // 3 segundos limite
 
     try {
-      // Limpa instância temporária anterior se existir
-      const appsExistentes = getApps();
-      const tempExistente = appsExistentes.find(a => a.name === TEMP_APP_NAME);
-      if (tempExistente) {
-        await deleteApp(tempExistente);
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+      console.log('Resposta recebida do Firestore REST. Status:', response.status);
+
+      if (response.status === 404) {
+        console.warn('Documento configuracoes/geral não encontrado no Firestore.');
+        return false;
       }
 
-      // Cria uma conexão temporária para verificar a senha
-      tempApp = initializeApp(configTemporaria, TEMP_APP_NAME);
-      const tempDb = initializeFirestore(tempApp, { localCache: persistentLocalCache() });
-
-      // Busca a senha cadastrada na coleção 'configuracoes', documento 'geral'
-      const docRef = doc(tempDb, 'configuracoes', 'geral');
-      const docSnap = await getDoc(docRef);
-
-      // Fecha a instância temporária imediatamente após a leitura
-      await deleteApp(tempApp);
-
-      if (docSnap.exists()) {
-        const dados = docSnap.data();
-        return dados['senhaTesouraria'] === senhaDigitada;
-      } else {
-        console.warn('Documento configuracoes/geral não encontrado no Firestore. Aceitando senha padrão.');
-        return senhaDigitada === 'ssvp1234';
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Erro Firestore REST:', errorData);
+        throw new Error('Chave de API inválida ou erro de acesso ao Firestore.');
       }
-    } catch (error) {
-      if (tempApp) {
-        await deleteApp(tempApp);
+
+      const data = await response.json();
+      console.log('Dados recebidos do documento:', data);
+
+      const senhaSalva = data.fields?.senhaTesouraria?.stringValue;
+
+      if (!senhaSalva) {
+        console.warn('Campo "senhaTesouraria" não existe no documento.');
+        return false;
       }
-      console.error('Erro ao validar senha do Tesoureiro:', error);
-      return false;
+
+      return senhaSalva === senhaDigitada;
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      console.error('Falha na requisição de validação:', error);
+      if (error.name === 'AbortError') {
+        throw new Error('Tempo limite excedido ao consultar o Firestore. Verifique a conexão.');
+      }
+      throw error;
     }
   }
 
@@ -121,11 +131,12 @@ export class FirebaseDynamicService {
   }
 
   public desconectar(): void {
-    if (this.app) {
-      deleteApp(this.app);
-      this.app = null;
-      this.db = null;
+    const apps = getApps();
+    for (const app of apps) {
+      deleteApp(app);
     }
+    this.app = null;
+    this.db = null;
     this.configService.removerConexao();
   }
 
