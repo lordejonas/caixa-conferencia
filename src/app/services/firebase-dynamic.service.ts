@@ -4,7 +4,10 @@ import {
   Firestore,
   getFirestore,
   collection,
-  addDoc
+  addDoc,
+  getDocsFromServer,
+  limit,
+  query
 } from 'firebase/firestore';
 import { ConfigService } from './config.service';
 import { FirebaseUserConfig } from '../models/firebase-config.model';
@@ -43,9 +46,64 @@ export class FirebaseDynamicService {
     return false;
   }
 
+  async inicializarETestarConexao(config: FirebaseUserConfig): Promise<boolean> {
+    let appTeste;
+    try {
+      const nomeAppTeste = 'app-validacao-temp';
+
+      // Se já existir uma instância temporária antiga, encerra para evitar conflitos
+      const appsExistentes = getApps();
+      const appExistente = appsExistentes.find(app => app.name === nomeAppTeste);
+      if (appExistente) {
+        await deleteApp(appExistente);
+      }
+
+      // 1. Inicializa uma instância temporária do Firebase
+      appTeste = initializeApp(config, nomeAppTeste);
+      const db = getFirestore(appTeste);
+
+      // 2. FORÇA a requisição DIRETO ao SERVIDOR (sem passar por cache local)
+      // Tenta ler uma coleção qualquer no servidor real
+      const consulta = query(collection(db, '_ping_teste'), limit(1));
+      await getDocsFromServer(consulta);
+
+      // Se passou, limpa o app temporário
+      await deleteApp(appTeste);
+      return true;
+
+    } catch (error: any) {
+      console.error('Falha na validação do Firebase:', error);
+
+      // Se o app temporário foi criado, encerra a instância
+      if (appTeste) {
+        try {
+          await deleteApp(appTeste);
+        } catch (e) {
+          // ignora erro de encerramento
+        }
+      }
+
+      /*
+        ATENÇÃO:
+        Se o erro for 'permission-denied' (Permissão Negada), significa que O PROJETO E AS CHAVES EXISTEM
+        e são VÁLIDOS na nuvem, mas as regras de segurança do Firestore bloquearam a leitura (o que é normal se não estiver logado).
+
+        Qualquer outro erro (como 'not-found', 'invalid-api-key', 'quota-exceeded', etc.) significa
+        que as CHAVES OU O PROJECT ID ESTÃO ERRADOS.
+      */
+      if (error?.code === 'permission-denied') {
+        // Chaves válidas, apenas sem permissão de leitura pública (normal e esperado)
+        return true;
+      }
+
+      // Se a chave/projectId contiver "z" ou dados falsos, cairá aqui retornando FALSE
+      return false;
+    }
+  }
+
   /**
-   * Valida a senha usando a API REST do Firestore via fetch (evita travamentos de SDK/Cache).
-   */
+ * Valida a senha usando a API REST do Firestore via fetch (evita travamentos de SDK/Cache).
+ */
   public async validarSenhaTesoureiro(config: FirebaseUserConfig, senhaDigitada: string): Promise<boolean> {
     const projectId = config.projectId?.trim();
     const apiKey = config.apiKey?.trim();
@@ -75,15 +133,16 @@ export class FirebaseDynamicService {
       clearTimeout(timeoutId);
       console.log('Resposta recebida do Firestore REST. Status:', response.status);
 
-      if (response.status === 404) {
-        console.warn('Documento configuracoes/geral não encontrado no Firestore.');
+      // Se o documento não existe ou a permissão/chave é inválida
+      if (response.status === 404 || response.status === 403 || response.status === 401) {
+        console.warn(`Acesso negado ou documento não encontrado. Status REST: ${response.status}`);
         return false;
       }
 
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Erro Firestore REST:', errorData);
-        throw new Error('Chave de API inválida ou erro de acesso ao Firestore.');
+        return false;
       }
 
       const data = await response.json();
@@ -96,14 +155,18 @@ export class FirebaseDynamicService {
         return false;
       }
 
-      return senhaSalva === senhaDigitada;
+      // Compara removendo espaços nas pontas para evitar falsos negativos
+      return senhaSalva.trim() === senhaDigitada.trim();
+
     } catch (error: any) {
       clearTimeout(timeoutId);
       console.error('Falha na requisição de validação:', error);
+
       if (error.name === 'AbortError') {
         throw new Error('Tempo limite excedido ao consultar o Firestore. Verifique a conexão.');
       }
-      throw error;
+
+      return false; // Retorna false em vez de re-lançar a exceção, garantindo que a senha seja rejeitada
     }
   }
 
