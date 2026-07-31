@@ -1,0 +1,19 @@
+<div class="configuracoes-container">
+  <div class="header">
+    <button class="btn-back" (click)="voltar()">&larr; Voltar</button>
+    <h2>Configurações</h2>
+  </div>
+
+  <div class="opcoes-list">
+    <!-- Item 1: Conectar Nuvem -->
+    <div class="opcao-item" (click)="navegarPara('configuracao-nuvem')">
+      <div class="opcao-conteudo">
+        <span class="opcao-icone">☁️</span>
+        <span class="opcao-titulo">Conectar Nuvem</span>
+      </div>
+      <span class="seta-indicadora">&rsaquo;</span>
+    </div>
+
+    <!-- Próximas configurações podem ser adicionadas facilmente aqui como novos elementos .opcao-item -->
+  </div>
+</div>

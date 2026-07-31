@@ -1,0 +1,66 @@
+.configuracoes-container {
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.btn-back {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #0066cc;
+  padding: 8px 0;
+}
+
+.opcoes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Card Retangular da Lista */
+.opcao-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.opcao-item:hover {
+  background-color: #f8f9fa;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.opcao-conteudo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.opcao-icone {
+  font-size: 1.5rem;
+}
+
+.opcao-titulo {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333333;
+}
+
+.seta-indicadora {
+  font-size: 1.5rem;
+  color: #999999;
+}
