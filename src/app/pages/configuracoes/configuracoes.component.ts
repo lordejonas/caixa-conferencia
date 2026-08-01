@@ -1,23 +1,13 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { InternalLayoutComponent } from '../../components/internal-layout/internal-layout.component';
 
 @Component({
   selector: 'app-configuracoes',
   standalone: true,
-  imports: [CommonModule, RouterLink],
-  templateUrl: './configuracoes.component.html'
+  imports: [CommonModule, RouterLink, InternalLayoutComponent],
+  templateUrl: './configuracoes.component.html',
+  styleUrl: './configuracoes.component.scss'
 })
-export class ConfiguracoesComponent {
-
-  constructor(private router: Router) {}
-
-  navegarPara(rota: string): void {
-    this.router.navigate([`/${rota}`]);
-  }
-
-  voltar(): void {
-    this.router.navigate(['/home']); // Ajuste para a rota da sua tela inicial
-  }
-}
+export class ConfiguracoesComponent {}

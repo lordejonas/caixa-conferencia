@@ -1,129 +1,120 @@
-<header class="header-principal shadow-sm mb-4">
-  <div class="header-container-flex container">
-    <a [routerLink]="['/']" class="text-white text-decoration-none me-2">
-      <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
-        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-      </svg>
-    </a>
-    <h1 class="h5 mb-0 fw-bold">Conectar Nuvem (Firebase)</h1>
-  </div>
-</header>
+<app-internal-layout titulo="Configurações" titulo="Conectar Nuvem">
+  <main class="container pb-5">
+    <div class="card shadow-sm p-4 mb-4">
+      <!-- Status de Conexão -->
+      @if (estaConectado) {
+        <div class="alert alert-success mb-4">
+          <strong>Status: Conectado!</strong> Perfil ativo:
+          <span class="badge bg-primary text-uppercase">{{ config.perfil }}</span>
+        </div>
+      }
 
-<main class="container pb-5">
-  <div class="card shadow-sm p-4 mb-4">
-    <!-- Status de Conexão -->
-    @if (estaConectado) {
-      <div class="alert alert-success mb-4">
-        <strong>Status: Conectado!</strong> Perfil ativo:
-        <span class="badge bg-primary text-uppercase">{{ config.perfil }}</span>
-      </div>
-    }
+      <form (ngSubmit)="salvarEConectar()">
 
-    <form (ngSubmit)="salvarEConectar()">
+        <!-- BOTÃO DE EDICAO / CANCELAMENTO -->
+        @if (configOriginal) {
+          <div class="d-flex justify-content-end mb-3">
+            @if (!modoEdicao) {
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+                (click)="habilitarEdicaoChaves()">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9 2 13.5l4.5-1.293 6.5-6.5z"/>
+                </svg>
+                Editar Chaves
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
+                (click)="cancelarEdicaoChaves()">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                </svg>
+                Cancelar Edição
+              </button>
+            }
+          </div>
+        }
 
-      <!-- BOTÃO DE EDICAO / CANCELAMENTO -->
-      @if (configOriginal) {
-        <div class="d-flex justify-content-end mb-3">
-          @if (!modoEdicao) {
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
-              (click)="habilitarEdicaoChaves()">
-              <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9 2 13.5l4.5-1.293 6.5-6.5z"/>
-              </svg>
-              Editar Chaves
-            </button>
-          } @else {
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
-              (click)="cancelarEdicaoChaves()">
-              <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-              </svg>
-              Cancelar Edição
+        <!-- Campos do Firebase (API Key, Project ID, etc.) -->
+        <div class="mb-3">
+          <label class="form-label small fw-bold">API Key</label>
+          <input
+            [type]="modoEdicao ? 'text' : 'password'"
+            [readonly]="!modoEdicao"
+            class="form-control"
+            [(ngModel)]="config.apiKey"
+            name="apiKey"
+            placeholder="Ex: AIzaSy..."
+            required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Project ID</label>
+          <input
+            [type]="modoEdicao ? 'text' : 'password'"
+            [readonly]="!modoEdicao"
+            class="form-control"
+            [(ngModel)]="config.projectId"
+            name="projectId"
+            placeholder="Ex: meu-projeto-firebase"
+            required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold">App ID</label>
+          <input
+            [type]="modoEdicao ? 'text' : 'password'"
+            [readonly]="!modoEdicao"
+            class="form-control"
+            [(ngModel)]="config.appId"
+            name="appId">
+        </div>
+
+        <!-- SELEÇÃO DE PERFIL (COMBOBOX) -->
+        <div class="mb-3 p-3 border rounded bg-light">
+          <label class="form-label fw-bold text-primary">Perfil de Acesso</label>
+          <select class="form-select" [(ngModel)]="perfilSelecionado" (change)="aoMudarPerfil()" name="perfil">
+            <option value="membro">Membro (Apenas Leitura)</option>
+            <option value="tesoureiro">Tesoureiro (Leitura e Escrita)</option>
+          </select>
+          <small class="text-muted d-block mt-1">
+            * Membros acompanham os dados sem alterar a nuvem. Tesoureiros podem criar e editar lançamentos.
+          </small>
+        </div>
+
+        <!-- CAMPO DE SENHA (Apenas se a senha for exigida na alteração de perfil) -->
+        @if (perfilSelecionado === 'tesoureiro' && senhaExigida) {
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-danger">Senha da Tesouraria</label>
+            <input
+              type="password"
+              class="form-control border-danger"
+              [(ngModel)]="senhaDigitada"
+              name="senha"
+              placeholder="Digite a senha para habilitar o modo Tesoureiro"
+              required>
+          </div>
+        }
+
+        @if (mensagemStatus) {
+          <p class="small text-danger fw-bold mt-2">{{ mensagemStatus }}</p>
+        }
+
+        <div class="d-grid gap-2 mt-4">
+          <button type="submit" class="btn btn-primary fw-bold">
+            Salvar e Conectar
+          </button>
+
+          @if (estaConectado) {
+            <button type="button" (click)="desconectar()" class="btn btn-outline-danger btn-sm">
+              Desconectar
             </button>
           }
         </div>
-      }
-
-      <!-- Campos do Firebase (API Key, Project ID, etc.) -->
-      <div class="mb-3">
-        <label class="form-label small fw-bold">API Key</label>
-        <input
-          [type]="modoEdicao ? 'text' : 'password'"
-          [readonly]="!modoEdicao"
-          class="form-control"
-          [(ngModel)]="config.apiKey"
-          name="apiKey"
-          placeholder="Ex: AIzaSy..."
-          required>
-      </div>
-
-      <div class="mb-3">
-        <label class="form-label small fw-bold">Project ID</label>
-        <input
-          [type]="modoEdicao ? 'text' : 'password'"
-          [readonly]="!modoEdicao"
-          class="form-control"
-          [(ngModel)]="config.projectId"
-          name="projectId"
-          placeholder="Ex: meu-projeto-firebase"
-          required>
-      </div>
-
-      <div class="mb-3">
-        <label class="form-label small fw-bold">App ID</label>
-        <input
-          [type]="modoEdicao ? 'text' : 'password'"
-          [readonly]="!modoEdicao"
-          class="form-control"
-          [(ngModel)]="config.appId"
-          name="appId">
-      </div>
-
-      <!-- SELEÇÃO DE PERFIL (COMBOBOX) -->
-      <div class="mb-3 p-3 border rounded bg-light">
-        <label class="form-label fw-bold text-primary">Perfil de Acesso</label>
-        <select class="form-select" [(ngModel)]="perfilSelecionado" (change)="aoMudarPerfil()" name="perfil">
-          <option value="membro">Membro (Apenas Leitura)</option>
-          <option value="tesoureiro">Tesoureiro (Leitura e Escrita)</option>
-        </select>
-        <small class="text-muted d-block mt-1">
-          * Membros acompanham os dados sem alterar a nuvem. Tesoureiros podem criar e editar lançamentos.
-        </small>
-      </div>
-
-      <!-- CAMPO DE SENHA (Apenas se a senha for exigida na alteração de perfil) -->
-      @if (perfilSelecionado === 'tesoureiro' && senhaExigida) {
-        <div class="mb-3">
-          <label class="form-label small fw-bold text-danger">Senha da Tesouraria</label>
-          <input
-            type="password"
-            class="form-control border-danger"
-            [(ngModel)]="senhaDigitada"
-            name="senha"
-            placeholder="Digite a senha para habilitar o modo Tesoureiro"
-            required>
-        </div>
-      }
-
-      @if (mensagemStatus) {
-        <p class="small text-danger fw-bold mt-2">{{ mensagemStatus }}</p>
-      }
-
-      <div class="d-grid gap-2 mt-4">
-        <button type="submit" class="btn btn-primary fw-bold">
-          Salvar e Conectar
-        </button>
-
-        @if (estaConectado) {
-          <button type="button" (click)="desconectar()" class="btn btn-outline-danger btn-sm">
-            Desconectar
-          </button>
-        }
-      </div>
-    </form>
-  </div>
-</main>
+      </form>
+    </div>
+  </main>
+</app-internal-layout>

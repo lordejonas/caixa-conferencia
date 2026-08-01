@@ -5,11 +5,12 @@ import { RouterLink } from '@angular/router';
 import { ConfigService } from '../../services/config.service';
 import { FirebaseDynamicService } from '../../services/firebase-dynamic.service';
 import { FirebaseUserConfig, PerfilUsuario } from '../../models/firebase-config.model';
+import { InternalLayoutComponent } from '../../components/internal-layout/internal-layout.component';
 
 @Component({
   selector: 'app-configuracao-nuvem',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, InternalLayoutComponent],
   templateUrl: './configuracao-nuvem.html',
   styleUrl: './configuracao-nuvem.scss'
 })

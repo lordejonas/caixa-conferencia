@@ -1,0 +1,25 @@
+<header class="header-principal shadow-sm">
+  <div class="header-content container">
+    <img src="/assets/icons/favicon.ico" alt="Ícone SSVP" class="header-icon">
+
+    <h2>{{ titulo }}</h2>
+
+    <a [routerLink]="['/']" class="home-link" title="Voltar ao Início">
+      <svg class="home-icon-svg" viewBox="0 0 24 24" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" fill="white"></path>
+      </svg>
+    </a>
+  </div>
+</header>
+
+<!-- O conteúdo específico de cada página será injetado aqui -->
+<main class="internal-container container py-4">
+  <ng-content></ng-content>
+</main>
+
+<footer class="footer-novo">
+  <div class="footer-content-center">
+    <p class="footer-texto">Conferência Santa Perpétua e Santa Felicidade - DF</p>
+    <span class="version-tag-blue">v2.0.0-Beta</span>
+  </div>
+</footer>
