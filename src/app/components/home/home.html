@@ -1,47 +1,47 @@
-<header class="header-principal shadow-sm">
-  <div class="header-container-flex container">
-    <img src="assets/icons/logo-ssvp-global.png" alt="Logo SSVP" class="logo-principal-ssvp">
-
-    <div class="header-titulos">
-      <h1 class="h4 mb-0 fw-bold">Tesouraria Conferência</h1>
-      <p class="mb-0 text-white-50 small">Conferência Santa Perpétua e Santa Felicidade - DF</p>
-    </div>
+<header class="header-principal-novo shadow-sm">
+  <div class="header-container-center container">
+    <img src="assets/icons/logo-ssvp-global.png" alt="Logo SSVP" class="logo-ssvp-grande">
+    <h1 class="titulo-cabecalho mb-0">TESOURARIA CONFERÊNCIA</h1>
   </div>
 </header>
 
 <main class="menu-grid container">
+  <!-- Cartão 1 -->
   <a [routerLink]="['/chave-pix']" class="menu-card">
     <div class="icon-box">
       <img src="assets/icons/icons8-pix-50.png" alt="Ícone PIX" class="menu-icon-img">
     </div>
-    <span>Chave Pix Conferência</span>
+    <span>Chave Pix<br>Conferência</span>
   </a>
 
+  <!-- Cartão 2 -->
   <a [routerLink]="['/caixa']" class="menu-card">
     <div class="icon-box">📘</div>
     <span>Livro Caixa</span>
   </a>
 
+  <!-- Cartão 3 -->
   <a [routerLink]="['/contador']" class="menu-card">
     <div class="icon-box">💵</div>
     <span>Contar Dinheiro</span>
   </a>
 
+  <!-- Cartão 4 -->
   <a [routerLink]="['/contador-parcial']" class="menu-card">
     <div class="icon-box">💰</div>
-    <span>Contar Dinheiro (Parcial)</span>
+    <span>Contar Dinheiro<br>(Parcial)</span>
   </a>
 
+  <!-- Cartão 5: Configurações -->
   <a [routerLink]="['/configuracoes']" class="menu-card">
     <div class="icon-box">⚙️</div>
     <span>Configurações</span>
   </a>
-
 </main>
 
-<footer class="footer-fixo">
-  <div class="footer-content">
-    <span>Conferência Santa Perpétua e Santa Felicidade - DF</span>
-    <span class="version-tag">v2.0.0-Beta</span>
+<footer class="footer-novo">
+  <div class="footer-content-center">
+    <p class="footer-texto">Conferência Santa Perpétua e Santa Felicidade - DF</p>
+    <span class="version-tag-blue">v2.0.0-Beta</span>
   </div>
 </footer>
