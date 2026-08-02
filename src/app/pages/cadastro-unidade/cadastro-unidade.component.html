@@ -1,0 +1,109 @@
+<app-internal-layout [titulo]="modoEdicao ? 'Editar Unidade' : 'Cadastro Unidade'">
+  <form [formGroup]="formUnidade" (ngSubmit)="salvar()" class="form-container shadow-sm p-4 rounded bg-white">
+
+    <!-- Tipo de Unidade (Obrigatório) -->
+    <div class="mb-3">
+      <label for="tipoUnidade" class="form-label fw-bold">Tipo de Unidade <span class="text-danger">*</span></label>
+      <select id="tipoUnidade" formControlName="tipoUnidade" class="form-select">
+        <option value="" disabled>Selecione o tipo</option>
+        <option value="Conferência">Conferência</option>
+        <option value="Conselho Particular">Conselho Particular</option>
+        <option value="Conselho Central">Conselho Central</option>
+      </select>
+    </div>
+
+    <!-- Nome da Unidade (Obrigatório) -->
+    <div class="mb-3">
+      <label for="nomeUnidade" class="form-label fw-bold">Nome da Unidade <span class="text-danger">*</span></label>
+      <input type="text" id="nomeUnidade" formControlName="nomeUnidade" class="form-control" placeholder="Digite o nome da unidade">
+    </div>
+
+    <!-- Local -->
+    <div class="mb-3">
+      <label for="local" class="form-label fw-bold">Local</label>
+      <input type="text" id="local" formControlName="local" class="form-control" placeholder="Cidade / Bairro / DF">
+    </div>
+
+    <!-- Data de Fundação -->
+    <div class="mb-3">
+      <label for="dataFundacao" class="form-label fw-bold">Data de Fundação</label>
+      <input
+        type="text"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        id="dataFundacao"
+        formControlName="dataFundacao"
+        class="form-control"
+        placeholder="DD/MM/AAAA"
+        maxLength="10"
+        (input)="aplicarMascaraData($event, 'dataFundacao')">
+      @if (formUnidade.get('dataFundacao')?.hasError('dataInexistente') && formUnidade.get('dataFundacao')?.touched) {
+        <small class="text-danger mt-1 d-block fw-semibold">data inexistente</small>
+      }
+    </div>
+
+    <!-- Data de Agregação -->
+    <div class="mb-3">
+      <label for="dataAgregacao" class="form-label fw-bold">Data de Agregação</label>
+      <input
+        type="text"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        id="dataAgregacao"
+        formControlName="dataAgregacao"
+        class="form-control"
+        placeholder="DD/MM/AAAA"
+        maxLength="10"
+        (input)="aplicarMascaraData($event, 'dataAgregacao')">
+      @if (formUnidade.get('dataAgregacao')?.hasError('dataInexistente') && formUnidade.get('dataAgregacao')?.touched) {
+        <small class="text-danger mt-1 d-block fw-semibold">data inexistente</small>
+      }
+    </div>
+
+    <!-- Código com Máscara (99.99.99.99) -->
+    <div class="mb-3">
+      <label for="codigo" class="form-label fw-bold">Código</label>
+      <input
+        type="text"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        id="codigo"
+        formControlName="codigo"
+        class="form-control"
+        placeholder="00.00.00.00"
+        maxLength="11"
+        (input)="aplicarMascaraCodigo($event)">
+    </div>
+
+    <!-- CAMPOS CONDICIONAIS -->
+    @if (tipoUnidadeValue === 'Conferência') {
+      <div class="mb-3">
+        <label for="conselhoParticular" class="form-label fw-bold">Conselho Particular</label>
+        <input type="text" id="conselhoParticular" formControlName="conselhoParticular" class="form-control">
+      </div>
+    }
+
+    @if (tipoUnidadeValue === 'Conferência' || tipoUnidadeValue === 'Conselho Particular') {
+      <div class="mb-3">
+        <label for="conselhoCentral" class="form-label fw-bold">Conselho Central</label>
+        <input type="text" id="conselhoCentral" formControlName="conselhoCentral" class="form-control">
+      </div>
+    }
+
+    @if (tipoUnidadeValue === 'Conferência' || tipoUnidadeValue === 'Conselho Particular' || tipoUnidadeValue === 'Conselho Central') {
+      <div class="mb-3">
+        <label for="conselhoMetropolitano" class="form-label fw-bold">Conselho Metropolitano</label>
+        <input type="text" id="conselhoMetropolitano" formControlName="conselhoMetropolitano" class="form-control">
+      </div>
+    }
+
+    <!-- Botões -->
+    <div class="d-flex justify-content-end gap-2 mt-4">
+      <button type="button" class="btn btn-outline-secondary px-4 fw-bold" (click)="cancelar()">Cancelar</button>
+      <button type="submit" class="btn btn-primary px-4 fw-bold" [disabled]="formUnidade.invalid">
+        {{ modoEdicao ? 'Atualizar' : 'Salvar' }}
+      </button>
+    </div>
+
+  </form>
+</app-internal-layout>

@@ -1,0 +1,32 @@
+.form-container {
+  border: 1px solid #e0e0e0;
+  max-width: 550px;
+  margin: 0 auto;
+
+  .form-label {
+    color: #333333;
+    font-size: 0.95rem;
+  }
+
+  .form-control, .form-select {
+    border-color: #0066cc;
+    border-radius: 8px;
+    padding: 10px 12px;
+
+    &:focus {
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+  }
+
+  .btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+
+    &:disabled {
+      background-color: #a5c7fe;
+      border-color: #a5c7fe;
+      cursor: not-allowed;
+    }
+  }
+}
