@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { InternalLayoutComponent } from '../../components/internal-layout/internal-layout.component';
-import { UnidadeService, UnidadeVicentina } from '../../services/unidade.service';
+import { UnidadeService } from '../../services/unidade.service';
 import { dataValidaValidator } from '../../utils/validar-data';
 
 @Component({
@@ -13,9 +14,10 @@ import { dataValidaValidator } from '../../utils/validar-data';
   templateUrl: './cadastro-unidade.component.html',
   styleUrl: './cadastro-unidade.component.scss'
 })
-export class CadastroUnidadeComponent implements OnInit {
+export class CadastroUnidadeComponent implements OnInit, OnDestroy {
   formUnidade!: FormGroup;
   modoEdicao: boolean = false;
+  private unidadeSub?: Subscription;
 
   constructor(
     private fb: FormBuilder,
@@ -25,7 +27,11 @@ export class CadastroUnidadeComponent implements OnInit {
 
   ngOnInit(): void {
     this.inicializarFormulario();
-    this.carregarDadosSeExistir();
+    this.carregarDadosInscrição();
+  }
+
+  ngOnDestroy(): void {
+    this.unidadeSub?.unsubscribe();
   }
 
   private inicializarFormulario(): void {
@@ -42,12 +48,17 @@ export class CadastroUnidadeComponent implements OnInit {
     });
   }
 
-  private carregarDadosSeExistir(): void {
-    const unidadeSalva = this.unidadeService.obterUnidade();
-    if (unidadeSalva) {
-      this.modoEdicao = true;
-      this.formUnidade.patchValue(unidadeSalva); // Preenche automaticamente o formulário com a unidade em memória
-    }
+  // Carrega os dados reativamente do IndexedDB / Firebase em tempo real
+  private carregarDadosInscrição(): void {
+    this.unidadeSub = this.unidadeService.obterUnidadeObservable().subscribe({
+      next: (unidadeSalva) => {
+        if (unidadeSalva) {
+          this.modoEdicao = true;
+          this.formUnidade.patchValue(unidadeSalva);
+        }
+      },
+      error: (err) => console.error('Erro ao carregar dados da unidade:', err)
+    });
   }
 
   get tipoUnidadeValue(): string {
@@ -69,20 +80,24 @@ export class CadastroUnidadeComponent implements OnInit {
       valor = `${valor.substring(0, 2)}/${valor.substring(2)}`;
     }
 
-    this.formUnidade.get(campo)?.setValue(valor, { emitEvent: false });
+    const control = this.formUnidade.get(campo);
+    if (control) {
+      // Atualiza o valor e força a reavaliação dos validadores
+      control.setValue(valor);
+      control.markAsTouched();
+      control.updateValueAndValidity();
+    }
   }
 
   // Máscara dinâmica para o Código (99.99.99.99)
   aplicarMascaraCodigo(event: Event): void {
     const input = event.target as HTMLInputElement;
-    let valor = input.value.replace(/\D/g, ''); // Remove tudo que não é número
+    let valor = input.value.replace(/\D/g, '');
 
-    // Limita ao tamanho máximo de 8 dígitos
     if (valor.length > 8) {
       valor = valor.substring(0, 8);
     }
 
-    // Aplica a formatação dos pontos
     if (valor.length > 6) {
       valor = `${valor.substring(0, 2)}.${valor.substring(2, 4)}.${valor.substring(4, 6)}.${valor.substring(6)}`;
     } else if (valor.length > 4) {
@@ -91,18 +106,28 @@ export class CadastroUnidadeComponent implements OnInit {
       valor = `${valor.substring(0, 2)}.${valor.substring(2)}`;
     }
 
-    // Atualiza o valor do controle no formulário
-    this.formUnidade.get('codigo')?.setValue(valor, { emitEvent: false });
+    const control = this.formUnidade.get('codigo');
+    if (control) {
+      // Atualiza o valor e força a reavaliação dos validadores
+      control.setValue(valor);
+      control.markAsTouched();
+      control.updateValueAndValidity();
+    }
   }
 
-  salvar(): void {
+  async salvar(): Promise<void> {
     if (this.formUnidade.valid) {
-      this.unidadeService.salvar(this.formUnidade.value);
-      const mensagem = this.modoEdicao
-        ? 'Unidade atualizada com sucesso!'
-        : 'Unidade cadastrada com sucesso!';
-      alert(mensagem);
-      this.router.navigate(['/configuracoes']);
+      try {
+        await this.unidadeService.salvar(this.formUnidade.value);
+        const mensagem = this.modoEdicao
+          ? 'Unidade atualizada com sucesso!'
+          : 'Unidade cadastrada com sucesso!';
+        alert(mensagem);
+        this.router.navigate(['/configuracoes']);
+      } catch (error) {
+        console.error('Erro ao salvar no IndexedDB:', error);
+        alert('Erro ao salvar os dados localmente.');
+      }
     }
   }
 

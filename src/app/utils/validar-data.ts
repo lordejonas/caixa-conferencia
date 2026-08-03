@@ -3,8 +3,10 @@ import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 export function dataValidaValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const valor = control.value;
-    if (!valor) {
-      return null; // Campo opcional
+
+    // Se estiver vazio, nulo ou limpo, é considerado válido (campo opcional)
+    if (!valor || typeof valor !== 'string' || valor.trim() === '') {
+      return null;
     }
 
     // Aceita apenas formato DD/MM/AAAA completo
@@ -26,7 +28,7 @@ export function dataValidaValidator(): ValidatorFn {
       dataObjeto.getMonth() === mes &&
       dataObjeto.getDate() === dia
     ) {
-      return null; // Data válida
+      return null; // Data válida!
     }
 
     return { dataInexistente: true };

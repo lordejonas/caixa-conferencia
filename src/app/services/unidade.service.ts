@@ -1,34 +1,39 @@
 import { Injectable } from '@angular/core';
+import { db, UnidadeLocal } from '../core/db/app-database';
+import { SyncService } from './sync.service';
+import { liveQuery } from 'dexie';
+import { Observable, from } from 'rxjs';
 
-export interface UnidadeVicentina {
-  tipoUnidade: 'Conferência' | 'Conselho Particular' | 'Conselho Central' | '';
-  nomeUnidade: string;
-  local?: string;
-  dataFundacao?: string;
-  dataAgregacao?: string;
-  codigo?: string;
-  conselhoParticular?: string;
-  conselhoCentral?: string;
-  conselhoMetropolitano?: string;
-}
+export type UnidadeVicentina = UnidadeLocal;
 
 @Injectable({
   providedIn: 'root'
 })
 export class UnidadeService {
-  // Armazena a única unidade em memória
-  private unidade: UnidadeVicentina | null = null;
 
-  salvar(unidade: UnidadeVicentina): void {
-    this.unidade = { ...unidade };
-    console.log('Unidade salva/atualizada em memória:', this.unidade);
+  constructor(private syncService: SyncService) {
+    // Dispara a sincronização imediatamente ao carregar o serviço
+    this.syncService.sincronizar();
   }
 
-  obterUnidade(): UnidadeVicentina | null {
-    return this.unidade;
+  async salvar(unidade: Omit<UnidadeLocal, 'updatedAt' | 'statusSync'>): Promise<void> {
+    const registro: UnidadeLocal = {
+      ...unidade,
+      id: 'unidade_principal',
+      updatedAt: Date.now(),
+      statusSync: 'PENDENTE'
+    };
+
+    // 1. Gravação local imediata no IndexedDB
+    await db.unidades.put(registro);
+
+    // 2. Dispara envio em background para a nuvem
+    await this.syncService.sincronizar();
   }
 
-  existeUnidade(): boolean {
-    return this.unidade !== null;
+  obterUnidadeObservable(): Observable<UnidadeVicentina | undefined> {
+    // Força uma nova tentativa de sincronia ao escutar os dados na tela
+    this.syncService.sincronizar();
+    return from(liveQuery(() => db.unidades.get('unidade_principal')));
   }
 }
