@@ -1,4 +1,4 @@
-<app-internal-layout titulo="Configurações" titulo="Conectar Nuvem">
+<app-internal-layout titulo="Configurações" subTitulo="Conectar Nuvem">
   <main class="container pb-5">
     <div class="card shadow-sm p-4 mb-4">
       <!-- Status de Conexão -->
@@ -11,7 +11,7 @@
 
       <form (ngSubmit)="salvarEConectar()">
 
-        <!-- BOTÃO DE EDICAO / CANCELAMENTO -->
+        <!-- BOTÃO DE EDIÇÃO / CANCELAMENTO -->
         @if (configOriginal) {
           <div class="d-flex justify-content-end mb-3">
             @if (!modoEdicao) {
@@ -85,17 +85,33 @@
           </small>
         </div>
 
-        <!-- CAMPO DE SENHA (Apenas se a senha for exigida na alteração de perfil) -->
+        <!-- CAMPOS DE SENHA (Apenas se o perfil for Tesoureiro) -->
         @if (perfilSelecionado === 'tesoureiro' && senhaExigida) {
-          <div class="mb-3">
-            <label class="form-label small fw-bold text-danger">Senha da Tesouraria</label>
-            <input
-              type="password"
-              class="form-control border-danger"
-              [(ngModel)]="senhaDigitada"
-              name="senha"
-              placeholder="Digite a senha para habilitar o modo Tesoureiro"
-              required>
+          <div class="p-3 border rounded bg-light-subtle mb-3">
+            <div class="mb-3">
+              <label class="form-label small fw-bold text-danger">Senha da Tesouraria</label>
+              <input
+                type="password"
+                class="form-control border-danger"
+                [(ngModel)]="senhaDigitada"
+                name="senhaDigitada"
+                placeholder="Digite a senha da tesouraria"
+                required>
+            </div>
+
+            <div class="mb-1">
+              <label class="form-label small fw-bold text-danger">Confirmar Senha da Tesouraria</label>
+              <input
+                type="password"
+                class="form-control border-danger"
+                [(ngModel)]="confirmacaoSenha"
+                name="confirmacaoSenha"
+                placeholder="Repita a senha para confirmar"
+                required>
+            </div>
+            <small class="text-muted d-block mt-2">
+              * Se for o primeiro acesso nesta base Firebase, esta senha será cadastrada na coleção <code>configuracoes</code>.
+            </small>
           </div>
         }
 

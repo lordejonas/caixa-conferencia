@@ -2,10 +2,14 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { initializeApp, getApps, deleteApp } from 'firebase/app';
+import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
+
 import { ConfigService } from '../../services/config.service';
 import { FirebaseDynamicService } from '../../services/firebase-dynamic.service';
 import { FirebaseUserConfig, PerfilUsuario } from '../../models/firebase-config.model';
 import { InternalLayoutComponent } from '../../components/internal-layout/internal-layout.component';
+import { gerarHashSenha } from '../../utils/crypto.utils';
 
 @Component({
   selector: 'app-configuracao-nuvem',
@@ -27,6 +31,7 @@ export class ConfiguracaoNuvemComponent implements OnInit {
 
   perfilSelecionado: PerfilUsuario = 'membro';
   senhaDigitada = '';
+  confirmacaoSenha = ''; // NOVO: Campo de confirmação de senha
   senhaExigida = false;
   estaConectado = false;
   mensagemStatus = '';
@@ -35,7 +40,6 @@ export class ConfiguracaoNuvemComponent implements OnInit {
   modoEdicao = false;
 
   // Guarda uma cópia original das chaves salvas para poder restaurar no "Cancelar"
-  // (deve ser pública para o template HTML conseguir acessar)
   configOriginal: FirebaseUserConfig | null = null;
 
   constructor(
@@ -56,7 +60,7 @@ export class ConfiguracaoNuvemComponent implements OnInit {
       // Se é o primeiro acesso (sem nada salvo), libera os campos para digitação
       this.modoEdicao = true;
     }
-    this.senhaExigida = false;
+    this.senhaExigida = this.perfilSelecionado === 'tesoureiro';
   }
 
   habilitarEdicaoChaves(): void {
@@ -79,9 +83,11 @@ export class ConfiguracaoNuvemComponent implements OnInit {
 
   aoMudarPerfil(): void {
     this.mensagemStatus = '';
-    const perfilSalvo = this.config.perfil || 'membro';
+    this.senhaDigitada = '';
+    this.confirmacaoSenha = '';
 
-    if (this.perfilSelecionado === 'tesoureiro' && perfilSalvo !== 'tesoureiro') {
+    // Sempre exige os campos de senha quando selecionar perfil 'tesoureiro'
+    if (this.perfilSelecionado === 'tesoureiro') {
       this.senhaExigida = true;
     } else {
       this.senhaExigida = false;
@@ -106,35 +112,75 @@ export class ConfiguracaoNuvemComponent implements OnInit {
         this.estaConectado = false;
         this.mensagemStatus = 'Chaves do Firebase inválidas ou projeto não encontrado.';
         this.cdr.detectChanges();
-        return; // Interrompe imediatamente se as chaves estiverem erradas
+        return;
       }
 
-      // PASSAGEM 2: Se mudou para Tesoureiro, validar a senha
-      if (this.perfilSelecionado === 'tesoureiro' && this.senhaExigida) {
+      // PASSAGEM 2: Lógica de criação ou validação da Tesouraria
+      if (this.perfilSelecionado === 'tesoureiro') {
         if (!this.senhaDigitada.trim()) {
           this.mensagemStatus = 'Por favor, informe a senha da Tesouraria.';
           this.cdr.detectChanges();
           return;
         }
 
-        this.mensagemStatus = 'Validando senha da Tesouraria...';
-        this.cdr.detectChanges();
+        // Conecta temporariamente para checar se a coleção "configuracoes" existe
+        const tempAppName = 'temp-setup-check';
+        const appsExistentes = getApps();
+        const appAntigo = appsExistentes.find(a => a.name === tempAppName);
+        if (appAntigo) await deleteApp(appAntigo);
 
-        // Passa a configuração testada para tentar ler a senha no Firebase
-        const senhaValida = await this.firebaseDynamicService.validarSenhaTesoureiro(
-          this.config,
-          this.senhaDigitada
-        );
+        const tempApp = initializeApp(this.config, tempAppName);
+        const dbTemp = getFirestore(tempApp);
+        const docRef = doc(dbTemp, 'configuracoes', 'geral');
+        const docSnap = await getDoc(docRef);
 
-        if (!senhaValida) {
-          this.estaConectado = false;
-          this.mensagemStatus = 'Senha da Tesouraria incorreta!';
+        const hashSenhaDigitada = await gerarHashSenha(this.senhaDigitada);
+
+        if (!docSnap.exists()) {
+          // --- PRIMEIRO ACESSO / BASE NOVA: CRIA A COLEÇÃO "configuracoes" ---
+          this.mensagemStatus = 'Inicializando nova base do Firebase...';
           this.cdr.detectChanges();
-          return; // Interrompe imediatamente se a senha estiver errada
+
+          // Valida a confirmação de senha
+          if (this.senhaDigitada !== this.confirmacaoSenha) {
+            this.mensagemStatus = 'A confirmação de senha não confere com a senha informada.';
+            this.estaConectado = false;
+            await deleteApp(tempApp);
+            this.cdr.detectChanges();
+            return;
+          }
+
+          // Grava a senha criptografada (hash) no Firestore
+          await setDoc(docRef, {
+            hashSenhaTesouraria: hashSenhaDigitada,
+            createdAt: new Date().toISOString(),
+            criadoPorPerfil: 'tesoureiro'
+          });
+
+          console.log('[Setup] Documento "configuracoes/geral" criado com sucesso!');
+
+        } else {
+          // --- BASE JÁ EXISTE: VALIDA A SENHA ---
+          this.mensagemStatus = 'Validando senha da Tesouraria...';
+          this.cdr.detectChanges();
+
+          const dadosRemotos = docSnap.data();
+          const hashSalvo = dadosRemotos['hashSenhaTesouraria'] || dadosRemotos['senhaTesouraria'];
+
+          // Compara o Hash da senha digitada com o Hash salvo na base
+          if (hashSalvo !== hashSenhaDigitada && dadosRemotos['senhaTesouraria'] !== this.senhaDigitada) {
+            this.estaConectado = false;
+            this.mensagemStatus = 'Senha da Tesouraria incorreta!';
+            await deleteApp(tempApp);
+            this.cdr.detectChanges();
+            return;
+          }
         }
+
+        await deleteApp(tempApp);
       }
 
-      // PASSAGEM 3: Tudo certo! Salva os dados e confirma a conexão
+      // PASSAGEM 3: Salva os dados localmente e ativa o serviço
       this.config.perfil = this.perfilSelecionado;
       this.configService.salvarConfiguracaoFirebase(this.config);
 
@@ -143,6 +189,7 @@ export class ConfiguracaoNuvemComponent implements OnInit {
       this.estaConectado = true;
       this.senhaExigida = false;
       this.senhaDigitada = '';
+      this.confirmacaoSenha = '';
       this.modoEdicao = false;
       this.configOriginal = { ...this.config };
       this.mensagemStatus = `Conectado com sucesso no perfil ${this.config.perfil.toUpperCase()}!`;
@@ -157,26 +204,27 @@ export class ConfiguracaoNuvemComponent implements OnInit {
   }
 
   desconectar(): void {
-  // Desconecta o serviço do Firebase
-  this.firebaseDynamicService.desconectar();
+    // Desconecta o serviço do Firebase
+    this.firebaseDynamicService.desconectar();
 
-  this.estaConectado = false;
-  this.perfilSelecionado = 'membro';
-  this.senhaDigitada = '';
-  this.senhaExigida = false;
+    this.estaConectado = false;
+    this.perfilSelecionado = 'membro';
+    this.senhaDigitada = '';
+    this.confirmacaoSenha = '';
+    this.senhaExigida = false;
 
-  // Mantém os campos bloqueados/mascarados se já existiam chaves gravadas
-  this.modoEdicao = false;
+    // Mantém os campos bloqueados/mascarados se já existiam chaves gravadas
+    this.modoEdicao = false;
 
-  // Se houver dados originais salvos, restaura o estado do formulário mascarado
-  if (this.configOriginal) {
-    this.config = { ...this.configOriginal };
-  } else {
-    // Caso não houvesse nada salvo anteriormente, libera os campos para digitação
-    this.modoEdicao = true;
+    // Se houver dados originais salvos, restaura o estado do formulário mascarado
+    if (this.configOriginal) {
+      this.config = { ...this.configOriginal };
+    } else {
+      // Caso não houvesse nada salvo anteriormente, libera os campos para digitação
+      this.modoEdicao = true;
+    }
+
+    this.mensagemStatus = 'Desconectado com sucesso.';
+    this.cdr.detectChanges();
   }
-
-  this.mensagemStatus = 'Desconectado com sucesso.';
-  this.cdr.detectChanges();
-}
 }
