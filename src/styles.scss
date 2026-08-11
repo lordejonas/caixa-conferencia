@@ -1,1 +1,47 @@
-/* You can add global styles to this file, and also import other style files */
+/* --- Estilos Globais de Listas e Menus de Navegação --- */
+.lista-configuracoes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.item-config {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #ffffff;
+  border: 1.5px solid #0066cc;
+  border-radius: 12px;
+  padding: 16px 20px;
+  text-decoration: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:active, &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .item-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .item-icone {
+      font-size: 1.6rem;
+    }
+
+    .item-titulo {
+      color: #0066cc;
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+  }
+
+  .item-seta {
+    font-size: 1.8rem;
+    color: #0066cc;
+    font-weight: 700;
+    line-height: 1;
+  }
+}

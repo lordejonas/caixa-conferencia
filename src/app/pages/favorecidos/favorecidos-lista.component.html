@@ -1,0 +1,67 @@
+<app-internal-layout titulo="Favorecidos" subTitulo="Favorecidos">
+  <main class="container pb-5 mb-5">
+
+    <div class="lista-favorecidos">
+      @for (item of favorecidos; track item.id) {
+        <div
+          class="item-favorecido"
+          [class.selecionado]="itemSelecionado?.id === item.id"
+          [class.inativo]="!item.ativo"
+          (click)="aoClicarItem($event, item)"
+          appLongPress
+          (appLongPress)="aoPressionarLongo(item)">
+
+          <div class="item-info">
+            <span class="item-icone">👤</span>
+            <span class="item-titulo">{{ item.titulo }}</span>
+          </div>
+
+          @if (!item.ativo) {
+            <span class="badge-inativo">Inativo</span>
+          }
+        </div>
+      } @empty {
+        <div class="text-center text-muted py-5">
+          Nenhum favorecido cadastrado.
+        </div>
+      }
+    </div>
+
+  </main>
+
+  <!-- PAINEL FIXO NO RODAPÉ -->
+  <div class="rodape-fixo" (click)="$event.stopPropagation()">
+    <div class="container d-flex align-items-center justify-content-between">
+
+      <a routerLink="/favorecidos/novo" class="btn-adicionar">
+        <span>+</span>
+      </a>
+
+      @if (itemSelecionado) {
+        <div class="acoes-selecao d-flex gap-2">
+          <button type="button" class="btn-acao btn-editar" (click)="irParaEditar()" title="Editar">
+            ✏️
+          </button>
+          <button type="button" class="btn-acao btn-excluir" (click)="confirmarExclusao()" title="Excluir">
+            🗑️
+          </button>
+        </div>
+      }
+
+    </div>
+  </div>
+
+  <!-- MODAL DE CONFIRMAÇÃO DE EXCLUSÃO -->
+  @if (exibirModalExclusao) {
+    <div class="modal-backdrop" (click)="$event.stopPropagation()">
+      <div class="modal-card">
+        <h5 class="fw-bold mb-3">Confirmar Exclusão</h5>
+        <p>Deseja realmente excluir o favorecido <strong>{{ itemSelecionado?.titulo }}</strong>?</p>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-secondary" (click)="exibirModalExclusao = false">Não (Cancelar)</button>
+          <button type="button" class="btn btn-danger" (click)="executarExclusao()">Sim (Excluir)</button>
+        </div>
+      </div>
+    </div>
+  }
+</app-internal-layout>

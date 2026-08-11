@@ -14,7 +14,7 @@ import { gerarHashSenha } from '../../utils/crypto.utils';
 @Component({
   selector: 'app-configuracao-nuvem',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, InternalLayoutComponent],
+  imports: [CommonModule, FormsModule, InternalLayoutComponent],
   templateUrl: './configuracao-nuvem.html',
   styleUrl: './configuracao-nuvem.scss'
 })

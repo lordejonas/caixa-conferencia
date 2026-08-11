@@ -1,0 +1,47 @@
+<app-internal-layout
+  [titulo]="isEdicao ? 'Editar Favorecido' : 'Novo Favorecido'"
+  subTitulo="Configurações">
+
+  <main class="container py-4">
+    <form (ngSubmit)="salvar()">
+
+      <!-- CAMPO TÍTULO -->
+      <div class="mb-3">
+        <label for="titulo" class="form-label fw-bold">Título / Nome</label>
+        <input
+          type="text"
+          id="titulo"
+          name="titulo"
+          class="form-control"
+          [(ngModel)]="titulo"
+          placeholder="Ex: Mercado Central, João Silva"
+          required
+          autocomplete="off" />
+      </div>
+
+      <!-- STATUS (EXIBIDO APENAS EM EDIÇÃO) -->
+      @if (isEdicao) {
+        <div class="form-check form-switch mb-4">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            role="switch"
+            id="ativo"
+            name="ativo"
+            [(ngModel)]="ativo">
+          <label class="form-check-label" for="ativo">Favorecido Ativo</label>
+        </div>
+      }
+
+      <!-- BOTOES DE AÇÃO -->
+      <div class="d-flex gap-2 justify-content-end mt-4">
+        <a routerLink="/favorecidos" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary" [disabled]="!titulo.trim()">
+          {{ isEdicao ? 'Salvar Alterações' : 'Cadastrar' }}
+        </button>
+      </div>
+
+    </form>
+  </main>
+
+</app-internal-layout>
