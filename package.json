@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "deploy": "ng build --configuration production --base-href /caixa-conferencia/ && npx angular-cli-ghpages --dir=dist/caixa-conferencia/browser"
   },
   "private": true,
   "packageManager": "npm@11.6.0",
