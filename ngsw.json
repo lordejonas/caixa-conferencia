@@ -1,0 +1,89 @@
+{
+  "configVersion": 1,
+  "timestamp": 1786493310183,
+  "index": "/caixa-conferencia/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/caixa-conferencia/assets/icons/favicon.ico",
+        "/caixa-conferencia/chunk-DHIQPLEE.js",
+        "/caixa-conferencia/chunk-SUWAE2VT.js",
+        "/caixa-conferencia/favicon.ico",
+        "/caixa-conferencia/index.html",
+        "/caixa-conferencia/main-AYWDSLFP.js",
+        "/caixa-conferencia/manifest.webmanifest",
+        "/caixa-conferencia/styles-AILPYG5V.css"
+      ],
+      "patterns": []
+    },
+    {
+      "name": "assets",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/caixa-conferencia/assets/icons/icons8-pix-50.png",
+        "/caixa-conferencia/assets/icons/logo-ssvp-global.png",
+        "/caixa-conferencia/assets/icons/logo-ssvp-transparente-st_192x192.png",
+        "/caixa-conferencia/icons/icon-128x128.png",
+        "/caixa-conferencia/icons/icon-144x144.png",
+        "/caixa-conferencia/icons/icon-152x152.png",
+        "/caixa-conferencia/icons/icon-192x192.png",
+        "/caixa-conferencia/icons/icon-384x384.png",
+        "/caixa-conferencia/icons/icon-512x512.png",
+        "/caixa-conferencia/icons/icon-72x72.png",
+        "/caixa-conferencia/icons/icon-96x96.png"
+      ],
+      "patterns": []
+    }
+  ],
+  "dataGroups": [],
+  "hashTable": {
+    "/caixa-conferencia/assets/icons/favicon.ico": "c987f299d34406a8289e7f86ed625afcfc4d5077",
+    "/caixa-conferencia/assets/icons/icons8-pix-50.png": "f737fc651a6db7e9fbe0fe256cfb4051332a1809",
+    "/caixa-conferencia/assets/icons/logo-ssvp-global.png": "6fa80578f36ddb1546bd70b743f0e4c3de63332b",
+    "/caixa-conferencia/assets/icons/logo-ssvp-transparente-st_192x192.png": "7e7777c2ab47e917705970442b0280a9aad6eb30",
+    "/caixa-conferencia/chunk-DHIQPLEE.js": "31c147f4d2f019393ea752b17969f01d8d664f74",
+    "/caixa-conferencia/chunk-SUWAE2VT.js": "d8bb01d701e9bceebfa4e8fbad109d151be7bcf1",
+    "/caixa-conferencia/favicon.ico": "9c39f434fe1261f68c5e3eefdf734630d99c5670",
+    "/caixa-conferencia/icons/icon-128x128.png": "f912963bdc6d5a38d8f1dd0afbaab2ce8d657acb",
+    "/caixa-conferencia/icons/icon-144x144.png": "b155fd5f2fd5d2ea7760721063003c4cd95fd783",
+    "/caixa-conferencia/icons/icon-152x152.png": "eae6e0f0c8afb8aaae339e2a569b43e9238e5e6c",
+    "/caixa-conferencia/icons/icon-192x192.png": "15c4180454633880d98674aa7394656196c91584",
+    "/caixa-conferencia/icons/icon-384x384.png": "94a915751ef6c9282df9aea405ad679230631814",
+    "/caixa-conferencia/icons/icon-512x512.png": "1de182f76f7329dfa8f9fcdd1fdcdd695bea6a99",
+    "/caixa-conferencia/icons/icon-72x72.png": "aa88a6096bd973be7f6d7a5489bfa6bc2463f8c4",
+    "/caixa-conferencia/icons/icon-96x96.png": "7fb8f59c30ce2ff12c700321a0b39e14b3dc8f95",
+    "/caixa-conferencia/index.html": "22daaa42ec11f31169eccb1eda2a7b909278694c",
+    "/caixa-conferencia/main-AYWDSLFP.js": "c7ca0624f1eabd83386e0fe5952b6a33ba4ecce9",
+    "/caixa-conferencia/manifest.webmanifest": "ed92da1c7fdf79f0c877954de664e55932befe08",
+    "/caixa-conferencia/styles-AILPYG5V.css": "dd7a57e30764834c5c2de7e074d611379c2cb36d"
+  },
+  "navigationUrls": [
+    {
+      "positive": true,
+      "regex": "^\\/.*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*\\.[^/]*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*\\/.*$"
+    }
+  ],
+  "navigationRequestStrategy": "performance"
+}
