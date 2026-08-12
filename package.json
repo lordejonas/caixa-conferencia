@@ -2,12 +2,11 @@
   "name": "caixa-conferencia",
   "version": "0.0.0",
   "scripts": {
-    "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test",
-    "deploy": "ng build --configuration production --base-href /caixa-conferencia/ && npx angular-cli-ghpages --dir=dist/caixa-conferencia/browser"
+    "build": "ng build --base-href /",
+    "build:gh": "ng build --configuration production --base-href /caixa-conferencia/",
+    "serve:pwa": "npm run build && npx http-server -p 8085 dist/caixa-conferencia/browser",
+    "deploy": "npm run build:gh && npx angular-cli-ghpages --dir=dist/caixa-conferencia/browser"
   },
   "private": true,
   "packageManager": "npm@11.6.0",
