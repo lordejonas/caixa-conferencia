@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { db, UnidadeLocal } from '../core/db/app-database';
-import { SyncService } from './sync.service';
+import { db} from '../core/db/app-database';
+import { UnidadeLocal } from '../models/unidade.model';
+import { SyncService } from '../core/service/sync.service';
 import { liveQuery } from 'dexie';
 import { Observable, from } from 'rxjs';
 

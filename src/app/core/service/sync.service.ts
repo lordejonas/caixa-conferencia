@@ -11,9 +11,11 @@ import {
   onSnapshot,
   Unsubscribe
 } from 'firebase/firestore';
-import { db, UnidadeLocal } from '../core/db/app-database';
-import { Favorecido } from '../models/favorecido.model';
-import { ConfigService } from './config.service';
+import { db } from '../db/app-database';
+import { UnidadeLocal } from '../../models/unidade.model';
+import { Favorecido } from '../../models/favorecido.model';
+import { Categoria } from '../../models/categoria.model';
+import { ConfigService } from '../../services/config.service';
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +27,7 @@ export class SyncService {
 
   private unsubscribeUnidadeSnapshot?: Unsubscribe;
   private unsubscribeFavorecidosSnapshot?: Unsubscribe;
+  private unsubscribeCategoriasSnapshot?: Unsubscribe;
 
   constructor() {
     window.addEventListener('online', () => {
@@ -57,15 +60,14 @@ export class SyncService {
       const app = getApps().length === 0 ? initializeApp(config) : getApp();
       const firestore = getFirestore(app);
 
-      // ==========================================
       // 1. SINCRONIZAÇÃO DE UNIDADE LOCAL
-      // ==========================================
       await this.sincronizarUnidade(firestore, perfil);
 
-      // ==========================================
       // 2. SINCRONIZAÇÃO DE FAVORECIDOS
-      // ==========================================
       await this.sincronizarFavorecidos(firestore, perfil);
+
+      // 3. SINCRONIZAÇÃO DE CATEGORIAS
+      await this.sincronizarCategorias(firestore, perfil);
 
     } catch (error) {
       console.error('[SyncEngine] ERRO CRÍTICO no Firebase/Firestore:', error);
@@ -78,7 +80,6 @@ export class SyncService {
   private async sincronizarUnidade(firestore: any, perfil: string): Promise<void> {
     const docRef = doc(firestore, 'unidades', this.DOC_ID);
 
-    // Upload (Tesoureiro)
     if (perfil === 'tesoureiro') {
       const pendente = await db.unidades.get(this.DOC_ID);
 
@@ -95,7 +96,6 @@ export class SyncService {
       }
     }
 
-    // Download Inicial
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       const dadosRemotos = docSnap.data() as UnidadeLocal;
@@ -110,7 +110,6 @@ export class SyncService {
       }
     }
 
-    // Realtime Listener Unidade
     if (this.unsubscribeUnidadeSnapshot) this.unsubscribeUnidadeSnapshot();
 
     this.unsubscribeUnidadeSnapshot = onSnapshot(docRef, async (snapshot) => {
@@ -135,22 +134,17 @@ export class SyncService {
   private async sincronizarFavorecidos(firestore: any, perfil: string): Promise<void> {
     const favorecidosRef = collection(firestore, 'favorecidos');
 
-    // ==========================================
-    // 1. UPLOAD DE PENDENTES (Tesoureiro)
-    // ==========================================
     if (perfil === 'tesoureiro') {
       const pendentes = await db.favorecidos.filter(f => f.sincronizado === false).toArray();
 
       for (const item of pendentes) {
         try {
-          // Se não tiver firebaseId por algum motivo herdado, gera o doc na hora
           const docRef = item.firebaseId
             ? doc(firestore, 'favorecidos', item.firebaseId)
             : doc(collection(firestore, 'favorecidos'));
 
           const firebaseId = docRef.id;
 
-          // Garante que o firebaseId e status atualizados estejam salvos localmente
           if (item.id) {
             await db.favorecidos.update(item.id, {
               firebaseId: firebaseId,
@@ -158,7 +152,6 @@ export class SyncService {
             });
           }
 
-          // Envia a alteração ou criação para o MESMO documento no Firestore
           await setDoc(docRef, {
             titulo: item.titulo,
             ativo: item.ativo,
@@ -172,34 +165,24 @@ export class SyncService {
       }
     }
 
-    // ==========================================
-    // 2. REALTIME LISTEN EM FAVORECIDOS (Download)
-    // ==========================================
     if (this.unsubscribeFavorecidosSnapshot) this.unsubscribeFavorecidosSnapshot();
 
     this.unsubscribeFavorecidosSnapshot = onSnapshot(
       favorecidosRef,
       async (snapshot) => {
-        // Ignora alterações locais pendentes de envio do próprio cliente
-        if (snapshot.metadata.hasPendingWrites) {
-          return;
-        }
+        if (snapshot.metadata.hasPendingWrites) return;
 
         for (const docChange of snapshot.docChanges()) {
           const data = docChange.doc.data() as Favorecido & { idLocal?: number };
           const firebaseId = docChange.doc.id;
 
           if (docChange.type === 'added' || docChange.type === 'modified') {
-
-            // 🔍 Busca 1: Pelo firebaseId no Dexie
             let local = await db.favorecidos.where('firebaseId').equals(firebaseId).first();
 
-            // 🔍 Busca 2: Pelo idLocal (se retornado do Firebase)
             if (!local && data.idLocal) {
               local = await db.favorecidos.get(data.idLocal);
             }
 
-            // 🔍 Busca 3: Por título/nome (evita duplicar registros criados sem firebaseId)
             if (!local) {
               local = await db.favorecidos
                 .filter(f => f.titulo.toLowerCase() === data.titulo.toLowerCase())
@@ -215,13 +198,11 @@ export class SyncService {
             };
 
             if (local && local.id) {
-              // 🟡 Registro já existe: Atualiza na mesma chave primária (id)
               await db.favorecidos.put({
                 ...dadosParaSalvar,
                 id: local.id
               });
             } else {
-              // 🟢 Registro realmente não existe: Insere novo
               await db.favorecidos.add(dadosParaSalvar);
             }
           }
@@ -243,8 +224,89 @@ export class SyncService {
   }
 
   /**
-   * Exclusão direta no Firestore chamada ao excluir localmente
+   * Métodos internos para CATEGORIAS (Novo)
    */
+  private async sincronizarCategorias(firestore: any, perfil: string): Promise<void> {
+    const categoriasRef = collection(firestore, 'categorias');
+
+    // 1. Upload de Categorias do Banco Local para o Firestore (Somente Tesoureiro)
+    if (perfil === 'tesoureiro') {
+      const categoriasLocais = await db.categorias.toArray();
+
+      for (const item of categoriasLocais) {
+        try {
+          // Usa o ID local numérico como chave do documento Firestore para manter relação estável
+          const docRef = doc(firestore, 'categorias', String(item.id || item.title));
+
+          await setDoc(docRef, {
+            id: item.id,
+            title: item.title,
+            pai: item.pai,
+            ativo: item.ativo,
+            descricao: item.descricao || null,
+            updatedAt: item.updatedAt || new Date().toISOString()
+          }, { merge: true });
+
+        } catch (e) {
+          console.error('[SyncEngine] Erro ao enviar categoria:', item, e);
+        }
+      }
+    }
+
+    // 2. Realtime Listener para Download automático
+    if (this.unsubscribeCategoriasSnapshot) this.unsubscribeCategoriasSnapshot();
+
+    this.unsubscribeCategoriasSnapshot = onSnapshot(
+      categoriasRef,
+      async (snapshot) => {
+        if (snapshot.metadata.hasPendingWrites) return;
+
+        for (const docChange of snapshot.docChanges()) {
+          const data = docChange.doc.data() as Categoria;
+
+          if (docChange.type === 'added' || docChange.type === 'modified') {
+            // Busca localmente pelo id ou por título + pai
+            let local = data.id ? await db.categorias.get(data.id) : null;
+
+            if (!local) {
+              local = await db.categorias
+                .filter(c => c.title === data.title && c.pai === data.pai)
+                .first();
+            }
+
+            const dadosParaSalvar: Categoria = {
+              id: data.id || local?.id,
+              title: data.title,
+              pai: data.pai ?? null,
+              ativo: data.ativo ?? true,
+              positivo: data.positivo ?? true,
+              auto: data.auto ?? false,
+              descricao: data.descricao || null,
+              updatedAt: data.updatedAt || new Date().toISOString()
+            };
+
+            if (local && local.id) {
+              await db.categorias.put(dadosParaSalvar);
+            } else {
+              await db.categorias.add(dadosParaSalvar);
+            }
+          }
+
+          if (docChange.type === 'removed') {
+            if (data.id) {
+              await db.categorias.delete(data.id);
+            }
+          }
+        }
+      },
+      (error) => {
+        if (error.code !== 'aborted') {
+          console.error('[SyncEngine] Erro no listener de categorias:', error);
+        }
+      }
+    );
+  }
+
   public async removerFavorecidoRemoto(firebaseId: string): Promise<void> {
     if (!this.isOnline) return;
 

@@ -3,7 +3,7 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, collection, doc } from 'firebase/firestore';
 import { db } from '../core/db/app-database';
 import { Favorecido } from '../models/favorecido.model';
-import { SyncService } from './sync.service';
+import { SyncService } from '../core/service/sync.service';
 import { ConfigService } from './config.service';
 
 @Injectable({

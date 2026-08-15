@@ -1,0 +1,80 @@
+<app-internal-layout titulo="Categorias">
+  <div class="container-categorias">
+
+    <!-- 1. Spinner -->
+    @if (loading) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="text-muted mt-2">Carregando categorias...</p>
+      </div>
+    }
+
+    <!-- 2. Erro -->
+    @else if (erroMsg) {
+      <div class="alert alert-danger my-3">
+        {{ erroMsg }}
+      </div>
+    }
+
+    <!-- 3. Sem Registros -->
+    @else if (categoriasTree.length === 0) {
+      <div class="empty-state">
+        <div class="card text-center p-4 shadow-sm">
+          <p class="mb-3 text-muted">Nenhuma categoria cadastrada no sistema.</p>
+          <div>
+            <button type="button" class="btn btn-primary btn-lg" (click)="onGerarCategorias()">
+              Gerar Categorias
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- 4. Accordion Compacto de Categorias -->
+    @else {
+      <div class="alert alert-info py-2 mb-2">
+        Total de categorias: <strong>{{ totalGeral }}</strong>
+      </div>
+
+      <div class="accordion-categorias border-top border-bottom">
+        @for (pai of categoriasTree; track pai.id || pai.title) {
+          <div class="card-categoria-pai">
+
+            <!-- Cabeçalho do Pai -->
+            <div
+              class="header-pai d-flex align-items-center"
+              [class.has-children]="pai.filhas && pai.filhas.length > 0"
+              [class.is-expanded]="pai.expanded"
+              (click)="toggleExpand(pai)"
+            >
+              @if (pai.filhas && pai.filhas.length > 0) {
+                <span class="icon-seta">{{ pai.expanded ? '▼' : '►' }}</span>
+              } @else {
+                <span class="icon-bullet">•</span>
+              }
+              <strong class="title-pai">{{ pai.title }}</strong>
+            </div>
+
+            <!-- Lista de Filhas -->
+            @if (pai.expanded && pai.filhas && pai.filhas.length > 0) {
+              <div class="lista-filhas">
+                @for (filha of pai.filhas; track filha.id || filha.title) {
+                  <div class="item-filha d-flex justify-content-between align-items-center">
+                    <span class="title-filha">{{ filha.title }}</span>
+                    @if (filha.descricao) {
+                      <small class="text-muted">{{ filha.descricao }}</small>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+</app-internal-layout>

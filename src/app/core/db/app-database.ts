@@ -1,37 +1,32 @@
 import Dexie, { Table } from 'dexie';
+import { UnidadeLocal } from '../../models/unidade.model';
 import { Favorecido } from '../../models/favorecido.model';
-
-export interface UnidadeLocal {
-  id?: string;
-  tipoUnidade: string;
-  nomeUnidade: string;
-  local?: string;
-  dataFundacao?: string;
-  dataAgregacao?: string;
-  codigo?: string;
-  conselhoParticular?: string;
-  conselhoCentral?: string;
-  conselhoMetropolitano?: string;
-  updatedAt: number;
-  statusSync: 'PENDENTE' | 'SINCRONIZADO';
-}
+import { Categoria } from '../../models/categoria.model';
 
 export class AppDatabase extends Dexie {
   unidades!: Table<UnidadeLocal, string>;
-  favorecidos!: Table<Favorecido, number>; // 🟢 Nova tabela adicionada
+  favorecidos!: Table<Favorecido, number>;
+  categorias!: Table<Categoria, number>;
 
   constructor() {
     super('LivroCaixaDB');
 
-    // Versão 1 (Legado - Mantido para preservar os dados de Unidades)
+    // Versão 1 (Legado)
     this.version(1).stores({
       unidades: 'id, statusSync, updatedAt'
     });
 
-    // Versão 2 (Nova estrutura com a tabela de favorecidos)
+    // Versão 2 (Favorecidos)
     this.version(2).stores({
       unidades: 'id, statusSync, updatedAt',
-      favorecidos: '++id, firebaseId, sincronizado, ativo' // ++id é chave primária auto-incremento
+      favorecidos: '++id, firebaseId, sincronizado, ativo'
+    });
+
+    // Versão 3 (Categorias)
+    this.version(3).stores({
+      unidades: 'id, statusSync, updatedAt',
+      favorecidos: '++id, firebaseId, sincronizado, ativo',
+      categorias: '++id, title, pai, ativo'
     });
   }
 }

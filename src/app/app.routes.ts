@@ -4,9 +4,12 @@ import { LivroCaixaComponent } from './components/livro-caixa/livro-caixa';
 import { ConfiguracaoNuvemComponent } from './components/configuracao-nuvem/configuracao-nuvem';
 import { ConfiguracoesComponent } from './pages/configuracoes/configuracoes.component';
 import { CadastroUnidadeComponent } from './pages/cadastro-unidade/cadastro-unidade.component';
+import { ConfiguracaoEntidadesComponent } from './pages/configuracao-entidades/configuracao-entidades.component';
 
-import {FavorecidosListaComponent} from './pages/favorecidos/favorecidos-lista.component';
-import {FavorecidoFormComponent} from './pages/favorecidos/favorecido-form.component';
+import { FavorecidosListaComponent } from './pages/favorecidos/favorecidos-lista.component';
+import { FavorecidoFormComponent } from './pages/favorecidos/favorecido-form.component';
+
+import { CategoriasComponent } from './pages/categorias/categorias.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -14,15 +17,12 @@ export const routes: Routes = [
   { path: 'configuracao-nuvem', component: ConfiguracaoNuvemComponent },
   { path: 'configuracoes', component: ConfiguracoesComponent },
   { path: 'cadastro-unidade', component: CadastroUnidadeComponent },
-  {
-    path: 'configuracao-entidades',
-    loadComponent: () => import('./pages/configuracao-entidades/configuracao-entidades.component')
-      .then(m => m.ConfiguracaoEntidadesComponent)
-  },
+  { path: 'configuracao-entidades', component: ConfiguracaoEntidadesComponent},
 
   { path: 'favorecidos', component: FavorecidosListaComponent },
   { path: 'favorecidos/novo', component: FavorecidoFormComponent },
   { path: 'favorecidos/editar/:id', component: FavorecidoFormComponent },
+  { path: 'categorias', component: CategoriasComponent},
 
   /*
   {
