@@ -366,14 +366,17 @@ export class SyncService {
           const firebaseId = docChange.doc.id;
 
           if (docChange.type === 'added' || docChange.type === 'modified') {
-            let local = data.id ? await db.agregadores.get(data.id) : null;
+            // 1. Busca pelo firebaseId (Índice agora existe no Dexie)
+            let local = await db.agregadores.where('firebaseId').equals(firebaseId).first();
 
-            if (!local) {
-              local = await db.agregadores.where('firebaseId').equals(firebaseId).first();
+            // 2. Se não achou pelo firebaseId, busca pelo Nome
+            if (!local && data.nome) {
+              local = await db.agregadores
+                .filter(a => a.nome.toLowerCase() === data.nome.toLowerCase())
+                .first();
             }
 
             const dadosParaSalvar: Agregador = {
-              id: data.id || local?.id,
               nome: data.nome,
               icone: data.icone || undefined,
               descricao: data.descricao || null,
@@ -384,7 +387,10 @@ export class SyncService {
             };
 
             if (local && local.id) {
-              await db.agregadores.put(dadosParaSalvar);
+              await db.agregadores.put({
+                ...dadosParaSalvar,
+                id: local.id
+              });
             } else {
               await db.agregadores.add(dadosParaSalvar);
             }
@@ -461,14 +467,17 @@ export class SyncService {
           const firebaseId = docChange.doc.id;
 
           if (docChange.type === 'added' || docChange.type === 'modified') {
-            let local = data.id ? await db.contas.get(data.id) : null;
+            // 1. Busca pelo firebaseId
+            let local = await db.contas.where('firebaseId').equals(firebaseId).first();
 
-            if (!local) {
-              local = await db.contas.where('firebaseId').equals(firebaseId).first();
+            // 2. Se não achou pelo firebaseId, busca pelo Título
+            if (!local && data.titulo) {
+              local = await db.contas
+                .filter(c => c.titulo.toLowerCase() === data.titulo.toLowerCase())
+                .first();
             }
 
             const dadosParaSalvar: Conta = {
-              id: data.id || local?.id,
               titulo: data.titulo,
               icone: data.icone || undefined,
               saldo_atual: data.saldo_atual ?? 0,
@@ -482,7 +491,10 @@ export class SyncService {
             };
 
             if (local && local.id) {
-              await db.contas.put(dadosParaSalvar);
+              await db.contas.put({
+                ...dadosParaSalvar,
+                id: local.id
+              });
             } else {
               await db.contas.add(dadosParaSalvar);
             }

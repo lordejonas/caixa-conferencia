@@ -34,12 +34,12 @@ export class AppDatabase extends Dexie {
     });
 
     // 🟢 Versão 4 (Contas)
-    this.version(5).stores({
+    this.version(6).stores({
       unidades: 'id',
       favorecidos: '++id, firebaseId, titulo, sincronizado',
       categorias: '++id, title, pai, ativo',
-      contas: '++id, titulo, ativo, id_agregador, ordem_listagem',
-      agregadores: '++id, nome, ativo, ordem_listagem'
+      contas: '++id, firebaseId, titulo, ativo, id_agregador, ordem_listagem',
+      agregadores: '++id, firebaseId, nome, ativo, ordem_listagem'
     });
   }
 }
