@@ -1,6 +1,15 @@
 <header class="header-principal shadow-sm">
   <div class="header-content container">
-    <img src="assets/icons/favicon.ico" alt="Ícone SSVP" class="header-icon">
+    <!-- Ícone transformado em botão de voltar -->
+    <img
+      src="assets/icons/favicon.ico"
+      alt="Voltar página"
+      class="header-icon btn-voltar"
+      (click)="voltarPagina()"
+      title="Voltar à página anterior"
+      role="button"
+      tabindex="0"
+    >
 
     <h2>{{ titulo }}</h2>
 

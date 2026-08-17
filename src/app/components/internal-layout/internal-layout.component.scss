@@ -87,4 +87,19 @@ main.internal-container {
     font-weight: 700;
     font-size: 0.85rem;
   }
+
+  .header-icon.btn-voltar {
+    cursor: pointer;
+    transition: transform 0.15s ease-in-out, opacity 0.15s ease-in-out;
+
+    &:hover {
+      opacity: 0.85;
+      transform: scale(1.08);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
 }

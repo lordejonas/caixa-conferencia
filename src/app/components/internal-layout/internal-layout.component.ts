@@ -1,14 +1,23 @@
-import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, inject } from '@angular/core';
+import { Location } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-internal-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [RouterLink],
   templateUrl: './internal-layout.component.html',
   styleUrl: './internal-layout.component.scss'
 })
 export class InternalLayoutComponent {
-  @Input({ required: true }) titulo: string = '';
+  @Input({ required: true }) titulo!: string;
+
+  private location = inject(Location); // 👈 Injeção da dependência
+
+  /**
+   * Navega para a página anterior no histórico do navegador
+   */
+  voltarPagina(): void {
+    this.location.back();
+  }
 }
