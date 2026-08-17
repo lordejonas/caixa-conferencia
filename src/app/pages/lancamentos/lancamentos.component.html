@@ -1,0 +1,117 @@
+<app-internal-layout titulo="Lançamentos">
+  <div class="container pt-1 pb-3">
+
+    <!-- Navegação por Abas -->
+    <ul class="nav nav-tabs nav-fill mb-3" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link"
+          [class.active]="abaAtiva === 'contas'"
+          (click)="selecionarAba('contas')"
+          type="button">
+          Contas
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link"
+          [class.active]="abaAtiva === 'lancamentos'"
+          (click)="selecionarAba('lancamentos')"
+          type="button">
+          Lançamentos
+        </button>
+      </li>
+    </ul>
+
+    <!-- Conteúdo da Aba Contas -->
+    @if (abaAtiva === 'contas') {
+
+      <!-- Se um agregador foi clicado, mostra cabeçalho de retorno -->
+      @if (agregadorSelecionado) {
+        <div class="d-flex align-items-center mb-2">
+          <button class="btn btn-sm btn-outline-secondary me-2" (click)="voltarParaRaizAgregador()">
+            ← Voltar
+          </button>
+          <h6 class="mb-0 fw-bold">{{ agregadorSelecionado.titulo }}</h6>
+        </div>
+      }
+
+      <!-- Mensagem de Aviso se Clicar em uma Conta -->
+      @if (contaSelecionadaAviso) {
+        <div class="alert alert-info alert-dismissible fade show mb-3" role="alert">
+          {{ contaSelecionadaAviso }}
+          <button type="button" class="btn-close" (click)="contaSelecionadaAviso = null" aria-label="Close"></button>
+        </div>
+      }
+
+      <!-- LISTA UNIFICADA (Retângulos unidos com divisores) -->
+      <div class="list-container shadow-sm rounded">
+
+        <!-- VISÃO 1: Lista Principal (Contas Raiz + Agregadores) -->
+        @if (!agregadorSelecionado) {
+          @for (item of itensRaiz; track item.id + '-' + item.type; let last = $last) {
+            <div
+              class="list-item"
+              [class.border-bottom]="!last"
+              (click)="onClickItem(item)">
+
+              <div class="left-content">
+                <span class="item-icon">{{ item.icone }}</span>
+                <span class="item-title">{{ item.titulo }}</span>
+                 @if (item.type === 'agregador') {
+                  <span class="chevron">›</span>
+                }
+              </div>
+
+              <div class="right-content">
+                <span class="item-value">{{ item.saldo_atual | moedaCentavos }}</span>
+
+              </div>
+
+            </div>
+          } @empty {
+            <div class="p-3 text-center text-muted">
+              Nenhuma conta ou agregador cadastrado.
+            </div>
+          }
+        }
+
+        <!-- VISÃO 2: Lista Interna do Agregador Selecionado -->
+        @if (agregadorSelecionado) {
+          @for (conta of agregadorSelecionado.contasFilhas; track conta.id; let last = $last) {
+            <div
+              class="list-item"
+              [class.border-bottom]="!last"
+              (click)="onClickItem(conta)">
+
+              <div class="left-content">
+                <span class="item-icon">{{ conta.icone || '🏦' }}</span>
+                <span class="item-title">{{ conta.titulo }}</span>
+              </div>
+
+              <div class="right-content">
+                <span class="item-value">{{ conta.saldo_atual | moedaCentavos }}</span>
+              </div>
+
+            </div>
+          } @empty {
+            <div class="p-3 text-center text-muted">
+              Nenhuma conta vinculada a este agregador.
+            </div>
+          }
+        }
+
+      </div>
+
+    }
+
+    <!-- Conteúdo da Aba Lançamentos -->
+    @if (abaAtiva === 'lancamentos') {
+      <div class="card shadow-sm p-3">
+        <h5>Aba Lançamentos</h5>
+        <p class="mb-0 text-muted">Módulo em desenvolvimento...</p>
+      </div>
+    }
+
+  </div>
+</app-internal-layout>
