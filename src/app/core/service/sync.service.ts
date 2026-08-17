@@ -6,7 +6,6 @@ import {
   setDoc,
   getDoc,
   collection,
-  getDocs,
   deleteDoc,
   onSnapshot,
   Unsubscribe
@@ -15,6 +14,8 @@ import { db } from '../db/app-database';
 import { UnidadeLocal } from '../../models/unidade.model';
 import { Favorecido } from '../../models/favorecido.model';
 import { Categoria } from '../../models/categoria.model';
+import { Conta } from '../../models/conta.model';
+import { Agregador } from '../../models/agregador.model';
 import { ConfigService } from '../../services/config.service';
 
 @Injectable({
@@ -28,6 +29,8 @@ export class SyncService {
   private unsubscribeUnidadeSnapshot?: Unsubscribe;
   private unsubscribeFavorecidosSnapshot?: Unsubscribe;
   private unsubscribeCategoriasSnapshot?: Unsubscribe;
+  private unsubscribeAgregadoresSnapshot?: Unsubscribe;
+  private unsubscribeContasSnapshot?: Unsubscribe;
 
   constructor() {
     window.addEventListener('online', () => {
@@ -68,6 +71,12 @@ export class SyncService {
 
       // 3. SINCRONIZAÇÃO DE CATEGORIAS
       await this.sincronizarCategorias(firestore, perfil);
+
+      // 4. SINCRONIZAÇÃO DE AGREGADORES (Antes de contas para manter integridade das chaves)
+      await this.sincronizarAgregadores(firestore, perfil);
+
+      // 5. SINCRONIZAÇÃO DE CONTAS
+      await this.sincronizarContas(firestore, perfil);
 
     } catch (error) {
       console.error('[SyncEngine] ERRO CRÍTICO no Firebase/Firestore:', error);
@@ -224,7 +233,7 @@ export class SyncService {
   }
 
   /**
-   * Métodos internos para CATEGORIAS (Novo)
+   * Métodos internos para CATEGORIAS
    */
   private async sincronizarCategorias(firestore: any, perfil: string): Promise<void> {
     const categoriasRef = collection(firestore, 'categorias');
@@ -235,7 +244,6 @@ export class SyncService {
 
       for (const item of categoriasLocais) {
         try {
-          // Usa o ID local numérico como chave do documento Firestore para manter relação estável
           const docRef = doc(firestore, 'categorias', String(item.id || item.title));
 
           await setDoc(docRef, {
@@ -265,7 +273,6 @@ export class SyncService {
           const data = docChange.doc.data() as Categoria;
 
           if (docChange.type === 'added' || docChange.type === 'modified') {
-            // Busca localmente pelo id ou por título + pai
             let local = data.id ? await db.categorias.get(data.id) : null;
 
             if (!local) {
@@ -302,6 +309,196 @@ export class SyncService {
       (error) => {
         if (error.code !== 'aborted') {
           console.error('[SyncEngine] Erro no listener de categorias:', error);
+        }
+      }
+    );
+  }
+
+  /**
+   * Métodos internos para AGREGADORES (Novo)
+   */
+  private async sincronizarAgregadores(firestore: any, perfil: string): Promise<void> {
+    const agregadoresRef = collection(firestore, 'agregadores');
+
+    // 1. Upload de Agregadores locais para o Firestore (Tesoureiro)
+    if (perfil === 'tesoureiro') {
+      const agregadoresLocais = await db.agregadores.toArray();
+
+      for (const item of agregadoresLocais) {
+        try {
+          const docRef = item.firebaseId
+            ? doc(firestore, 'agregadores', item.firebaseId)
+            : doc(firestore, 'agregadores', String(item.id));
+
+          const firebaseId = docRef.id;
+
+          if (item.id && !item.firebaseId) {
+            await db.agregadores.update(item.id, { firebaseId });
+          }
+
+          await setDoc(docRef, {
+            id: item.id,
+            nome: item.nome,
+            icone: item.icone || null,
+            descricao: item.descricao || null,
+            ativo: item.ativo ?? true,
+            ordem_listagem: item.ordem_listagem || null,
+            updatedAt: item.updatedAt || new Date().toISOString(),
+            firebaseId
+          }, { merge: true });
+
+        } catch (e) {
+          console.error('[SyncEngine] Erro ao enviar agregador:', item, e);
+        }
+      }
+    }
+
+    // 2. Realtime Listener para Download automático
+    if (this.unsubscribeAgregadoresSnapshot) this.unsubscribeAgregadoresSnapshot();
+
+    this.unsubscribeAgregadoresSnapshot = onSnapshot(
+      agregadoresRef,
+      async (snapshot) => {
+        if (snapshot.metadata.hasPendingWrites) return;
+
+        for (const docChange of snapshot.docChanges()) {
+          const data = docChange.doc.data() as Agregador;
+          const firebaseId = docChange.doc.id;
+
+          if (docChange.type === 'added' || docChange.type === 'modified') {
+            let local = data.id ? await db.agregadores.get(data.id) : null;
+
+            if (!local) {
+              local = await db.agregadores.where('firebaseId').equals(firebaseId).first();
+            }
+
+            const dadosParaSalvar: Agregador = {
+              id: data.id || local?.id,
+              nome: data.nome,
+              icone: data.icone || undefined,
+              descricao: data.descricao || null,
+              ativo: data.ativo ?? true,
+              ordem_listagem: data.ordem_listagem || null,
+              updatedAt: data.updatedAt || new Date().toISOString(),
+              firebaseId
+            };
+
+            if (local && local.id) {
+              await db.agregadores.put(dadosParaSalvar);
+            } else {
+              await db.agregadores.add(dadosParaSalvar);
+            }
+          }
+
+          if (docChange.type === 'removed') {
+            const local = await db.agregadores.where('firebaseId').equals(firebaseId).first();
+            if (local?.id) {
+              await db.agregadores.delete(local.id);
+            }
+          }
+        }
+      },
+      (error) => {
+        if (error.code !== 'aborted') {
+          console.error('[SyncEngine] Erro no listener de agregadores:', error);
+        }
+      }
+    );
+  }
+
+  /**
+   * Métodos internos para CONTAS
+   */
+  private async sincronizarContas(firestore: any, perfil: string): Promise<void> {
+    const contasRef = collection(firestore, 'contas');
+
+    // 1. Upload de Contas locais para o Firestore (Tesoureiro)
+    if (perfil === 'tesoureiro') {
+      const contasLocais = await db.contas.toArray();
+
+      for (const item of contasLocais) {
+        try {
+          const docRef = item.firebaseId
+           ? doc(firestore, 'contas', item.firebaseId)
+           : doc(firestore, 'contas', String(item.id));
+
+          const firebaseId = docRef.id;
+
+          if (item.id && !item.firebaseId) {
+            await db.contas.update(item.id, { firebaseId });
+          }
+
+          await setDoc(docRef, {
+            id: item.id,
+            titulo: item.titulo,
+            icone: item.icone || null,
+            saldo_atual: item.saldo_atual ?? 0,
+            ativo: item.ativo ?? true,
+            id_conta_arredondamento: item.id_conta_arredondamento || null,
+            id_agregador: item.id_agregador || null,
+            minimo_arredondamento: item.minimo_arredondamento || 1,
+            ordem_listagem: item.ordem_listagem || null,
+            updatedAt: item.updatedAt || new Date().toISOString(),
+            firebaseId
+          }, { merge: true });
+
+        } catch (e) {
+          console.error('[SyncEngine] Erro ao enviar conta:', item, e);
+        }
+      }
+    }
+
+    // 2. Realtime Listener para Download automático
+    if (this.unsubscribeContasSnapshot) this.unsubscribeContasSnapshot();
+
+    this.unsubscribeContasSnapshot = onSnapshot(
+      contasRef,
+      async (snapshot) => {
+        if (snapshot.metadata.hasPendingWrites) return;
+
+        for (const docChange of snapshot.docChanges()) {
+          const data = docChange.doc.data() as Conta;
+          const firebaseId = docChange.doc.id;
+
+          if (docChange.type === 'added' || docChange.type === 'modified') {
+            let local = data.id ? await db.contas.get(data.id) : null;
+
+            if (!local) {
+              local = await db.contas.where('firebaseId').equals(firebaseId).first();
+            }
+
+            const dadosParaSalvar: Conta = {
+              id: data.id || local?.id,
+              titulo: data.titulo,
+              icone: data.icone || undefined,
+              saldo_atual: data.saldo_atual ?? 0,
+              ativo: data.ativo ?? true,
+              id_conta_arredondamento: data.id_conta_arredondamento || null,
+              id_agregador: data.id_agregador || null,
+              minimo_arredondamento: data.minimo_arredondamento || 1,
+              ordem_listagem: data.ordem_listagem || null,
+              updatedAt: data.updatedAt || new Date().toISOString(),
+              firebaseId
+            };
+
+            if (local && local.id) {
+              await db.contas.put(dadosParaSalvar);
+            } else {
+              await db.contas.add(dadosParaSalvar);
+            }
+          }
+
+          if (docChange.type === 'removed') {
+            const local = await db.contas.where('firebaseId').equals(firebaseId).first();
+            if (local?.id) {
+              await db.contas.delete(local.id);
+            }
+          }
+        }
+      },
+      (error) => {
+        if (error.code !== 'aborted') {
+          console.error('[SyncEngine] Erro no listener de contas:', error);
         }
       }
     );

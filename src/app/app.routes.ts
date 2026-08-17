@@ -10,6 +10,7 @@ import { FavorecidosListaComponent } from './pages/favorecidos/favorecidos-lista
 import { FavorecidoFormComponent } from './pages/favorecidos/favorecido-form.component';
 
 import { CategoriasComponent } from './pages/categorias/categorias.component';
+import { ContasComponent } from './pages/contas/contas.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -23,6 +24,7 @@ export const routes: Routes = [
   { path: 'favorecidos/novo', component: FavorecidoFormComponent },
   { path: 'favorecidos/editar/:id', component: FavorecidoFormComponent },
   { path: 'categorias', component: CategoriasComponent},
+  { path: 'contas', component: ContasComponent},
 
   /*
   {

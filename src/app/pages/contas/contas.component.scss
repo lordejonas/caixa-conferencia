@@ -1,0 +1,21 @@
+.container-contas {
+  padding: 0;
+
+  .empty-state {
+    .card {
+      background-color: #f8f9fa;
+      border-radius: 12px;
+    }
+  }
+
+  .list-contas {
+    .list-group-item {
+      border-left: none;
+      border-right: none;
+
+      &:hover {
+        background-color: #f8fafc;
+      }
+    }
+  }
+}

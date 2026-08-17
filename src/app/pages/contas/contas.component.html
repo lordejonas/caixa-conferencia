@@ -1,0 +1,106 @@
+<app-internal-layout titulo="Contas">
+  <div class="container-contas">
+
+    <!-- 1. Spinner -->
+    @if (loading) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="text-muted mt-2">Carregando contas...</p>
+      </div>
+    }
+
+    <!-- 2. Mensagem de Erro -->
+    @else if (erroMsg) {
+      <div class="alert alert-danger my-3 mx-3">
+        {{ erroMsg }}
+      </div>
+    }
+
+    <!-- 3. Estado Vazio: Botões de Inicialização -->
+    @else if (contas.length === 0) {
+      <div class="empty-state p-3">
+        <div class="card text-center p-4 shadow-sm border-0">
+          <h5 class="card-title text-secondary mb-2">Nenhuma conta cadastrada</h5>
+          <p class="text-muted mb-4 fs-6">Selecione uma das opções abaixo para gerar o plano de contas inicial:</p>
+
+          <div class="d-flex flex-column align-items-center gap-3 w-100 max-w-sm mx-auto">
+            <button type="button" class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center gap-2" (click)="onCriarContasTipo1()">
+              Criar contas tipo 1
+            </button>
+            <button type="button" class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center gap-2" (click)="onCriarContasTipo2()">
+              Criar contas tipo 2
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- 4. Listagem das Contas Cadastradas -->
+    @else {
+      <div class="px-3 py-2 bg-light border-bottom d-flex justify-content-between align-items-center">
+        <span class="text-secondary small fw-bold">PLANO DE CONTAS</span>
+        <span class="badge bg-primary rounded-pill">Total: {{ contas.length }}</span>
+      </div>
+
+      <div class="list-group list-group-flush list-contas">
+        @for (conta of contas; track conta.id || conta.titulo) {
+          <div class="list-group-item d-flex align-items-center justify-content-between py-3 px-3">
+
+            <!-- Lado Esquerdo: Ícone + Título + Detalhes/Badges -->
+            <div class="d-flex align-items-center gap-3">
+              <!-- Ícone da Conta com fundo sutil -->
+              <div class="conta-icon-wrapper rounded-circle d-flex align-items-center justify-content-center">
+                <span class="fs-4">{{ conta.icone || '📂' }}</span>
+              </div>
+
+              <div>
+                <div class="d-flex align-items-center gap-2">
+                  <h6 class="mb-0 text-dark fw-semibold">{{ conta.titulo }}</h6>
+                  @if (!conta.ativo) {
+                    <span class="badge bg-secondary opacity-75">Inativa</span>
+                  }
+                </div>
+
+                <!-- Detalhes e Relações empilhados verticalmente -->
+                <div class="d-flex flex-column align-items-start gap-1 mt-1">
+
+                  <!-- Mínimo Arredondamento -->
+                  <span class="text-muted small">
+                    Mín. Arredondamento: <strong>{{ conta.minimo_arredondamento }}</strong>
+                  </span>
+
+                  <!-- Vínculo com Agregador -->
+                  @if (conta.id_agregador) {
+                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+                      🏷️ Agregador ID: {{ conta.id_agregador }}
+                    </span>
+                  }
+
+                  <!-- Conta de Arredondamento associada -->
+                  @if (conta.id_conta_arredondamento) {
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                      🪙 Arredonda para ID: {{ conta.id_conta_arredondamento }}
+                    </span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Lado Direito: Saldo e Ordem -->
+            <!--
+            <div class="text-end ms-2">
+              <div class="fw-bold text-dark">
+                R$ {{ (conta.saldo_atual || 0).toFixed(2) }}
+              </div>
+              <small class="text-muted">Ordem: #{{ conta.ordem_listagem || '-' }}</small>
+            </div>
+          -->
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+</app-internal-layout>
