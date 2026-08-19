@@ -315,8 +315,8 @@ export class SyncService {
   }
 
   /**
-   * Métodos internos para AGREGADORES (Novo)
-   */
+  * Métodos internos para AGREGADORES
+  */
   private async sincronizarAgregadores(firestore: any, perfil: string): Promise<void> {
     const agregadoresRef = collection(firestore, 'agregadores');
 
@@ -342,6 +342,7 @@ export class SyncService {
             icone: item.icone || null,
             descricao: item.descricao || null,
             ativo: item.ativo ?? true,
+            contabilizar_totais: item.contabilizar_totais ?? null, // 👈 Mapeado no Upload
             ordem_listagem: item.ordem_listagem || null,
             updatedAt: item.updatedAt || new Date().toISOString(),
             firebaseId
@@ -366,7 +367,7 @@ export class SyncService {
           const firebaseId = docChange.doc.id;
 
           if (docChange.type === 'added' || docChange.type === 'modified') {
-            // 1. Busca pelo firebaseId (Índice agora existe no Dexie)
+            // 1. Busca pelo firebaseId
             let local = await db.agregadores.where('firebaseId').equals(firebaseId).first();
 
             // 2. Se não achou pelo firebaseId, busca pelo Nome
@@ -381,6 +382,7 @@ export class SyncService {
               icone: data.icone || undefined,
               descricao: data.descricao || null,
               ativo: data.ativo ?? true,
+              contabilizar_totais: data.contabilizar_totais ?? null,
               ordem_listagem: data.ordem_listagem || null,
               updatedAt: data.updatedAt || new Date().toISOString(),
               firebaseId
@@ -425,8 +427,8 @@ export class SyncService {
       for (const item of contasLocais) {
         try {
           const docRef = item.firebaseId
-           ? doc(firestore, 'contas', item.firebaseId)
-           : doc(firestore, 'contas', String(item.id));
+          ? doc(firestore, 'contas', item.firebaseId)
+          : doc(firestore, 'contas', String(item.id));
 
           const firebaseId = docRef.id;
 
@@ -440,6 +442,7 @@ export class SyncService {
             icone: item.icone || null,
             saldo_atual: item.saldo_atual ?? 0,
             ativo: item.ativo ?? true,
+            contabilizar_totais: item.contabilizar_totais ?? null, // 👈 Mapeado no Upload
             id_conta_arredondamento: item.id_conta_arredondamento || null,
             id_agregador: item.id_agregador || null,
             minimo_arredondamento: item.minimo_arredondamento || 1,
@@ -482,6 +485,7 @@ export class SyncService {
               icone: data.icone || undefined,
               saldo_atual: data.saldo_atual ?? 0,
               ativo: data.ativo ?? true,
+              contabilizar_totais: data.contabilizar_totais ?? null,
               id_conta_arredondamento: data.id_conta_arredondamento || null,
               id_agregador: data.id_agregador || null,
               minimo_arredondamento: data.minimo_arredondamento || 1,

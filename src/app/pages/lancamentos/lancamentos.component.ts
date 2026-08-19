@@ -1,4 +1,5 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core'; // 👈 Importe o ChangeDetectorRef
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { InternalLayoutComponent } from '../../components/internal-layout/internal-layout.component';
 import { MoedaCentavosPipe } from '../../pipes/moeda-centavos.pipe';
@@ -25,7 +26,8 @@ export interface ItemListaContas {
   imports: [
     CommonModule,
     InternalLayoutComponent,
-    MoedaCentavosPipe
+    MoedaCentavosPipe,
+    RouterLink
   ],
   templateUrl: './lancamentos.component.html',
   styleUrl: './lancamentos.component.scss'
@@ -111,6 +113,55 @@ export class LancamentosComponent implements OnInit {
       this.carregando = false;
       this.cdr.detectChanges(); // 👈 Força o Angular a renderizar os dados atualizados
     }
+  }
+
+
+
+  // Métodos auxiliares para cálculo dos saldos na classe do componente:
+  get saldoLiquido(): number {
+    if (!this.itensRaiz) return 0;
+
+    // Soma o saldo de todas as contas onde contabilizar_totais NÃO é null
+    return this.extrairContasDaLista().reduce((acc, conta) => {
+      if (conta.contabilizar_totais !== null) {
+        return acc + (conta.saldo_atual || 0);
+      }
+      return acc;
+    }, 0);
+  }
+
+  get saldoBruto(): number {
+    if (!this.itensRaiz) return 0;
+
+    // Soma apenas o saldo das contas onde contabilizar_totais === true
+    return this.extrairContasDaLista().reduce((acc, conta) => {
+      if (conta.contabilizar_totais === true) {
+        return acc + (conta.saldo_atual || 0);
+      }
+      return acc;
+    }, 0);
+  }
+
+  // Método auxiliar interno atualizado
+  private extrairContasDaLista(): Conta[] {
+    if (this.agregadorSelecionado) {
+      return this.agregadorSelecionado.contasFilhas || [];
+    }
+
+    const contas: Conta[] = [];
+
+    if (this.itensRaiz) {
+      for (const item of this.itensRaiz) {
+        if (item.type === 'conta') {
+          // 🟢 Asserção explícita indicando ao TS que neste ponto o item representa uma Conta
+          contas.push(item as unknown as Conta);
+        } else if (item.type === 'agregador' && item.contasFilhas) {
+          contas.push(...item.contasFilhas);
+        }
+      }
+    }
+
+    return contas;
   }
 
   onClickItem(item: ItemListaContas | Conta): void {

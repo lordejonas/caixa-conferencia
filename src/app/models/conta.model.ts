@@ -4,6 +4,7 @@ export interface Conta {
   icone?: string;
   saldo_atual: number | null;
   ativo: boolean;
+  contabilizar_totais?: boolean | null;
   id_conta_arredondamento: number | null;
   id_agregador: number | null;
   minimo_arredondamento: number;

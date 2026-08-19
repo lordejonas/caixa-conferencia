@@ -41,6 +41,15 @@ export class AppDatabase extends Dexie {
       contas: '++id, firebaseId, titulo, ativo, id_agregador, ordem_listagem',
       agregadores: '++id, firebaseId, nome, ativo, ordem_listagem'
     });
+
+    // 🟢 Versão 7 (Adição do índice contabilizar_totais caso precise consultar localmente por ele)
+    this.version(7).stores({
+      unidades: 'id',
+      favorecidos: '++id, firebaseId, titulo, sincronizado',
+      categorias: '++id, title, pai, ativo',
+      contas: '++id, firebaseId, titulo, ativo, id_agregador, ordem_listagem, contabilizar_totais',
+      agregadores: '++id, firebaseId, nome, ativo, ordem_listagem, contabilizar_totais'
+    });
   }
 }
 

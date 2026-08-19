@@ -1,6 +1,4 @@
 <app-internal-layout titulo="Lançamentos">
-  <!-- Conteúdo sem 'container' externo para encostar de ponta a ponta -->
-
   <!-- Navegação por Abas Encostada no Topo -->
   <ul class="nav nav-tabs nav-fill custom-nav-tabs" role="tablist">
     <li class="nav-item" role="presentation">
@@ -120,5 +118,43 @@
       <p class="mb-0">Módulo em desenvolvimento...</p>
     </div>
   }
+
+  <!-- Conteúdo anterior da aba contas... -->
+
+  <!-- 🟢 RESUMO DE SALDOS (Inserido entre a lista e o rodapé) -->
+  @if (abaAtiva === 'contas' && !carregando) {
+    <div class="resumo-saldos-container border-top bg-light p-3">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="text-secondary fw-semibold">Saldo Líquido:</span>
+        <span class="fw-bold fs-6 text-dark">
+          {{ saldoLiquido | moedaCentavos }}
+        </span>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center">
+        <span class="text-secondary fw-semibold">Saldo Bruto:</span>
+        <span class="fw-bold fs-6 text-dark">
+          {{ saldoBruto | moedaCentavos }}
+        </span>
+      </div>
+    </div>
+  }
+
+  <!-- PAINEL FIXO NO RODAPÉ -->
+  <div class="rodape-fixo" (click)="$event.stopPropagation()">
+    <div class="container d-flex align-items-center justify-content-end gap-2">
+
+      <!-- Botão de Transferência -->
+      <a routerLink="/lancamentos/transferencia" class="btn-transferencia" aria-label="Nova transferência">
+        <span>⇄</span>
+      </a>
+
+      <!-- Botão de Novo Lançamento -->
+      <a routerLink="/lancamentos/novo" class="btn-adicionar" aria-label="Adicionar lançamento">
+        <span>+</span>
+      </a>
+
+    </div>
+  </div>
 
 </app-internal-layout>
