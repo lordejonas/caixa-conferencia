@@ -1,34 +1,42 @@
 <app-internal-layout titulo="Lançamentos">
-  <div class="container-fluid px-1 px-md-3 pt-0 pb-3">
+  <!-- Conteúdo sem 'container' externo para encostar de ponta a ponta -->
 
-    <!-- Navegação por Abas -->
-    <ul class="nav nav-tabs nav-fill mb-0" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button
-          class="nav-link"
-          [class.active]="abaAtiva === 'contas'"
-          (click)="selecionarAba('contas')"
-          type="button">
-          Contas
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button
-          class="nav-link"
-          [class.active]="abaAtiva === 'lancamentos'"
-          (click)="selecionarAba('lancamentos')"
-          type="button">
-          Lançamentos
-        </button>
-      </li>
-    </ul>
+  <!-- Navegação por Abas Encostada no Topo -->
+  <ul class="nav nav-tabs nav-fill custom-nav-tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link"
+        [class.active]="abaAtiva === 'contas'"
+        (click)="selecionarAba('contas')"
+        type="button">
+        Contas
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link"
+        [class.active]="abaAtiva === 'lancamentos'"
+        (click)="selecionarAba('lancamentos')"
+        type="button">
+        Lançamentos
+      </button>
+    </li>
+  </ul>
 
-    <!-- Conteúdo da Aba Contas -->
-    @if (abaAtiva === 'contas') {
+  <!-- Conteúdo da Aba Contas -->
+  @if (abaAtiva === 'contas') {
 
-      <!-- Se um agregador foi clicado, mostra cabeçalho de retorno -->
+    <!-- Indicador de Carregamento -->
+    @if (carregando) {
+      <div class="text-center py-4 text-muted">
+        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+        <span>Carregando contas...</span>
+      </div>
+    } @else {
+
+      <!-- Se um agregador foi clicado -->
       @if (agregadorSelecionado) {
-        <div class="d-flex align-items-center mb-2">
+        <div class="d-flex align-items-center p-2 bg-light border-bottom">
           <button class="btn btn-sm btn-outline-secondary me-2" (click)="voltarParaRaizAgregador()">
             ← Voltar
           </button>
@@ -36,36 +44,35 @@
         </div>
       }
 
-      <!-- Mensagem de Aviso se Clicar em uma Conta -->
+      <!-- Mensagem de Aviso -->
       @if (contaSelecionadaAviso) {
-        <div class="alert alert-info alert-dismissible fade show mb-3" role="alert">
+        <div class="alert alert-info alert-dismissible fade show m-2" role="alert">
           {{ contaSelecionadaAviso }}
           <button type="button" class="btn-close" (click)="contaSelecionadaAviso = null" aria-label="Close"></button>
         </div>
       }
 
-      <!-- LISTA UNIFICADA (Retângulos unidos com divisores) -->
-      <div class="list-container shadow-sm rounded">
+      <!-- LISTA FULL WIDTH (Encostada nas bordas) -->
+      <div class="list-container-full">
 
-        <!-- VISÃO 1: Lista Principal (Contas Raiz + Agregadores) -->
+        <!-- VISÃO 1: Lista Principal -->
         @if (!agregadorSelecionado) {
           @for (item of itensRaiz; track item.id + '-' + item.type; let last = $last) {
             <div
-              class="list-item"
+              class="list-item-full"
               [class.border-bottom]="!last"
               (click)="onClickItem(item)">
 
               <div class="left-content">
                 <span class="item-icon">{{ item.icone }}</span>
                 <span class="item-title">{{ item.titulo }}</span>
-                 @if (item.type === 'agregador') {
-                  <span class="chevron">›</span>
+                @if (item.type === 'agregador') {
+                  <span class="chevron">››</span>
                 }
               </div>
 
               <div class="right-content">
                 <span class="item-value">{{ item.saldo_atual | moedaCentavos }}</span>
-
               </div>
 
             </div>
@@ -76,11 +83,11 @@
           }
         }
 
-        <!-- VISÃO 2: Lista Interna do Agregador Selecionado -->
+        <!-- VISÃO 2: Lista Interna do Agregador -->
         @if (agregadorSelecionado) {
           @for (conta of agregadorSelecionado.contasFilhas; track conta.id; let last = $last) {
             <div
-              class="list-item"
+              class="list-item-full"
               [class.border-bottom]="!last"
               (click)="onClickItem(conta)">
 
@@ -105,13 +112,13 @@
 
     }
 
-    <!-- Conteúdo da Aba Lançamentos -->
-    @if (abaAtiva === 'lancamentos') {
-      <div class="card shadow-sm p-3">
-        <h5>Aba Lançamentos</h5>
-        <p class="mb-0 text-muted">Módulo em desenvolvimento...</p>
-      </div>
-    }
+  }
 
-  </div>
+  <!-- Conteúdo da Aba Lançamentos -->
+  @if (abaAtiva === 'lancamentos') {
+    <div class="p-3 text-center text-muted">
+      <p class="mb-0">Módulo em desenvolvimento...</p>
+    </div>
+  }
+
 </app-internal-layout>
