@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1787171798444,
+  "timestamp": 1787194776911,
   "index": "/caixa-conferencia/index.html",
   "assetGroups": [
     {
@@ -14,7 +14,7 @@
         "/caixa-conferencia/assets/icons/favicon.ico",
         "/caixa-conferencia/favicon.ico",
         "/caixa-conferencia/index.html",
-        "/caixa-conferencia/main-4XQDZDFA.js",
+        "/caixa-conferencia/main-XYGPEPX5.js",
         "/caixa-conferencia/manifest.webmanifest",
         "/caixa-conferencia/styles-AILPYG5V.css"
       ],
@@ -60,8 +60,8 @@
     "/caixa-conferencia/icons/icon-512x512.png": "1de182f76f7329dfa8f9fcdd1fdcdd695bea6a99",
     "/caixa-conferencia/icons/icon-72x72.png": "aa88a6096bd973be7f6d7a5489bfa6bc2463f8c4",
     "/caixa-conferencia/icons/icon-96x96.png": "7fb8f59c30ce2ff12c700321a0b39e14b3dc8f95",
-    "/caixa-conferencia/index.html": "22da7b7fba7c4d20ff8f663a7b943e07644b4654",
-    "/caixa-conferencia/main-4XQDZDFA.js": "49bb8ce4c78f898b2ac77ae52c8c0e46ef7a7055",
+    "/caixa-conferencia/index.html": "71312fa13e2d130bff400741b0161cfcadf17fd2",
+    "/caixa-conferencia/main-XYGPEPX5.js": "fc8c1f422e11b01ce2cb280769c336bb5d93f0eb",
     "/caixa-conferencia/manifest.webmanifest": "ed92da1c7fdf79f0c877954de664e55932befe08",
     "/caixa-conferencia/styles-AILPYG5V.css": "dd7a57e30764834c5c2de7e074d611379c2cb36d"
   },
