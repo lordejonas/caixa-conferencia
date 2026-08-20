@@ -26,9 +26,12 @@
   <ng-content></ng-content>
 </main>
 
-<footer class="footer-novo">
-  <div class="footer-content-center">
-    <p class="footer-texto">Conferência Santa Perpétua e Santa Felicidade - DF</p>
-    <span class="version-tag-blue">v3.0.0-Beta A</span>
-  </div>
-</footer>
+<!-- 🟢 Rodapé renderizado apenas se a flag for verdadeira -->
+@if (exibirFooterPadrao) {
+  <footer class="footer-novo">
+    <div class="footer-content-center">
+      <p class="footer-texto">Conferência Santa Perpétua e Santa Felicidade - DF</p>
+      <span class="version-tag-blue">v3.0.0-Alpha B</span>
+    </div>
+  </footer>
+}

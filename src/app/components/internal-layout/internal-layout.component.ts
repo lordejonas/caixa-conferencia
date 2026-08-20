@@ -11,8 +11,10 @@ import { RouterLink } from '@angular/router';
 })
 export class InternalLayoutComponent {
   @Input({ required: true }) titulo!: string;
+  @Input() subTitulo: string = '';
+  @Input() exibirFooterPadrao: boolean = true;
 
-  private location = inject(Location); // 👈 Injeção da dependência
+  private location = inject(Location);
 
   /**
    * Navega para a página anterior no histórico do navegador

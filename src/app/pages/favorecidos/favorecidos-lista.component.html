@@ -1,5 +1,5 @@
-<app-internal-layout titulo="Favorecidos" subTitulo="Favorecidos">
-  <main class="container pb-5 mb-5">
+<app-internal-layout titulo="Favorecidos" subTitulo="Favorecidos" [exibirFooterPadrao]="false">
+  <main class="container mb-5">
 
     <div class="lista-favorecidos">
       @for (item of favorecidos; track item.id) {
