@@ -1,0 +1,117 @@
+<div class="transacao-container">
+  <!-- 1ª Linha: Header/Label -->
+  <div class="header-title">
+    <span class="label-transacao">Transação</span>
+  </div>
+
+  <!-- 2ª Linha: Indicador Ata + Data + Horário -->
+  <div class="row-linha data-hora-row">
+    <span
+      class="status-circle"
+      [class.verde]="ataLivroCaixaId !== null"
+      [class.laranja]="ataLivroCaixaId === null">
+    </span>
+
+    <input type="date" class="input-field picker-date" [(ngModel)]="dataIso" />
+    <input type="time" class="input-field picker-time" [(ngModel)]="horaIso" />
+  </div>
+
+  <!-- 3ª Linha: Seleção de Conta -->
+  <div class="row-linha flex-col">
+    <label class="field-label">Conta</label>
+    <select class="select-field" [(ngModel)]="contaSelecionadaId">
+      <option *ngFor="let conta of contas" [value]="conta.id">
+        {{ conta.titulo }}
+      </option>
+    </select>
+  </div>
+
+  <!-- 4ª Linha: Seleção de Favorecido com Botão de Adição -->
+  <div class="row-linha flex-col">
+    <label class="field-label">Pago a / Recebido de</label>
+    <div class="favorecido-wrapper">
+      <select class="select-field" [(ngModel)]="favorecidoSelecionadoId">
+        <option [value]="null">Sem favorecido</option>
+        <option *ngFor="let fav of favorecidos" [value]="fav.id">
+          {{ fav.titulo }}
+        </option>
+      </select>
+      <button type="button" class="btn-add" (click)="abrirModalFavorecido()">+</button>
+    </div>
+  </div>
+
+  <!-- 5ª Linha: Seleção de Categoria -->
+  <div class="row-linha flex-col">
+    <label class="field-label">Categoria</label>
+    <select class="select-field" [(ngModel)]="categoriaSelecionadaId">
+      <option [value]="null">Selecione a Categoria..</option>
+      <option *ngFor="let cat of categorias" [value]="cat.id">
+        {{ cat.title }}
+      </option>
+    </select>
+  </div>
+
+  <!-- 6ª Linha: Valor da Transação (Sinal + Inteiros + Centavos) -->
+  <div class="row-linha flex-col">
+    <label class="field-label">Valor</label>
+    <div class="valor-wrapper">
+      <button
+        type="button"
+        class="btn-sinal"
+        [class.despesa]="isDespesa"
+        [class.receita]="!isDespesa"
+        (click)="alternarSinal()">
+        {{ isDespesa ? '-' : '+' }}
+      </button>
+
+      <input
+        type="text"
+        inputmode="numeric"
+        class="input-field input-inteiros"
+        placeholder="0"
+        [(ngModel)]="inteiros"
+        (keydown)="onInteirosInput($event, campoCentavos)" />
+
+      <span class="ponto-separador">.</span>
+
+      <input
+        #campoCentavos
+        type="text"
+        inputmode="numeric"
+        maxlength="2"
+        class="input-field input-centavos"
+        placeholder="00"
+        [(ngModel)]="centavos"
+        (blur)="formatarCentavos()" />
+    </div>
+  </div>
+
+  <!-- 7ª Linha: Nota Livre -->
+  <div class="row-linha flex-col">
+    <label class="field-label">Nota</label>
+    <input type="text" class="input-field" placeholder="Escreva uma observação..." [(ngModel)]="nota" />
+  </div>
+
+  <!-- Rodapé com Ações -->
+  <div class="footer-actions">
+    <button type="button" class="btn-footer btn-cancelar" (click)="cancelar()">Cancelar</button>
+    <button type="button" class="btn-footer btn-salvar" (click)="salvar()">Salvar</button>
+  </div>
+</div>
+
+<!-- Modal para Inserção de Novo Favorecido -->
+<div class="modal-backdrop" *ngIf="exibirModalFavorecido">
+  <div class="modal-card">
+    <h3>Novo Favorecido</h3>
+    <input
+      type="text"
+      class="input-field"
+      placeholder="Nome do favorecido"
+      [(ngModel)]="novoFavorecidoNome"
+      autofocus />
+    <div class="modal-actions">
+      <button type="button" class="btn-modal" (click)="fecharModalFavorecido()">Cancelar</button>
+      <button type="button" class="btn-modal btn-primary" (click)="salvarNovoFavorecido()">OK</button>
+    </div>
+  </div>
+</div>

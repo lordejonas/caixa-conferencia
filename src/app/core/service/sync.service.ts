@@ -17,6 +17,7 @@ import { Categoria } from '../../models/categoria.model';
 import { Conta } from '../../models/conta.model';
 import { Agregador } from '../../models/agregador.model';
 import { ConfigService } from '../../services/config.service';
+import { Lancamento } from '../../models/lancamento.model';
 
 @Injectable({
   providedIn: 'root'
@@ -31,6 +32,7 @@ export class SyncService {
   private unsubscribeCategoriasSnapshot?: Unsubscribe;
   private unsubscribeAgregadoresSnapshot?: Unsubscribe;
   private unsubscribeContasSnapshot?: Unsubscribe;
+  private unsubscribeLancamentosSnapshot?: Unsubscribe;
 
   constructor() {
     window.addEventListener('online', () => {
@@ -77,6 +79,9 @@ export class SyncService {
 
       // 5. SINCRONIZAÇÃO DE CONTAS
       await this.sincronizarContas(firestore, perfil);
+
+      // 6. SINCRONIZAÇÃO DE LANÇAMENTOS (Após contas para garantir integridade das contas)
+      await this.sincronizarLancamentos(firestore, perfil);
 
     } catch (error) {
       console.error('[SyncEngine] ERRO CRÍTICO no Firebase/Firestore:', error);
@@ -535,5 +540,114 @@ export class SyncService {
     } catch (e) {
       console.error('[SyncEngine] Erro ao excluir favorecido remoto:', e);
     }
+  }
+
+  /**
+   * Métodos internos para LANÇAMENTOS
+   */
+  private async sincronizarLancamentos(firestore: any, perfil: string): Promise<void> {
+    const lancamentosRef = collection(firestore, 'lancamentos');
+
+    // 1. Upload de Lançamentos pendentes do Banco Local para o Firestore (Somente Tesoureiro)
+    if (perfil === 'tesoureiro') {
+      const pendentes = await db.lancamentos.filter(l => l.sincronizado === false).toArray();
+
+      for (const item of pendentes) {
+        try {
+          const docRef = item.firebaseId
+            ? doc(firestore, 'lancamentos', item.firebaseId)
+            : doc(collection(firestore, 'lancamentos'));
+
+          const firebaseId = docRef.id;
+
+          if (item.id) {
+            await db.lancamentos.update(item.id, {
+              firebaseId,
+              sincronizado: true
+            });
+          }
+
+          await setDoc(docRef, {
+            idLocal: item.id,
+            datahorario: item.datahorario,
+            favorecido_id: item.favorecido_id ?? null,
+            categoria_id: item.categoria_id ?? null,
+            origem_conta_id: item.origem_conta_id,
+            destino_conta_id: item.destino_conta_id ?? null,
+            origem_montante: item.origem_montante ?? 0,
+            destino_montante: item.destino_montante ?? 0,
+            nota: item.nota || null,
+            arredondamento_id: item.arredondamento_id ?? null,
+            ata_livro_caixa_id: item.ata_livro_caixa_id ?? null,
+            updatedAt: item.updatedAt || new Date().toISOString(),
+            firebaseId
+          }, { merge: true });
+
+        } catch (e) {
+          console.error('[SyncEngine] Erro ao enviar lançamento:', item, e);
+        }
+      }
+    }
+
+    // 2. Realtime Listener para Download automático
+    if (this.unsubscribeLancamentosSnapshot) this.unsubscribeLancamentosSnapshot();
+
+    this.unsubscribeLancamentosSnapshot = onSnapshot(
+      lancamentosRef,
+      async (snapshot) => {
+        if (snapshot.metadata.hasPendingWrites) return;
+
+        for (const docChange of snapshot.docChanges()) {
+          const data = docChange.doc.data() as Lancamento & { idLocal?: number };
+          const firebaseId = docChange.doc.id;
+
+          if (docChange.type === 'added' || docChange.type === 'modified') {
+            // Busca localmente pelo firebaseId ou pelo idLocal enviado no upload
+            let local = await db.lancamentos.where('firebaseId').equals(firebaseId).first();
+
+            if (!local && data.idLocal) {
+              local = await db.lancamentos.get(data.idLocal);
+            }
+
+            const dadosParaSalvar: Lancamento = {
+              firebaseId,
+              datahorario: data.datahorario,
+              favorecido_id: data.favorecido_id ?? null,
+              categoria_id: data.categoria_id ?? null,
+              origem_conta_id: data.origem_conta_id,
+              destino_conta_id: data.destino_conta_id ?? null,
+              origem_montante: data.origem_montante ?? 0,
+              destino_montante: data.destino_montante ?? 0,
+              nota: data.nota || null,
+              arredondamento_id: data.arredondamento_id ?? null,
+              ata_livro_caixa_id: data.ata_livro_caixa_id ?? null,
+              updatedAt: data.updatedAt || new Date().toISOString(),
+              sincronizado: true
+            };
+
+            if (local && local.id) {
+              await db.lancamentos.put({
+                ...dadosParaSalvar,
+                id: local.id
+              });
+            } else {
+              await db.lancamentos.add(dadosParaSalvar);
+            }
+          }
+
+          if (docChange.type === 'removed') {
+            const local = await db.lancamentos.where('firebaseId').equals(firebaseId).first();
+            if (local?.id) {
+              await db.lancamentos.delete(local.id);
+            }
+          }
+        }
+      },
+      (error) => {
+        if (error.code !== 'aborted') {
+          console.error('[SyncEngine] Erro no listener de lançamentos:', error);
+        }
+      }
+    );
   }
 }

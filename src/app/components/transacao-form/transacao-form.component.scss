@@ -1,0 +1,218 @@
+.transacao-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+  padding-bottom: 80px;
+
+  .header-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 8px;
+  }
+
+  .row-linha {
+    display: flex;
+
+    &.flex-col {
+      flex-direction: column;
+      gap: 4px;
+    }
+  }
+
+  .field-label {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+  }
+
+  .data-hora-row {
+    align-items: center;
+    gap: 10px;
+
+    .status-circle {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+
+      &.laranja {
+        background-color: #ff9800;
+      }
+      &.verde {
+        background-color: #4caf50;
+      }
+    }
+
+    .picker-date {
+      flex: 2;
+    }
+    .picker-time {
+      flex: 1;
+    }
+  }
+
+  .input-field, .select-field {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fff;
+    box-sizing: border-box;
+
+    &:focus {
+      outline: none;
+      border-color: #0d6efd;
+    }
+  }
+
+  .favorecido-wrapper {
+    display: flex;
+    gap: 8px;
+
+    .btn-add {
+      width: 44px;
+      background-color: #0d6efd;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  .valor-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .btn-sinal {
+      width: 44px;
+      height: 44px;
+      border: none;
+      border-radius: 6px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #fff;
+      cursor: pointer;
+
+      &.despesa {
+        background-color: #dc3545; // Vermelho para (-)
+      }
+      &.receita {
+        background-color: #198754; // Verde para (+)
+      }
+    }
+
+    .input-inteiros {
+      text-align: right;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .ponto-separador {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .input-centavos {
+      width: 70px;
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+  }
+
+  .footer-actions {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    gap: 12px;
+    padding: 12px 16px;
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid #e0e0e0;
+
+    .btn-footer {
+      flex: 1;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+
+      &.btn-cancelar {
+        background-color: #e0e0e0;
+        color: #333;
+      }
+
+      &.btn-salvar {
+        background-color: #0d6efd;
+        color: #fff;
+      }
+    }
+  }
+}
+
+/* Modal Styling */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+
+  .modal-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 85%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: #333;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+
+      .btn-modal {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        background: #e0e0e0;
+        cursor: pointer;
+
+        &.btn-primary {
+          background-color: #0d6efd;
+          color: #fff;
+        }
+      }
+    }
+  }
+}
