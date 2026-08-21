@@ -12,17 +12,40 @@
       [class.laranja]="ataLivroCaixaId === null">
     </span>
 
-    <input type="date" class="input-field picker-date" [(ngModel)]="dataIso" />
-    <input type="time" class="input-field picker-time" [(ngModel)]="horaIso" />
+    <!-- DatePicker customizado -->
+    <div class="date-picker-wrapper" (click)="abrirDatePicker(pickerData)">
+      <span class="data-extenso-label">{{ dataExtenso }}</span>
+      <input
+        #pickerData
+        type="date"
+        class="input-date-hidden"
+        [(ngModel)]="dataIso"
+        (change)="onDataChange()"
+        (blur)="onDataChange()" />
+    </div>
+
+    <!-- TimePicker customizado -->
+    <div class="time-picker-wrapper" (click)="abrirTimePicker(pickerHora)">
+      <span class="time-label">{{ horaIso }}</span>
+      <input
+        #pickerHora
+        type="time"
+        class="input-time-hidden"
+        [(ngModel)]="horaIso"
+        (change)="onHoraChange()"
+        (blur)="onHoraChange()" />
+    </div>
   </div>
 
   <!-- 3ª Linha: Seleção de Conta -->
   <div class="row-linha flex-col">
     <label class="field-label">Conta</label>
     <select class="select-field" [(ngModel)]="contaSelecionadaId">
-      <option *ngFor="let conta of contas" [value]="conta.id">
-        {{ conta.titulo }}
-      </option>
+      @for (conta of contas; track conta.id) {
+        <option [ngValue]="conta.id">
+          {{ conta.titulo }}
+        </option>
+      }
     </select>
   </div>
 
@@ -31,10 +54,12 @@
     <label class="field-label">Pago a / Recebido de</label>
     <div class="favorecido-wrapper">
       <select class="select-field" [(ngModel)]="favorecidoSelecionadoId">
-        <option [value]="null">Sem favorecido</option>
-        <option *ngFor="let fav of favorecidos" [value]="fav.id">
-          {{ fav.titulo }}
-        </option>
+        <option [ngValue]="null">Sem favorecido</option>
+        @for (fav of favorecidos; track fav.id) {
+          <option [ngValue]="fav.id">
+            {{ fav.titulo }}
+          </option>
+        }
       </select>
       <button type="button" class="btn-add" (click)="abrirModalFavorecido()">+</button>
     </div>
@@ -43,11 +68,16 @@
   <!-- 5ª Linha: Seleção de Categoria -->
   <div class="row-linha flex-col">
     <label class="field-label">Categoria</label>
-    <select class="select-field" [(ngModel)]="categoriaSelecionadaId">
-      <option [value]="null">Selecione a Categoria..</option>
-      <option *ngFor="let cat of categorias" [value]="cat.id">
-        {{ cat.title }}
-      </option>
+    <select
+      class="select-field"
+      [(ngModel)]="categoriaSelecionadaId"
+      (ngModelChange)="onCategoriaChange()">
+      <option [ngValue]="null">Selecione a Categoria..</option>
+      @for (cat of categorias; track cat.id) {
+        <option [ngValue]="cat.id">
+          {{ cat.title }}
+        </option>
+      }
     </select>
   </div>
 
@@ -64,15 +94,17 @@
         {{ isDespesa ? '-' : '+' }}
       </button>
 
-      <input
-        type="text"
-        inputmode="numeric"
-        class="input-field input-inteiros"
-        placeholder="0"
-        [(ngModel)]="inteiros"
-        (keydown)="onInteirosInput($event, campoCentavos)" />
+     <input
+      #campoInteiros
+      type="text"
+      inputmode="numeric"
+      class="input-field input-inteiros"
+      placeholder="0"
+      [ngModel]="inteiros"
+      (beforeinput)="onBeforeInputInteiros($event, campoCentavos)"
+      (input)="onInteirosInput($event)" />
 
-      <span class="ponto-separador">.</span>
+      <span class="ponto-separador">,</span>
 
       <input
         #campoCentavos
@@ -81,7 +113,10 @@
         maxlength="2"
         class="input-field input-centavos"
         placeholder="00"
-        [(ngModel)]="centavos"
+        [ngModel]="centavos"
+        (focus)="onCentavosFocus($event)"
+        (beforeinput)="onBeforeInputCentavos($event)"
+        (input)="onCentavosInput($event)"
         (blur)="formatarCentavos()" />
     </div>
   </div>

@@ -40,7 +40,7 @@ export class LancamentosComponent implements OnInit {
   contaSelecionadaAviso: string | null = null;
   carregando: boolean = true; // 👈 Estado de carregamento inicial
 
-  constructor(private cdr: ChangeDetectorRef) {} // 👈 Injeta o detector de mudanças
+  constructor(private cdr: ChangeDetectorRef) {}
 
   async ngOnInit(): Promise<void> {
     await this.carregarDadosContas();
