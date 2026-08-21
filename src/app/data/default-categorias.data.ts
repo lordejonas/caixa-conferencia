@@ -2,7 +2,7 @@ import { Categoria } from '../models/categoria.model';
 
 export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
   { title: '00-Saldo de Abertura', pai: null, ativo: true, positivo: true, auto: false, descricao: 'Primeiro valor inserido na conta' },
-  { title: '01-Coleta nas reuniões durante o mês', pai: null, ativo: true, positivo: true, auto: false, descricao: null },
+  { title: '01-Coleta reunião', pai: null, ativo: true, positivo: true, auto: false, descricao: null },
   { title: '02-Subscritores e Benfeitores', pai: null, ativo: true, positivo: true, auto: false, descricao: null },
   { title: '03-Doações Recebidas', pai: null, ativo: true, positivo: true, auto: false, descricao: null },
   { title: '03.1-Porta Igreja', pai: 4, ativo: true, positivo: true, auto: false, descricao: null },

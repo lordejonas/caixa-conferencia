@@ -219,7 +219,7 @@ export class TransacaoFormComponent implements OnInit {
         titulo: nomeTratado,
         ativo: true,
         sincronizado: false,
-        atualizadoEm: new Date().toISOString()
+        atualizadoEm: this.obterDataIsoLocal()
       };
       const idInserido = await db.favorecidos.add(novoFav);
       this.favorecidos.push({ ...novoFav, id: idInserido });
@@ -247,7 +247,8 @@ export class TransacaoFormComponent implements OnInit {
       totalCentavos = Math.abs(totalCentavos);
     }
 
-    const dataHorarioIso = new Date(`${this.dataIso}T${this.horaIso}:00`).toISOString();
+    // Monta a string ISO preservando o fuso local -03:00 (ex: "2026-08-21T16:43:00-03:00")
+    const dataHorarioIso = `${this.dataIso}T${this.horaIso}:00-03:00`;
 
     const novoLancamento: Lancamento = {
       datahorario: dataHorarioIso,
@@ -261,7 +262,7 @@ export class TransacaoFormComponent implements OnInit {
       ata_livro_caixa_id: this.ataLivroCaixaId,
       arredondamento_id: null,
       sincronizado: false,
-      updatedAt: new Date().toISOString()
+      updatedAt: this.obterDataIsoLocal()
     };
 
     await db.lancamentos.add(novoLancamento);
@@ -273,15 +274,30 @@ export class TransacaoFormComponent implements OnInit {
   }
 
   private atualizarDataExtenso(): void {
-  if (!this.dataIso) return;
+    if (!this.dataIso) return;
 
-  const [ano, mes, dia] = this.dataIso.split('-').map(Number);
-  const meses = [
-    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-  ];
+    const [ano, mes, dia] = this.dataIso.split('-').map(Number);
+    const meses = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
 
-  const nomeMes = meses[mes - 1] || '';
-  this.dataExtenso = `${dia} de ${nomeMes} de ${ano}`;
-}
+    const nomeMes = meses[mes - 1] || '';
+    this.dataExtenso = `${dia} de ${nomeMes} de ${ano}`;
+  }
+
+
+  // Retorna a data/hora local no formato ISO (ex: "2026-08-21T17:03:31")
+  private obterDataIsoLocal(): string {
+    const agora = new Date();
+    const ano = agora.getFullYear();
+    const mes = String(agora.getMonth() + 1).padStart(2, '0');
+    const dia = String(agora.getDate()).padStart(2, '0');
+    const horas = String(agora.getHours()).padStart(2, '0');
+    const minutos = String(agora.getMinutes()).padStart(2, '0');
+    const segundos = String(agora.getSeconds()).padStart(2, '0');
+
+    return `${ano}-${mes}-${dia}T${horas}:${minutos}:${segundos}`;
+  }
+
 }
