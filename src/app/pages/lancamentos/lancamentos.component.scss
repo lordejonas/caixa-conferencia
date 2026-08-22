@@ -179,3 +179,18 @@
     }
   }
 }
+
+.saldo-positivo {
+  color: #198754 !important; // Verde
+  font-weight: 600;
+}
+
+.saldo-negativo {
+  color: #dc3545 !important; // Vermelho
+  font-weight: 600;
+}
+
+.saldo-zero {
+  color: #6c757d !important; // Cinza
+  font-weight: 500;
+}

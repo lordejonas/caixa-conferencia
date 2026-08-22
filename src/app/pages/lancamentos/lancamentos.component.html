@@ -69,10 +69,9 @@
                 }
               </div>
 
-              <div class="right-content">
-                <span class="item-value">{{ item.saldo_atual | moedaCentavos }}</span>
-              </div>
-
+              <span class="item-value" [class]="obterClasseSaldo(item.saldo_atual)">
+                {{ item.saldo_atual | moedaCentavos }}
+              </span>
             </div>
           } @empty {
             <div class="p-3 text-center text-muted">
@@ -95,7 +94,9 @@
               </div>
 
               <div class="right-content">
-                <span class="item-value">{{ conta.saldo_atual | moedaCentavos }}</span>
+                <span class="item-value" [ngClass]="obterClasseSaldo(conta.saldo_atual)">
+                  {{ conta.saldo_atual | moedaCentavos }}
+                </span>
               </div>
 
             </div>
@@ -105,11 +106,8 @@
             </div>
           }
         }
-
       </div>
-
     }
-
   }
 
   <!-- Conteúdo da Aba Lançamentos -->
@@ -119,24 +117,28 @@
     </div>
   }
 
-  <!-- Conteúdo anterior da aba contas... -->
-
   <!-- 🟢 RESUMO DE SALDOS (Inserido entre a lista e o rodapé) -->
   @if (abaAtiva === 'contas' && !carregando) {
     <div class="resumo-saldos-container border-top bg-light p-3">
+
+      <!-- Saldo Líquido -->
       <div class="d-flex justify-content-between align-items-center mb-1">
         <span class="text-secondary fw-semibold">Saldo Líquido:</span>
-        <span class="fw-bold fs-6 text-dark">
+        <!-- REMOVIDO 'text-dark' DAQUI -->
+        <span class="fw-bold fs-6" [class]="obterClasseSaldo(saldoLiquido)">
           {{ saldoLiquido | moedaCentavos }}
         </span>
       </div>
 
+      <!-- Saldo Bruto -->
       <div class="d-flex justify-content-between align-items-center">
         <span class="text-secondary fw-semibold">Saldo Bruto:</span>
-        <span class="fw-bold fs-6 text-dark">
+        <!-- REMOVIDO 'text-dark' DAQUI -->
+        <span class="fw-bold fs-6" [class]="obterClasseSaldo(saldoBruto)">
           {{ saldoBruto | moedaCentavos }}
         </span>
       </div>
+
     </div>
   }
 

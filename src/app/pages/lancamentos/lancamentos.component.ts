@@ -142,6 +142,14 @@ export class LancamentosComponent implements OnInit {
     }, 0);
   }
 
+  // Retorna a classe CSS conforme o valor do saldo em centavos ou reais
+  obterClasseSaldo(valor: number | null | undefined): string {
+    if (valor === null || valor === undefined || valor === 0) {
+      return 'saldo-zero';
+    }
+    return valor > 0 ? 'saldo-positivo' : 'saldo-negativo';
+  }
+
   // Método auxiliar interno atualizado
   private extrairContasDaLista(): Conta[] {
     if (this.agregadorSelecionado) {
