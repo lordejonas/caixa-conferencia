@@ -229,7 +229,7 @@ export class TransacaoFormComponent implements OnInit {
     this.fecharModalFavorecido();
   }
 
-  // Salvar a Transação
+  // Salvar a Transação e Atualizar o Saldo da Conta
   async salvar(): Promise<void> {
     if (!this.contaSelecionadaId) {
       alert('Por favor, selecione uma conta.');
@@ -240,33 +240,58 @@ export class TransacaoFormComponent implements OnInit {
     const valCentavos = parseInt(this.centavos || '0', 10);
     let totalCentavos = (valInteiros * 100) + valCentavos;
 
-    // Se for despesa (-), o valor entra negativo
+    // Se for despesa (-), o valor entra negativo; se receita (+), positivo
     if (this.isDespesa) {
       totalCentavos = -Math.abs(totalCentavos);
     } else {
       totalCentavos = Math.abs(totalCentavos);
     }
 
-    // Monta a string ISO preservando o fuso local -03:00 (ex: "2026-08-21T16:43:00-03:00")
-    const dataHorarioIso = `${this.dataIso}T${this.horaIso}:00-03:00`;
+    const dataHorarioIso = `${this.dataIso}T${this.horaIso}:00`;
+    const contaId = Number(this.contaSelecionadaId);
 
-    const novoLancamento: Lancamento = {
-      datahorario: dataHorarioIso,
-      origem_conta_id: this.contaSelecionadaId,
-      destino_conta_id: null,
-      favorecido_id: this.favorecidoSelecionadoId ? Number(this.favorecidoSelecionadoId) : null,
-      categoria_id: this.categoriaSelecionadaId ? Number(this.categoriaSelecionadaId) : null,
-      origem_montante: totalCentavos,
-      destino_montante: 0,
-      nota: this.nota.trim() || null,
-      ata_livro_caixa_id: this.ataLivroCaixaId,
-      arredondamento_id: null,
-      sincronizado: false,
-      updatedAt: this.obterDataIsoLocal()
-    };
+    try {
+      // Executa a inserção do lançamento e atualização do saldo em uma transação atômica
+      await db.transaction('rw', [db.lancamentos, db.contas], async () => {
+        // 1. Busca a conta vinculada no banco
+        const conta = await db.contas.get(contaId);
 
-    await db.lancamentos.add(novoLancamento);
-    this.cancelar();
+        if (!conta) {
+          throw new Error('Conta selecionada não foi encontrada no banco de dados.');
+        }
+
+        // 2. Cria o novo lançamento
+        const novoLancamento: Lancamento = {
+          datahorario: dataHorarioIso,
+          origem_conta_id: contaId,
+          destino_conta_id: null,
+          favorecido_id: this.favorecidoSelecionadoId ? Number(this.favorecidoSelecionadoId) : null,
+          categoria_id: this.categoriaSelecionadaId ? Number(this.categoriaSelecionadaId) : null,
+          origem_montante: totalCentavos,
+          destino_montante: 0,
+          nota: this.nota.trim() || null,
+          ata_livro_caixa_id: this.ataLivroCaixaId,
+          arredondamento_id: null,
+          sincronizado: false,
+          updatedAt: this.obterDataIsoLocal()
+        };
+
+        await db.lancamentos.add(novoLancamento);
+
+        // 3. Atualiza o saldo_atual da conta somando o montante (positivo ou negativo)
+        const saldoAtualizado = (conta.saldo_atual || 0) + totalCentavos;
+
+        await db.contas.update(contaId, {
+          saldo_atual: saldoAtualizado,
+          updatedAt: this.obterDataIsoLocal() // ou o campo de atualização da conta caso exista
+        });
+      });
+
+      this.cancelar();
+    } catch (error) {
+      console.error('Erro ao salvar lançamento:', error);
+      alert('Ocorreu um erro ao salvar o lançamento.');
+    }
   }
 
   cancelar(): void {
