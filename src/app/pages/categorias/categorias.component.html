@@ -39,7 +39,7 @@
       </div>
 
       <div class="accordion-categorias border-top border-bottom">
-        @for (pai of categoriasTree; track pai.id || pai.title) {
+        @for (pai of categoriasTree; track pai.id || pai.titulo) {
           <div class="card-categoria-pai">
 
             <!-- Cabeçalho do Pai -->
@@ -54,15 +54,15 @@
               } @else {
                 <span class="icon-bullet">•</span>
               }
-              <strong class="title-pai">{{ pai.title }}</strong>
+              <strong class="title-pai">{{ pai.titulo }}</strong>
             </div>
 
             <!-- Lista de Filhas -->
             @if (pai.expanded && pai.filhas && pai.filhas.length > 0) {
               <div class="lista-filhas">
-                @for (filha of pai.filhas; track filha.id || filha.title) {
+                @for (filha of pai.filhas; track filha.id || filha.titulo) {
                   <div class="item-filha d-flex justify-content-between align-items-center">
-                    <span class="title-filha">{{ filha.title }}</span>
+                    <span class="title-filha">{{ filha.titulo }}</span>
                     @if (filha.descricao) {
                       <small class="text-muted">{{ filha.descricao }}</small>
                     }

@@ -1,10 +1,12 @@
 export interface Categoria {
   id?: number;
-  title: string;
+  titulo: string;
+  titulo_dois: string;
   pai: number | null;
   ativo: boolean;
   positivo: boolean;
   auto: boolean;
+  arredondavel: boolean;
   descricao: string | null;
   updatedAt?: string;
 }

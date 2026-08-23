@@ -10,7 +10,7 @@ export class CategoriaService {
 
   async getCategorias(): Promise<Categoria[]> {
     const categorias = await db.categorias.toArray();
-    return categorias.sort((a, b) => a.title.localeCompare(b.title));
+    return categorias.sort((a, b) => a.titulo.localeCompare(b.titulo));
   }
 
   async gerarCategoriasIniciais(): Promise<void> {

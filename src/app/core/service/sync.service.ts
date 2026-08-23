@@ -238,8 +238,8 @@ export class SyncService {
   }
 
   /**
-   * Métodos internos para CATEGORIAS
-   */
+  * Métodos internos para CATEGORIAS
+  */
   private async sincronizarCategorias(firestore: any, perfil: string): Promise<void> {
     const categoriasRef = collection(firestore, 'categorias');
 
@@ -249,13 +249,17 @@ export class SyncService {
 
       for (const item of categoriasLocais) {
         try {
-          const docRef = doc(firestore, 'categorias', String(item.id || item.title));
+          const docRef = doc(firestore, 'categorias', String(item.id || item.titulo));
 
           await setDoc(docRef, {
             id: item.id,
-            title: item.title,
-            pai: item.pai,
-            ativo: item.ativo,
+            titulo: item.titulo,
+            titulo_dois: item.titulo_dois || '',
+            pai: item.pai ?? null,
+            ativo: item.ativo ?? true,
+            positivo: item.positivo ?? true,
+            auto: item.auto ?? false,
+            arredondavel: item.arredondavel ?? false,
             descricao: item.descricao || null,
             updatedAt: item.updatedAt || new Date().toISOString()
           }, { merge: true });
@@ -282,17 +286,19 @@ export class SyncService {
 
             if (!local) {
               local = await db.categorias
-                .filter(c => c.title === data.title && c.pai === data.pai)
+                .filter(c => c.titulo === data.titulo && c.pai === data.pai)
                 .first();
             }
 
             const dadosParaSalvar: Categoria = {
               id: data.id || local?.id,
-              title: data.title,
+              titulo: data.titulo,
+              titulo_dois: data.titulo_dois || '',
               pai: data.pai ?? null,
               ativo: data.ativo ?? true,
               positivo: data.positivo ?? true,
               auto: data.auto ?? false,
+              arredondavel: data.arredondavel ?? false,
               descricao: data.descricao || null,
               updatedAt: data.updatedAt || new Date().toISOString()
             };
