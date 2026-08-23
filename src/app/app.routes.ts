@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { HomeComponent } from './components/home/home';
 import { LancamentosComponent } from './pages/lancamentos/lancamentos.component';
 import { TransacaoFormComponent } from './components/transacao-form/transacao-form.component';
+import { TransferenciaFormComponent } from './components/transferencia-form/transferencia-form.component';
 import { LivroCaixaComponent } from './components/livro-caixa/livro-caixa';
 import { ConfiguracaoNuvemComponent } from './components/configuracao-nuvem/configuracao-nuvem';
 import { ConfiguracoesComponent } from './pages/configuracoes/configuracoes.component';
@@ -28,7 +29,8 @@ export const routes: Routes = [
   { path: 'favorecidos/editar/:id', component: FavorecidoFormComponent },
   { path: 'categorias', component: CategoriasComponent},
   { path: 'contas', component: ContasComponent},
-  {path: 'lancamentos/novo',component: TransacaoFormComponent},
+  { path: 'lancamentos/novo',component: TransacaoFormComponent},
+  { path: 'lancamentos/transferencia',component: TransferenciaFormComponent},
 
   /*
   {

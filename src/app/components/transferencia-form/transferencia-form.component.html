@@ -1,0 +1,129 @@
+<div class="transacao-container">
+  <!-- 1ª Linha: Header/Label -->
+  <div class="header-title">
+    <span class="label-transacao">Transferência</span>
+  </div>
+
+  <!-- 2ª Linha: Indicador Ata + Data + Horário -->
+  <div class="row-linha data-hora-row">
+    <span
+      class="status-circle"
+      [class.verde]="ataLivroCaixaId !== null"
+      [class.laranja]="ataLivroCaixaId === null">
+    </span>
+
+    <!-- DatePicker customizado -->
+    <div class="date-picker-wrapper" (click)="abrirDatePicker(pickerData)">
+      <span class="data-extenso-label">{{ dataExtenso }}</span>
+      <input
+        #pickerData
+        type="date"
+        class="input-date-hidden"
+        [(ngModel)]="dataIso"
+        (change)="onDataChange()"
+        (blur)="onDataChange()" />
+    </div>
+
+    <!-- TimePicker customizado -->
+    <div class="time-picker-wrapper" (click)="abrirTimePicker(pickerHora)">
+      <span class="time-label">{{ horaIso }}</span>
+      <input
+        #pickerHora
+        type="time"
+        class="input-time-hidden"
+        [(ngModel)]="horaIso"
+        (change)="onHoraChange()"
+        (blur)="onHoraChange()" />
+    </div>
+  </div>
+
+  <!-- 3ª Linha: Seleção de Conta Origem -->
+  <div class="row-linha flex-col">
+    <label class="field-label">Conta Origem</label>
+    <select
+      class="select-field"
+      [(ngModel)]="contaOrigemId"
+      (ngModelChange)="onContaOrigemChange()">
+      @for (conta of contas; track conta.id) {
+        <option [ngValue]="conta.id">
+          {{ conta.titulo }}
+        </option>
+      }
+    </select>
+  </div>
+
+  <!-- 4ª Linha: Seleção de Conta Destino -->
+  <div class="row-linha flex-col">
+    <label class="field-label">Conta Destino</label>
+    <select
+      class="select-field"
+      [(ngModel)]="contaDestinoId"
+      (ngModelChange)="onContaDestinoChange()">
+      @for (conta of contas; track conta.id) {
+        <option [ngValue]="conta.id">
+          {{ conta.titulo }}
+        </option>
+      }
+    </select>
+  </div>
+
+  <!-- 5ª Linha: Seleção de Categoria -->
+  <div class="row-linha flex-col">
+    <label class="field-label">Categoria</label>
+    <select class="select-field" [(ngModel)]="categoriaSelecionadaId">
+      <option [ngValue]="null">Selecione a Categoria..</option>
+      @for (cat of categorias; track cat.id) {
+        <option [ngValue]="cat.id">
+          {{ cat.title }}
+        </option>
+      }
+    </select>
+  </div>
+
+  <!-- 6ª Linha: Valor da Transferência -->
+  <div class="row-linha flex-col">
+    <label class="field-label">Valor</label>
+    <div class="valor-wrapper">
+      <button type="button" class="btn-sinal despesa" disabled>
+        -
+      </button>
+
+      <input
+        #campoInteiros
+        type="text"
+        inputmode="numeric"
+        class="input-field input-inteiros"
+        placeholder="0"
+        [ngModel]="inteiros"
+        (beforeinput)="onBeforeInputInteiros($event, campoCentavos)"
+        (input)="onInteirosInput($event)" />
+
+      <span class="ponto-separador">,</span>
+
+      <input
+        #campoCentavos
+        type="text"
+        inputmode="numeric"
+        maxlength="2"
+        class="input-field input-centavos"
+        placeholder="00"
+        [ngModel]="centavos"
+        (focus)="onCentavosFocus($event)"
+        (beforeinput)="onBeforeInputCentavos($event)"
+        (input)="onCentavosInput($event)"
+        (blur)="formatarCentavos()" />
+    </div>
+  </div>
+
+  <!-- 7ª Linha: Nota Livre -->
+  <div class="row-linha flex-col">
+    <label class="field-label">Nota</label>
+    <input type="text" class="input-field" placeholder="Escreva uma observação..." [(ngModel)]="nota" />
+  </div>
+
+  <!-- Rodapé com Ações -->
+  <div class="footer-actions">
+    <button type="button" class="btn-footer btn-cancelar" (click)="cancelar()">Cancelar</button>
+    <button type="button" class="btn-footer btn-salvar" (click)="salvar()">Salvar</button>
+  </div>
+</div>
