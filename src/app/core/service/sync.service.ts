@@ -259,7 +259,7 @@ export class SyncService {
             ativo: item.ativo ?? true,
             positivo: item.positivo ?? true,
             auto: item.auto ?? false,
-            arredondavel: item.arredondavel ?? false,
+            decimavel: item.decimavel ?? false,
             descricao: item.descricao || null,
             updatedAt: item.updatedAt || new Date().toISOString()
           }, { merge: true });
@@ -298,7 +298,7 @@ export class SyncService {
               ativo: data.ativo ?? true,
               positivo: data.positivo ?? true,
               auto: data.auto ?? false,
-              arredondavel: data.arredondavel ?? false,
+              decimavel: data.decimavel ?? false,
               descricao: data.descricao || null,
               updatedAt: data.updatedAt || new Date().toISOString()
             };

@@ -6,7 +6,7 @@ export interface Categoria {
   ativo: boolean;
   positivo: boolean;
   auto: boolean;
-  arredondavel: boolean;
+  decimavel: boolean;
   descricao: string | null;
   updatedAt?: string;
 }

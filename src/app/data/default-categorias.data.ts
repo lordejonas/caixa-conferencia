@@ -8,7 +8,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: 'Primeiro valor inserido na conta'
   },
   {
@@ -18,7 +18,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: true,
+    decimavel: true,
     descricao: null
   },
   {
@@ -28,7 +28,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: true,
+    decimavel: true,
     descricao: null
   },
   {
@@ -38,7 +38,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: true,
+    decimavel: true,
     descricao: null
   },
   {
@@ -48,7 +48,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: true,
+    decimavel: true,
     descricao: null
   },
   {
@@ -58,7 +58,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: true,
+    decimavel: true,
     descricao: null
   },
   {
@@ -68,7 +68,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: true,
+    decimavel: true,
     descricao: null
   },
   {
@@ -78,7 +78,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: true,
+    decimavel: true,
     descricao: 'Rifa, Bazar, almoços etc.'
   },
   {
@@ -88,7 +88,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: true,
+    decimavel: true,
     descricao: null
   },
   {
@@ -98,7 +98,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: true,
-    arredondavel: false,
+    decimavel: false,
     descricao: 'Valor base para cálculo da Décima'
   },
   {
@@ -108,7 +108,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -118,7 +118,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -128,7 +128,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -138,7 +138,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -148,7 +148,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: 'Contribuições Recebidas de Unidades Vicentinas'
   },
   {
@@ -158,7 +158,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -168,7 +168,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -178,7 +178,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -188,7 +188,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: true,
-    arredondavel: false,
+    decimavel: false,
     descricao: 'Somas da linha 06 a linha 12'
   },
   {
@@ -198,7 +198,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: true,
-    arredondavel: false,
+    decimavel: false,
     descricao: 'Igual ao Saldo final do MÊS anterior'
   },
   {
@@ -208,7 +208,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: true,
-    arredondavel: false,
+    decimavel: false,
     descricao: 'soma da linha 13 + linha 14'
   },
   {
@@ -218,7 +218,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: 'alimentos, produto de higiene e limpeza  etc.'
   },
   {
@@ -228,7 +228,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -238,7 +238,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -248,7 +248,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -258,7 +258,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -268,7 +268,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -278,7 +278,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: 'Material Construção, Ajuda Financeira etc.'
   },
   {
@@ -288,7 +288,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -298,7 +298,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -308,7 +308,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: 'água, luz, gás, transporte etc.'
   },
   {
@@ -318,7 +318,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -328,7 +328,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: 'Contribuições a Unidades Vicentinas'
   },
   {
@@ -338,7 +338,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -348,7 +348,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -358,7 +358,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: 'Promoção eventos: terços, passeios'
   },
   {
@@ -368,7 +368,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -378,7 +378,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -388,7 +388,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -398,7 +398,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -408,7 +408,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: '10% do valor da linha 6'
   },
   {
@@ -418,7 +418,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -428,7 +428,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: true,
-    arredondavel: false,
+    decimavel: false,
     descricao: 'Linha 8'
   },
   {
@@ -438,7 +438,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: true,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -448,7 +448,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: true,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -458,7 +458,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: true,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -468,7 +468,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: true,
-    arredondavel: false,
+    decimavel: false,
     descricao: 'Somar da linha 16 a linha 27'
   },
   {
@@ -478,7 +478,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: true,
-    arredondavel: false,
+    decimavel: false,
     descricao: 'linha 15 menos linha 28'
   },
   {
@@ -488,7 +488,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: true,
-    arredondavel: false,
+    decimavel: false,
     descricao: 'Somar linha 28 + linha 29'
   },
   {
@@ -498,7 +498,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -508,7 +508,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -518,7 +518,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -528,7 +528,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -538,7 +538,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -548,7 +548,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -558,7 +558,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -568,7 +568,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -578,7 +578,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -588,7 +588,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -598,7 +598,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -608,7 +608,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -618,7 +618,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -628,7 +628,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -638,7 +638,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -648,7 +648,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: true,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   },
   {
@@ -658,7 +658,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     ativo: true,
     positivo: false,
     auto: false,
-    arredondavel: false,
+    decimavel: false,
     descricao: null
   }
 ];
