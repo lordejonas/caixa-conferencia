@@ -1,6 +1,7 @@
 import { Component, Input, inject } from '@angular/core';
 import { Location } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-internal-layout',
@@ -15,6 +16,7 @@ export class InternalLayoutComponent {
   @Input() exibirFooterPadrao: boolean = true;
 
   private location = inject(Location);
+  readonly appVersion = environment.version;
 
   /**
    * Navega para a página anterior no histórico do navegador

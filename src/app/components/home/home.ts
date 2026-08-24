@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { environment } from '../../../environments/environment';
 import { RouterLink } from '@angular/router'; // <-- IMPORTANTE PARA O NAVEGADOR FUNCIONAR
 
 @Component({
@@ -10,4 +11,6 @@ import { RouterLink } from '@angular/router'; // <-- IMPORTANTE PARA O NAVEGADOR
   templateUrl: './home.html', // ou ./home.component.html
   styleUrl: './home.scss'     // ou ./home.component.scss
 })
-export class HomeComponent {}
+export class HomeComponent {
+  readonly appVersion = environment.version;
+}
