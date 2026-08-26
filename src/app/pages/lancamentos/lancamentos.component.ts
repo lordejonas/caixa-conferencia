@@ -1,9 +1,10 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { InternalLayoutComponent } from '../../components/internal-layout/internal-layout.component';
+import { ListaLancamentosComponent, ItemExtrato } from '../../components/lista-lancamentos/lista-lancamentos.component';
 import { MoedaCentavosPipe } from '../../pipes/moeda-centavos.pipe';
-import { db } from '../../core/db/app-database'; // Importe seu serviço/instância do Dexie
+import { db } from '../../core/db/app-database';
 import { Conta } from '../../models/conta.model';
 import { Agregador } from '../../models/agregador.model';
 
@@ -26,6 +27,7 @@ export interface ItemListaContas {
   imports: [
     CommonModule,
     InternalLayoutComponent,
+    ListaLancamentosComponent,
     MoedaCentavosPipe,
     RouterLink
   ],
@@ -38,19 +40,28 @@ export class LancamentosComponent implements OnInit {
   itensRaiz: ItemListaContas[] = [];
   agregadorSelecionado: ItemListaContas | null = null;
   contaSelecionadaAviso: string | null = null;
-  carregando: boolean = true; // 👈 Estado de carregamento inicial
+  carregando: boolean = true;
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  // Propriedades para a aba Lançamentos
+  todosLancamentos: ItemExtrato[] = [];
+  carregandoLancamentos: boolean = false;
+
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private router: Router
+  ) {}
 
   async ngOnInit(): Promise<void> {
     await this.carregarDadosContas();
   }
 
-  selecionarAba(aba: TipoAba): void {
+  async selecionarAba(aba: TipoAba): Promise<void> {
     this.abaAtiva = aba;
     if (aba === 'contas') {
       this.agregadorSelecionado = null;
       this.contaSelecionadaAviso = null;
+    } else if (aba === 'lancamentos' && this.todosLancamentos.length === 0) {
+      await this.carregarTodosLancamentos();
     }
   }
 
@@ -66,7 +77,6 @@ export class LancamentosComponent implements OnInit {
 
       const listaGeral: ItemListaContas[] = [];
 
-      // 1. Mapear Agregadores
       for (const ag of agregadores) {
         const contasDoAgregador = contas.filter(c => c.id_agregador === ag.id);
 
@@ -89,7 +99,6 @@ export class LancamentosComponent implements OnInit {
         });
       }
 
-      // 2. Mapear Contas Raiz (sem id_agregador)
       const contasRaiz = contas.filter(c => !c.id_agregador);
       for (const c of contasRaiz) {
         listaGeral.push({
@@ -103,7 +112,6 @@ export class LancamentosComponent implements OnInit {
         });
       }
 
-      // 3. Ordenar por ordem_listagem
       listaGeral.sort((a, b) => a.ordem_listagem - b.ordem_listagem);
 
       this.itensRaiz = listaGeral;
@@ -111,17 +119,71 @@ export class LancamentosComponent implements OnInit {
       console.error('Erro ao carregar contas do IndexedDB:', error);
     } finally {
       this.carregando = false;
-      this.cdr.detectChanges(); // 👈 Força o Angular a renderizar os dados atualizados
+      this.cdr.detectChanges();
     }
   }
 
+  /**
+   * Carrega a lista completa para a aba Lançamentos
+   */
+  async carregarTodosLancamentos(): Promise<void> {
+    try {
+      this.carregandoLancamentos = true;
 
+      const todasContas = await db.contas.toArray();
+      const mapaContas = new Map<number, string>(todasContas.map(c => [c.id!, c.titulo]));
 
-  // Métodos auxiliares para cálculo dos saldos na classe do componente:
+      const categorias = await db.categorias.toArray();
+      const mapaCategorias = new Map<number, string>(categorias.map(c => [c.id!, c.titulo]));
+
+      const favorecidos = await db.favorecidos.toArray();
+      const mapaFavorecidos = new Map<number, string>(favorecidos.map(f => [f.id!, f.titulo]));
+
+      const lancamentosBrutos = await db.lancamentos.toArray();
+
+      lancamentosBrutos.sort(
+        (a, b) => new Date(b.datahorario).getTime() - new Date(a.datahorario).getTime()
+      );
+
+      this.todosLancamentos = lancamentosBrutos.map((l) => {
+        const ehTransferencia = l.origem_conta_id !== null && l.destino_conta_id !== null;
+
+        let tipoMov: 'entrada' | 'saida' | 'transferencia' = 'entrada';
+        let montanteCalculado = l.origem_montante || l.destino_montante || 0;
+
+        if (ehTransferencia) {
+          tipoMov = 'transferencia';
+        } else if (l.origem_conta_id !== null) {
+          tipoMov = montanteCalculado >= 0 ? 'entrada' : 'saida';
+        } else {
+          tipoMov = montanteCalculado >= 0 ? 'entrada' : 'saida';
+        }
+
+        const nomeOrigem = l.origem_conta_id
+          ? mapaContas.get(l.origem_conta_id) || 'Conta Removida'
+          : 'Sem Origem';
+
+        return {
+          id: l.id!,
+          datahorario: l.datahorario,
+          nomeContaOrigem: nomeOrigem,
+          tipoMovimentacao: tipoMov,
+          categoriaNome: l.categoria_id ? mapaCategorias.get(l.categoria_id) : undefined,
+          favorecidoNome: l.favorecido_id ? mapaFavorecidos.get(l.favorecido_id) : undefined,
+          nota: l.nota || undefined,
+          montante: montanteCalculado
+        };
+      });
+    } catch (error) {
+      console.error('Erro ao carregar lançamentos:', error);
+    } finally {
+      this.carregandoLancamentos = false;
+      this.cdr.detectChanges();
+    }
+  }
+
   get saldoLiquido(): number {
     if (!this.itensRaiz) return 0;
-
-    // Soma o saldo de todas as contas onde contabilizar_totais NÃO é null
     return this.extrairContasDaLista().reduce((acc, conta) => {
       if (conta.contabilizar_totais !== null) {
         return acc + (conta.saldo_atual || 0);
@@ -132,8 +194,6 @@ export class LancamentosComponent implements OnInit {
 
   get saldoBruto(): number {
     if (!this.itensRaiz) return 0;
-
-    // Soma apenas o saldo das contas onde contabilizar_totais === true
     return this.extrairContasDaLista().reduce((acc, conta) => {
       if (conta.contabilizar_totais === true) {
         return acc + (conta.saldo_atual || 0);
@@ -142,7 +202,6 @@ export class LancamentosComponent implements OnInit {
     }, 0);
   }
 
-  // Retorna a classe CSS conforme o valor do saldo em centavos ou reais
   obterClasseSaldo(valor: number | null | undefined): string {
     if (valor === null || valor === undefined || valor === 0) {
       return 'saldo-zero';
@@ -150,25 +209,21 @@ export class LancamentosComponent implements OnInit {
     return valor > 0 ? 'saldo-positivo' : 'saldo-negativo';
   }
 
-  // Método auxiliar interno atualizado
   private extrairContasDaLista(): Conta[] {
     if (this.agregadorSelecionado) {
       return this.agregadorSelecionado.contasFilhas || [];
     }
 
     const contas: Conta[] = [];
-
     if (this.itensRaiz) {
       for (const item of this.itensRaiz) {
         if (item.type === 'conta') {
-          // 🟢 Asserção explícita indicando ao TS que neste ponto o item representa uma Conta
           contas.push(item as unknown as Conta);
         } else if (item.type === 'agregador' && item.contasFilhas) {
           contas.push(...item.contasFilhas);
         }
       }
     }
-
     return contas;
   }
 
@@ -177,7 +232,8 @@ export class LancamentosComponent implements OnInit {
       this.agregadorSelecionado = item;
       this.contaSelecionadaAviso = null;
     } else {
-      this.contaSelecionadaAviso = `Lançamentos em desenvolvimento para "${item.titulo}"...`;
+      // Navega para o extrato da conta clicada
+      this.router.navigate(['/contas', item.id, 'extrato']);
     }
   }
 

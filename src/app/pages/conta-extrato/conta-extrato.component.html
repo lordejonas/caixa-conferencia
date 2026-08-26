@@ -1,0 +1,7 @@
+<app-internal-layout [titulo]="conta?.titulo || 'Extrato da Conta'">
+  <app-lista-lancamentos
+    [lancamentos]="lancamentosExtrato"
+    [carregando]="carregando"
+    mensagemVazia="Nenhum lançamento encontrado para esta conta.">
+  </app-lista-lancamentos>
+</app-internal-layout>

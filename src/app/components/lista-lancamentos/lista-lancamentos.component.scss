@@ -1,0 +1,116 @@
+.lista-container {
+  width: 100%;
+  background-color: #ffffff;
+
+  .loading-state,
+  .empty-state {
+    text-align: center;
+    padding: 24px;
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
+
+  .cards-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .item-lancamento {
+    background-color: #ffffff;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    transition: background-color 0.15s ease-in-out;
+
+    &:active {
+      background-color: #f8f9fa;
+    }
+
+    /* ---------------- 1. TOPO ---------------- */
+    .card-topo {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .conta-origem {
+        font-size: 0.75rem;
+        color: #6c757d;
+        font-weight: 500;
+        text-transform: uppercase;
+      }
+
+      .icone-fluxo {
+        font-size: 0.60rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &.saida {
+          color: #dc3545; // Vermelho
+        }
+        &.entrada {
+          color: #198754; // Verde
+        }
+        &.transferencia {
+          color: #fd7e14; // Laranja
+        }
+      }
+    }
+
+    /* ---------------- 2. MEIO ---------------- */
+    .card-meio {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+
+      .descricao {
+        font-size: 1rem;
+        color: #212529;
+        font-weight: 500;
+        word-break: break-word;
+
+        .categoria {
+          font-weight: 600;
+        }
+        .favorecido {
+          color: #495057;
+        }
+        .nota {
+          color: #6c757d;
+          font-style: italic;
+        }
+      }
+
+      .valor {
+        font-size: 1.05rem;
+        font-weight: 700;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+
+        &.valor-zero {
+          color: #6c757d;
+        }
+        &.valor-positivo {
+          color: #198754;
+        }
+        &.valor-negativo {
+          color: #dc3545;
+        }
+      }
+    }
+
+    /* ---------------- 3. RODAPÉ ---------------- */
+    .card-rodape {
+      display: flex;
+      justify-content: flex-start;
+
+      .data-horario {
+        font-size: 0.75rem;
+        color: #8c959f;
+      }
+    }
+  }
+}

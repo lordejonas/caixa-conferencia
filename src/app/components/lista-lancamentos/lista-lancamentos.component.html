@@ -1,0 +1,50 @@
+<div class="lista-container">
+
+  <div *ngIf="carregando" class="loading-state">
+    <p>Carregando lançamentos...</p>
+  </div>
+
+  <div *ngIf="!carregando && lancamentos.length === 0" class="empty-state">
+    <p>{{ mensagemVazia }}</p>
+  </div>
+
+  <div *ngIf="!carregando && lancamentos.length > 0" class="cards-list">
+    <div *ngFor="let item of lancamentos" class="item-lancamento">
+
+      <!-- Topo -->
+      <div class="card-topo">
+        <span class="conta-origem">{{ item.nomeContaOrigem }}</span>
+
+        <!-- Ícone do FontAwesome -->
+        <span class="icone-fluxo" [ngClass]="item.tipoMovimentacao">
+          <i [ngClass]="getIconeClass(item)"></i>
+        </span>
+      </div>
+
+      <!-- Meio -->
+      <div class="card-meio">
+        <div class="descricao">
+          <span *ngIf="item.categoriaNome" class="categoria">{{ item.categoriaNome }} </span>
+          <span *ngIf="item.favorecidoNome" class="favorecido">{{ item.favorecidoNome }} </span>
+          <span *ngIf="item.nota" class="nota">{{ item.nota }}</span>
+        </div>
+
+        <div class="valor"
+             [ngClass]="{
+               'valor-zero': item.montante === 0,
+               'valor-positivo': item.montante > 0,
+               'valor-negativo': item.montante < 0
+             }">
+          {{ formatarMoedaCustom(item.montante) }}
+        </div>
+      </div>
+
+      <!-- Rodapé -->
+      <div class="card-rodape">
+        <span class="data-horario">{{ formatarDataCustom(item.datahorario) }}</span>
+      </div>
+
+    </div>
+  </div>
+
+</div>
