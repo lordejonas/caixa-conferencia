@@ -130,6 +130,10 @@ export class LancamentosComponent implements OnInit {
     try {
       this.carregandoLancamentos = true;
 
+      // 1. Busca todos os lançamentos
+      const lancamentosBrutos = await db.lancamentos.toArray();
+
+      // Mapeamentos para buscar nomes de contas, categorias e favorecidos
       const todasContas = await db.contas.toArray();
       const mapaContas = new Map<number, string>(todasContas.map(c => [c.id!, c.titulo]));
 
@@ -139,29 +143,28 @@ export class LancamentosComponent implements OnInit {
       const favorecidos = await db.favorecidos.toArray();
       const mapaFavorecidos = new Map<number, string>(favorecidos.map(f => [f.id!, f.titulo]));
 
-      const lancamentosBrutos = await db.lancamentos.toArray();
-
+      // Ordenação decrescente por data/horário
       lancamentosBrutos.sort(
         (a, b) => new Date(b.datahorario).getTime() - new Date(a.datahorario).getTime()
       );
 
+      // 2. Mapeamento dividindo o valor por 100
       this.todosLancamentos = lancamentosBrutos.map((l) => {
-        const ehTransferencia = l.origem_conta_id !== null && l.destino_conta_id !== null;
+        const orig = l.origem_montante || 0;
+        const dest = l.destino_montante || 0;
 
+        const ehTransferencia = orig !== 0 && dest !== 0 && (orig === -dest);
+
+        let montanteEmCentavos = orig || dest;
         let tipoMov: 'entrada' | 'saida' | 'transferencia' = 'entrada';
-        let montanteCalculado = l.origem_montante || l.destino_montante || 0;
 
         if (ehTransferencia) {
           tipoMov = 'transferencia';
-        } else if (l.origem_conta_id !== null) {
-          tipoMov = montanteCalculado >= 0 ? 'entrada' : 'saida';
         } else {
-          tipoMov = montanteCalculado >= 0 ? 'entrada' : 'saida';
+          tipoMov = montanteEmCentavos < 0 ? 'saida' : 'entrada';
         }
 
-        const nomeOrigem = l.origem_conta_id
-          ? mapaContas.get(l.origem_conta_id) || 'Conta Removida'
-          : 'Sem Origem';
+        const nomeOrigem = mapaContas.get(l.origem_conta_id) || 'Sem Conta';
 
         return {
           id: l.id!,
@@ -171,7 +174,8 @@ export class LancamentosComponent implements OnInit {
           categoriaNome: l.categoria_id ? mapaCategorias.get(l.categoria_id) : undefined,
           favorecidoNome: l.favorecido_id ? mapaFavorecidos.get(l.favorecido_id) : undefined,
           nota: l.nota || undefined,
-          montante: montanteCalculado
+          // 🔴 DIVISÃO POR 100 AQUI: Converte de centavos para reais antes de passar para a lista
+          montante: montanteEmCentavos / 100
         };
       });
     } catch (error) {

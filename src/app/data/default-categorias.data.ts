@@ -7,7 +7,7 @@ export const DEFAULT_CATEGORIAS: Omit<Categoria, 'id'>[] = [
     pai: null,
     ativo: true,
     positivo: true,
-    auto: false,
+    auto: true,
     decimavel: false,
     descricao: 'Primeiro valor inserido na conta'
   },
