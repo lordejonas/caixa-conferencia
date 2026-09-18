@@ -22,7 +22,8 @@
 
       <!-- Topo -->
       <div class="card-topo">
-        <span class="conta-origem">{{ item.nomeContaOrigem }}</span>
+        <!-- Exibe Origem >> Destino se for transferência -->
+        <span class="conta-origem">{{ obterDescricaoConta(item) }}</span>
 
         <!-- Ícone do FontAwesome -->
         <span class="icone-fluxo" [ngClass]="item.tipoMovimentacao">

@@ -2,3 +2,81 @@
   display: block;
   width: 100%;
 }
+
+.extrato-container {
+  padding-bottom: 90px; // Espaço para não cobrir os últimos itens
+}
+
+/* Painel de Rodapé Fixo */
+.rodape-fixo {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  border-top: 1px solid #e0e0e0;
+  padding: 12px 0;
+  z-index: 1000;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+
+  // Botão de Transferência
+  .btn-transferencia {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: #0066cc;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+    transition: background-color 0.2s ease, transform 0.15s ease;
+
+    span {
+      font-size: 1.5rem;
+      line-height: 1;
+      font-weight: bold;
+    }
+
+    &:hover {
+      background-color: #5c636a;
+      color: #ffffff;
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  // Botão de Novo Lançamento
+  .btn-adicionar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: #0066cc;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 4px 8px rgba(0, 102, 204, 0.3);
+    transition: background-color 0.2s ease, transform 0.15s ease;
+
+    span {
+      font-size: 2rem;
+      line-height: 1;
+      font-weight: 300;
+      margin-top: -3px;
+    }
+
+    &:hover {
+      background-color: #0052a3;
+      color: #ffffff;
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+}

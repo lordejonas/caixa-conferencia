@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { InternalLayoutComponent } from '../../components/internal-layout/internal-layout.component';
 import { ListaLancamentosComponent, ItemExtrato } from '../../components/lista-lancamentos/lista-lancamentos.component';
 import { db } from '../../core/db/app-database';
@@ -11,6 +11,7 @@ import { Conta } from '../../models/conta.model';
   standalone: true,
   imports: [
     CommonModule,
+    RouterModule,
     InternalLayoutComponent,
     ListaLancamentosComponent
   ],
@@ -102,11 +103,13 @@ export class ContaExtratoComponent implements OnInit {
         }
 
         const nomeOrigem = mapaContas.get(l.origem_conta_id) || 'Conta Removida';
+        const nomeDestino = l.destino_conta_id ? mapaContas.get(l.destino_conta_id) : undefined;
 
         return {
           id: l.id!,
           datahorario: l.datahorario,
           nomeContaOrigem: nomeOrigem,
+          nomeContaDestino: nomeDestino, // Passado aqu
           tipoMovimentacao: tipoMov,
           categoriaNome: l.categoria_id ? mapaCategorias.get(l.categoria_id) : undefined,
           favorecidoNome: l.favorecido_id ? mapaFavorecidos.get(l.favorecido_id) : undefined,

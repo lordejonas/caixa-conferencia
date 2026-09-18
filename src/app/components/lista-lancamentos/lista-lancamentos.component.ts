@@ -5,6 +5,7 @@ export interface ItemExtrato {
   id: number;
   datahorario: string | Date;
   nomeContaOrigem: string;
+  nomeContaDestino?: string;
   tipoMovimentacao: 'entrada' | 'saida' | 'transferencia';
   categoriaNome?: string;
   favorecidoNome?: string;
@@ -27,6 +28,14 @@ export class ListaLancamentosComponent {
   // NOVOS INPUT/OUTPUT
   @Input() exibirBotaoSaldoAbertura: boolean = false;
   @Output() aoClicarSaldoAbertura = new EventEmitter<void>();
+
+  // A descrição adequada da conta (origem >> destino em transferências)
+  obterDescricaoConta(item: ItemExtrato): string {
+    if (item.tipoMovimentacao === 'transferencia' && item.nomeContaDestino) {
+      return `${item.nomeContaOrigem} >> ${item.nomeContaDestino}`;
+    }
+    return item.nomeContaOrigem;
+  }
 
   getIconeClass(item: ItemExtrato): string {
     if (item.tipoMovimentacao === 'transferencia') {

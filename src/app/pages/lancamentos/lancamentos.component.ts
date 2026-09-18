@@ -153,7 +153,7 @@ export class LancamentosComponent implements OnInit {
         const orig = l.origem_montante || 0;
         const dest = l.destino_montante || 0;
 
-        const ehTransferencia = orig !== 0 && dest !== 0 && (orig === -dest);
+        const ehTransferencia = (orig !== 0 && dest !== 0 && (orig === -dest)) || !!l.destino_conta_id;
 
         let montanteEmCentavos = orig || dest;
         let tipoMov: 'entrada' | 'saida' | 'transferencia' = 'entrada';
@@ -165,16 +165,19 @@ export class LancamentosComponent implements OnInit {
         }
 
         const nomeOrigem = mapaContas.get(l.origem_conta_id) || 'Sem Conta';
+        // Captura o nome da conta de destino se houver destino_conta_id
+        const nomeDestino = l.destino_conta_id ? mapaContas.get(l.destino_conta_id) : undefined;
 
         return {
           id: l.id!,
           datahorario: l.datahorario,
           nomeContaOrigem: nomeOrigem,
+          nomeContaDestino: nomeDestino, // 🟢 Mapeia a conta de destino para formar "ORIGEM >> DESTINO"
           tipoMovimentacao: tipoMov,
           categoriaNome: l.categoria_id ? mapaCategorias.get(l.categoria_id) : undefined,
           favorecidoNome: l.favorecido_id ? mapaFavorecidos.get(l.favorecido_id) : undefined,
           nota: l.nota || undefined,
-          // 🔴 DIVISÃO POR 100 AQUI: Converte de centavos para reais antes de passar para a lista
+          // Converte de centavos para reais antes de passar para a lista
           montante: montanteEmCentavos / 100
         };
       });
