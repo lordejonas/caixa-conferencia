@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router'; // Injetado
 import { db } from '../../core/db/app-database';
 import { Conta } from '../../models/conta.model';
 import { Favorecido } from '../../models/favorecido.model';
@@ -17,6 +18,7 @@ import { Lancamento } from '../../models/lancamento.model';
 export class TransacaoFormComponent implements OnInit {
   private location = inject(Location);
   private cdr = inject(ChangeDetectorRef);
+  private route = inject(ActivatedRoute); // Injeção do ActivatedRoute
 
   // Listas dos Selects
   contas: Conta[] = [];
@@ -25,14 +27,14 @@ export class TransacaoFormComponent implements OnInit {
 
   // Estado do Formulário
   ataLivroCaixaId: number | null = null;
-  dataIso: string = new Date().toISOString().substring(0, 10); // YYYY-MM-DD
-  horaIso: string = new Date().toTimeString().substring(0, 5);  // HH:mm
+  dataIso: string = new Date().toISOString().substring(0, 10);
+  horaIso: string = new Date().toTimeString().substring(0, 5);
 
   contaSelecionadaId: number | null = null;
   favorecidoSelecionadoId: number | null = null;
   categoriaSelecionadaId: number | null = null;
 
-  isDespesa: boolean = true; // true = "-", false = "+"
+  isDespesa: boolean = true;
   inteiros: string = '';
   centavos: string = '00';
   nota: string = '';
@@ -48,97 +50,99 @@ export class TransacaoFormComponent implements OnInit {
   }
 
   private async carregarDados(): Promise<void> {
+    // 1. Ler parâmetros passados pela URL (queryParams)
+    const queryParams = this.route.snapshot.queryParams;
+    const contaIdQuery = queryParams['contaId'] ? Number(queryParams['contaId']) : null;
+    const categoriaNomeQuery = queryParams['categoriaNome'] as string | undefined;
+
+    // 2. Carregar Contas
     const listaContas = await db.contas.filter(c => c.ativo !== false).toArray();
     this.contas = listaContas;
 
-    // Garante a atribuição do id da primeira conta se houver registros
-    if (this.contas.length > 0 && this.contas[0].id !== undefined) {
+    // Define a conta selecionada: se veio parâmetro na URL, usa ele; senão, pega a primeira
+    if (contaIdQuery && this.contas.some(c => c.id === contaIdQuery)) {
+      this.contaSelecionadaId = contaIdQuery;
+    } else if (this.contas.length > 0 && this.contas[0].id !== undefined) {
       this.contaSelecionadaId = this.contas[0].id;
     }
 
+    // 3. Carregar Favorecidos
     this.favorecidos = await db.favorecidos.filter(f => f.ativo !== false).toArray();
 
-    //Filtra apenas categorias ativas e com auto === false
+    // 4. Carregar Categorias
+    // Permite buscar categorias ativas e não automáticas (auto === false),
+    // OU explicitamente a categoria informada na URL (mesmo que auto === true)
     this.categorias = await db.categorias
-      .filter(c => c.ativo !== false && c.auto === false)
+      .filter(c => {
+        if (c.ativo === false) return false;
+        if (categoriaNomeQuery && c.titulo === categoriaNomeQuery) return true;
+        return c.auto === false;
+      })
       .toArray();
 
-    //Força a atualização do template após a Promise resolver do banco
+    // 5. Pre-selecionar a Categoria se enviada via URL
+    if (categoriaNomeQuery) {
+      const catEncontrada = this.categorias.find(c => c.titulo === categoriaNomeQuery);
+      if (catEncontrada && catEncontrada.id) {
+        this.categoriaSelecionadaId = catEncontrada.id;
+        this.onCategoriaChange(); // Ajusta o sinal (+/-) automaticamente
+      }
+    }
+
     this.cdr.detectChanges();
   }
 
-  // Alterna o sinal (+ / -)
   alternarSinal(): void {
     this.isDespesa = !this.isDespesa;
   }
 
-  // Chamado quando o usuário escolhe uma categoria no select
   onCategoriaChange(): void {
     if (!this.categoriaSelecionadaId) return;
 
-    // Encontra a categoria selecionada na lista carregada
     const categoria = this.categorias.find(
       c => c.id === Number(this.categoriaSelecionadaId)
     );
 
     if (categoria && categoria.positivo !== undefined) {
-      // Se positivo === true -> isDespesa = false (sinal '+')
-      // Se positivo === false -> isDespesa = true (sinal '-')
       this.isDespesa = !categoria.positivo;
     }
   }
 
-  // Intercepta a tentativa de digitar ponto ou vírgula ANTES do valor entrar no campo
   onBeforeInputInteiros(event: InputEvent, elementCentavos: HTMLInputElement): void {
     const charInserido = event.data;
-
-    // Se o usuário digitou ponto ou vírgula no teclado virtual/físico
     if (charInserido === '.' || charInserido === ',') {
-      event.preventDefault(); // Impede totalmente o caractere de entrar no campo
+      event.preventDefault();
       elementCentavos.focus();
-      elementCentavos.select(); // Pula direto para o campo de centavos
+      elementCentavos.select();
     }
   }
 
-  // Sanitização estrita em tempo real contra colar valores ou caracteres não numéricos
   onInteirosInput(event: Event): void {
     const inputEl = event.target as HTMLInputElement;
-
-    // Remove imediatamente qualquer caractere que NÃO seja número
     const valorLimpo = inputEl.value.replace(/\D/g, '');
-
-    // Sincroniza a propriedade da classe e força o elemento HTML a refletir apenas números
     this.inteiros = valorLimpo;
     inputEl.value = valorLimpo;
   }
 
-  // Seleciona todo o texto automaticamente ao focar (sobrescreve '00' ao digitar)
   onCentavosFocus(event: FocusEvent): void {
     const inputEl = event.target as HTMLInputElement;
     inputEl.select();
   }
 
-  // Cancela e ignora a tecla de ponto, vírgula ou sinais no campo de centavos
   onBeforeInputCentavos(event: InputEvent): void {
     const charInserido = event.data;
-
     if (charInserido === '.' || charInserido === ',') {
-      event.preventDefault(); // Impede totalmente a inserção do caractere
+      event.preventDefault();
     }
   }
 
-  // Sanitiza em tempo real para permitir APENAS números
   onCentavosInput(event: Event): void {
     const inputEl = event.target as HTMLInputElement;
-
-    // Mantém apenas os dígitos numéricos
     const valorLimpo = inputEl.value.replace(/\D/g, '');
-
     this.centavos = valorLimpo;
     inputEl.value = valorLimpo;
   }
 
-  // Garante o formato de 2 dígitos ao sair do campo
   formatarCentavos(): void {
     if (!this.centavos) {
       this.centavos = '00';
@@ -147,7 +151,6 @@ export class TransacaoFormComponent implements OnInit {
     this.centavos = this.centavos.padStart(2, '0').slice(0, 2);
   }
 
-  // Abertura / Fechamento do Modal
   abrirModalFavorecido(): void {
     this.novoFavorecidoNome = '';
     this.exibirModalFavorecido = true;
@@ -158,7 +161,6 @@ export class TransacaoFormComponent implements OnInit {
     this.novoFavorecidoNome = '';
   }
 
-  // Adicione o método para abrir o picker ao clicar na div
   abrirDatePicker(inputData: HTMLInputElement): void {
     if ('showPicker' in HTMLInputElement.prototype) {
       try {
@@ -171,16 +173,13 @@ export class TransacaoFormComponent implements OnInit {
     }
   }
 
-  // Método chamado sempre que o valor do input tipo date mudar
   onDataChange(): void {
-    // Se o usuário clicar em "Limpar" ou a data vier vazia, restaura para a data atual
     if (!this.dataIso) {
       this.dataIso = new Date().toISOString().substring(0, 10);
     }
     this.atualizarDataExtenso();
   }
 
-  // Dispara o Time Picker ao clicar na div
   abrirTimePicker(inputTime: HTMLInputElement): void {
     if ('showPicker' in HTMLInputElement.prototype) {
       try {
@@ -193,14 +192,12 @@ export class TransacaoFormComponent implements OnInit {
     }
   }
 
-  // Garante que o campo de horário nunca fique vazio ao clicar em 'Limpar'
   onHoraChange(): void {
     if (!this.horaIso) {
-      this.horaIso = new Date().toTimeString().substring(0, 5); // Fallback para horário atual (HH:mm)
+      this.horaIso = new Date().toTimeString().substring(0, 5);
     }
   }
 
-  // Salvar novo Favorecido (verifica duplicidade pelo nome)
   async salvarNovoFavorecido(): Promise<void> {
     const nomeTratado = this.novoFavorecidoNome.trim();
     if (!nomeTratado) {
@@ -229,7 +226,6 @@ export class TransacaoFormComponent implements OnInit {
     this.fecharModalFavorecido();
   }
 
-  // Salvar a Transação e Atualizar o Saldo da Conta
   async salvar(): Promise<void> {
     if (!this.contaSelecionadaId) {
       alert('Por favor, selecione uma conta.');
@@ -240,7 +236,6 @@ export class TransacaoFormComponent implements OnInit {
     const valCentavos = parseInt(this.centavos || '0', 10);
     let totalCentavos = (valInteiros * 100) + valCentavos;
 
-    // Se for despesa (-), o valor entra negativo; se receita (+), positivo
     if (this.isDespesa) {
       totalCentavos = -Math.abs(totalCentavos);
     } else {
@@ -251,16 +246,13 @@ export class TransacaoFormComponent implements OnInit {
     const contaId = Number(this.contaSelecionadaId);
 
     try {
-      // Executa a inserção do lançamento e atualização do saldo em uma transação atômica
       await db.transaction('rw', [db.lancamentos, db.contas], async () => {
-        // 1. Busca a conta vinculada no banco
         const conta = await db.contas.get(contaId);
 
         if (!conta) {
           throw new Error('Conta selecionada não foi encontrada no banco de dados.');
         }
 
-        // 2. Cria o novo lançamento
         const novoLancamento: Lancamento = {
           datahorario: dataHorarioIso,
           origem_conta_id: contaId,
@@ -278,12 +270,11 @@ export class TransacaoFormComponent implements OnInit {
 
         await db.lancamentos.add(novoLancamento);
 
-        // 3. Atualiza o saldo_atual da conta somando o montante (positivo ou negativo)
         const saldoAtualizado = (conta.saldo_atual || 0) + totalCentavos;
 
         await db.contas.update(contaId, {
           saldo_atual: saldoAtualizado,
-          updatedAt: this.obterDataIsoLocal() // ou o campo de atualização da conta caso exista
+          updatedAt: this.obterDataIsoLocal()
         });
       });
 
@@ -311,8 +302,6 @@ export class TransacaoFormComponent implements OnInit {
     this.dataExtenso = `${dia} de ${nomeMes} de ${ano}`;
   }
 
-
-  // Retorna a data/hora local no formato ISO (ex: "2026-08-21T17:03:31")
   private obterDataIsoLocal(): string {
     const agora = new Date();
     const ano = agora.getFullYear();
@@ -324,5 +313,4 @@ export class TransacaoFormComponent implements OnInit {
 
     return `${ano}-${mes}-${dia}T${horas}:${minutos}:${segundos}`;
   }
-
 }

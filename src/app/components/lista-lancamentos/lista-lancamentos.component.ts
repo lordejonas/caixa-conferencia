@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export interface ItemExtrato {
@@ -24,16 +24,16 @@ export class ListaLancamentosComponent {
   @Input() carregando: boolean = false;
   @Input() mensagemVazia: string = 'Nenhum lançamento encontrado.';
 
-  // Retorna a classe FontAwesome adequada para cada fluxo
+  // NOVOS INPUT/OUTPUT
+  @Input() exibirBotaoSaldoAbertura: boolean = false;
+  @Output() aoClicarSaldoAbertura = new EventEmitter<void>();
+
   getIconeClass(item: ItemExtrato): string {
     if (item.tipoMovimentacao === 'transferencia') {
-      return 'fa-solid fa-right-left'; // Seta dupla para transferência
+      return 'fa-solid fa-right-left';
     }
-
-    // Seta para baixo (entrada) e seta para cima (saída)
     return item.montante < 0 ? 'fa-solid fa-arrow-up' : 'fa-solid fa-arrow-down';
   }
-
 
   formatarMoedaCustom(valor: number): string {
     const valorAbsoluto = Math.abs(valor);

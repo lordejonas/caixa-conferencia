@@ -6,6 +6,15 @@
 
   <div *ngIf="!carregando && lancamentos.length === 0" class="empty-state">
     <p>{{ mensagemVazia }}</p>
+
+    <!-- Botão de Saldo de Abertura -->
+    <button
+      *ngIf="exibirBotaoSaldoAbertura"
+      type="button"
+      class="btn btn-primary mt-3"
+      (click)="aoClicarSaldoAbertura.emit()">
+      Lançar saldo de abertura
+    </button>
   </div>
 
   <div *ngIf="!carregando && lancamentos.length > 0" class="cards-list">

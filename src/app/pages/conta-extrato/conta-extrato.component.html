@@ -2,6 +2,8 @@
   <app-lista-lancamentos
     [lancamentos]="lancamentosExtrato"
     [carregando]="carregando"
-    mensagemVazia="Nenhum lançamento encontrado para esta conta.">
+    mensagemVazia="Nenhum lançamento encontrado para esta conta."
+    [exibirBotaoSaldoAbertura]="true"
+    (aoClicarSaldoAbertura)="irParaSaldoAbertura()">
   </app-lista-lancamentos>
 </app-internal-layout>

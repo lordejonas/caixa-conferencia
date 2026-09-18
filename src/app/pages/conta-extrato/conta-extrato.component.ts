@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { InternalLayoutComponent } from '../../components/internal-layout/internal-layout.component';
 import { ListaLancamentosComponent, ItemExtrato } from '../../components/lista-lancamentos/lista-lancamentos.component';
 import { db } from '../../core/db/app-database';
@@ -24,6 +24,7 @@ export class ContaExtratoComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -35,6 +36,18 @@ export class ContaExtratoComponent implements OnInit {
     } else {
       this.carregando = false;
     }
+  }
+
+  // Ação disparada ao clicar no botão
+  irParaSaldoAbertura(): void {
+    if (!this.conta) return;
+
+    this.router.navigate(['/lancamentos/novo'], {
+      queryParams: {
+        contaId: this.conta.id,
+        categoriaNome: '00-Saldo de Abertura'
+      }
+    });
   }
 
   async carregarExtratoDaConta(contaId: number): Promise<void> {
@@ -70,7 +83,6 @@ export class ContaExtratoComponent implements OnInit {
         const orig = l.origem_montante || 0;
         const dest = l.destino_montante || 0;
 
-        // É transferência se ambos os campos de montante estiverem preenchidos (diferentes de zero)
         const ehTransferencia = orig !== 0 && dest !== 0;
 
         let montanteEmCentavos = orig;
@@ -80,14 +92,11 @@ export class ContaExtratoComponent implements OnInit {
           tipoMov = 'transferencia';
 
           if (l.origem_conta_id === contaId) {
-            // Visão da Conta de Origem (saiu dinheiro -> valor negativo do origem_montante)
             montanteEmCentavos = orig;
           } else if (l.destino_conta_id === contaId) {
-            // Visão da Conta de Destino (entrou dinheiro -> valor positivo do destino_montante)
             montanteEmCentavos = dest;
           }
         } else {
-          // Lançamento normal (Receita/Despesa)
           montanteEmCentavos = orig || dest;
           tipoMov = montanteEmCentavos < 0 ? 'saida' : 'entrada';
         }
@@ -102,7 +111,6 @@ export class ContaExtratoComponent implements OnInit {
           categoriaNome: l.categoria_id ? mapaCategorias.get(l.categoria_id) : undefined,
           favorecidoNome: l.favorecido_id ? mapaFavorecidos.get(l.favorecido_id) : undefined,
           nota: l.nota || undefined,
-          // Converte de centavos para reais mantendo o sinal original (+ ou -)
           montante: montanteEmCentavos / 100
         };
       });
