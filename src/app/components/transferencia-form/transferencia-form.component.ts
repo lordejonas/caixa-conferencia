@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router'; // 1. IMPORTANTE: Adicionado ActivatedRoute
 import { db } from '../../core/db/app-database';
 import { Conta } from '../../models/conta.model';
 import { Categoria } from '../../models/categoria.model';
@@ -16,6 +17,7 @@ import { Lancamento } from '../../models/lancamento.model';
 export class TransferenciaFormComponent implements OnInit {
   private location = inject(Location);
   private cdr = inject(ChangeDetectorRef);
+  private route = inject(ActivatedRoute); // 2. IMPORTANTE: Injeção do ActivatedRoute
 
   // Listas dos Selects
   contas: Conta[] = [];
@@ -46,19 +48,27 @@ export class TransferenciaFormComponent implements OnInit {
     await this.carregarDados();
   }
 
+  // 3. ALTERADO: Método carregarDados atualizado para ler o queryParam
   private async carregarDados(): Promise<void> {
+    // Captura o parâmetro 'contaId' da URL, se existir
+    const queryParams = this.route.snapshot.queryParams;
+    const contaIdQuery = queryParams['contaId'] ? Number(queryParams['contaId']) : null;
+
     const listaContas = await db.contas.filter(c => c.ativo !== false).toArray();
     this.contas = listaContas;
 
     if (this.contas.length > 0) {
-      this.contaOrigemId = this.contas[0].id ?? null;
+      // Se veio contaId na URL e ela existe na lista, define como Origem; senão, pega a primeira
+      if (contaIdQuery && this.contas.some(c => c.id === contaIdQuery)) {
+        this.contaOrigemId = contaIdQuery;
+      } else {
+        this.contaOrigemId = this.contas[0].id ?? null;
+      }
       this.contaOrigemAnterior = this.contaOrigemId;
 
-      if (this.contas.length > 1) {
-        this.contaDestinoId = this.contas[1].id ?? null;
-      } else {
-        this.contaDestinoId = this.contas[0].id ?? null;
-      }
+      // Define a conta de Destino (procura a primeira conta que seja DIFERENTE da origem)
+      const contaDestinoDiferente = this.contas.find(c => c.id !== this.contaOrigemId);
+      this.contaDestinoId = contaDestinoDiferente ? (contaDestinoDiferente.id ?? null) : this.contaOrigemId;
       this.contaDestinoAnterior = this.contaDestinoId;
     }
 
@@ -203,7 +213,7 @@ export class TransferenciaFormComponent implements OnInit {
           datahorario: dataHorarioIso,
           origem_conta_id: origemId,
           destino_conta_id: destinoId,
-          favorecido_id: null, // Sempre nulo para transferências
+          favorecido_id: null,
           categoria_id: this.categoriaSelecionadaId ? Number(this.categoriaSelecionadaId) : null,
           origem_montante: -valorTransferencia,
           destino_montante: valorTransferencia,

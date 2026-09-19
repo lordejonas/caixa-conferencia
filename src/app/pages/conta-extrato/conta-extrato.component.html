@@ -13,13 +13,21 @@
   <div class="rodape-fixo" (click)="$event.stopPropagation()">
     <div class="container d-flex align-items-center justify-content-end gap-2">
 
-      <!-- Botão de Transferência -->
-      <a routerLink="/lancamentos/transferencia" class="btn-transferencia" aria-label="Nova transferência">
+      <!-- Botão de Transferência (Passa a conta de origem via QueryParam) -->
+      <a
+        [routerLink]="['/lancamentos/transferencia']"
+        [queryParams]="{ contaId: conta?.id }"
+        class="btn-transferencia"
+        aria-label="Nova transferência">
         <span>⇄</span>
       </a>
 
-      <!-- Botão de Novo Lançamento -->
-      <a routerLink="/lancamentos/novo" class="btn-adicionar" aria-label="Adicionar lançamento">
+      <!-- Botão de Novo Lançamento (Passa a conta via QueryParam) -->
+      <a
+        [routerLink]="['/lancamentos/novo']"
+        [queryParams]="{ contaId: conta?.id }"
+        class="btn-adicionar"
+        aria-label="Adicionar lançamento">
         <span>+</span>
       </a>
 
