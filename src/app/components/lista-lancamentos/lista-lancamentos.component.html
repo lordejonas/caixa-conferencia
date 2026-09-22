@@ -1,112 +1,122 @@
 <div class="lista-container">
 
-  <div *ngIf="carregando" class="loading-state">
-    <p>Carregando lançamentos...</p>
-  </div>
-
-  <!-- Estado Vazio -->
-  <div *ngIf="!carregando && lancamentos.length === 0" class="empty-state">
-    <p>{{ mensagemVazia }}</p>
-
-    <button
-      *ngIf="exibirBotaoSaldoAbertura"
-      type="button"
-      class="btn btn-primary mt-3"
-      (click)="aoClicarSaldoAbertura.emit()">
-      Lançar saldo de abertura
-    </button>
-  </div>
-
-  <!-- Lista de Lançamentos -->
-  <div *ngIf="!carregando && lancamentos.length > 0" class="cards-list">
-    <div
-      *ngFor="let item of lancamentos"
-      class="item-lancamento"
-      (touchstart)="iniciarPressionar(item)"
-      (touchend)="cancelarPressionar()"
-      (touchmove)="cancelarPressionar()"
-      (mousedown)="iniciarPressionar(item)"
-      (mouseup)="cancelarPressionar()"
-      (mouseleave)="cancelarPressionar()"
-      (contextmenu)="$event.preventDefault()">
-
-      <div class="card-topo">
-        <span class="conta-origem">{{ obterDescricaoConta(item) }}</span>
-        <span class="icone-fluxo" [ngClass]="item.tipoMovimentacao">
-          <i [ngClass]="getIconeClass(item)"></i>
-        </span>
-      </div>
-
-      <div class="card-meio">
-        <div class="descricao">
-          <span *ngIf="item.categoriaNome" class="categoria">{{ item.categoriaNome }} </span>
-          <span *ngIf="item.favorecidoNome" class="favorecido">{{ item.favorecidoNome }} </span>
-          <span *ngIf="item.nota" class="nota">{{ item.nota }}</span>
-        </div>
-
-        <div class="valor"
-             [ngClass]="{
-               'valor-zero': item.montante === 0,
-               'valor-positivo': item.montante > 0,
-               'valor-negativo': item.montante < 0
-             }">
-          {{ formatarMoedaCustom(item.montante) }}
-        </div>
-      </div>
-
-      <div class="card-rodape">
-        <span class="data-horario">{{ formatarDataCustom(item.datahorario) }}</span>
-      </div>
-
+  @if (carregando) {
+    <div class="loading-state">
+      <p>Carregando lançamentos...</p>
     </div>
-  </div>
+  } @else if (lancamentos.length === 0) {
+    <!-- Estado Vazio -->
+    <div class="empty-state">
+      <p>{{ mensagemVazia }}</p>
+
+      @if (exibirBotaoSaldoAbertura) {
+        <button
+          type="button"
+          class="btn btn-primary mt-3"
+          (click)="aoClicarSaldoAbertura.emit()">
+          Lançar saldo de abertura
+        </button>
+      }
+    </div>
+  } @else {
+    <!-- Lista de Lançamentos -->
+    <div class="cards-list">
+      @for (item of lancamentos; track item.id) {
+        <div
+          class="item-lancamento"
+          (touchstart)="iniciarPressionar(item)"
+          (touchend)="cancelarPressionar()"
+          (touchmove)="cancelarPressionar()"
+          (mousedown)="iniciarPressionar(item)"
+          (mouseup)="cancelarPressionar()"
+          (mouseleave)="cancelarPressionar()"
+          (contextmenu)="$event.preventDefault()">
+
+          <div class="card-topo">
+            <span class="conta-origem">{{ obterDescricaoConta(item) }}</span>
+            <span class="icone-fluxo" [ngClass]="item.tipoMovimentacao">
+              <i [ngClass]="getIconeClass(item)"></i>
+            </span>
+          </div>
+
+          <div class="card-meio">
+            <div class="descricao">
+              @if (item.categoriaNome) {
+                <span class="categoria">{{ item.categoriaNome }} </span>
+              }
+              @if (item.favorecidoNome) {
+                <span class="favorecido">{{ item.favorecidoNome }} </span>
+              }
+              @if (item.nota) {
+                <span class="nota">{{ item.nota }}</span>
+              }
+            </div>
+
+            <div class="valor"
+                 [ngClass]="{
+                   'valor-zero': item.montante === 0,
+                   'valor-positivo': item.montante > 0,
+                   'valor-negativo': item.montante < 0
+                 }">
+              {{ formatarMoedaCustom(item.montante) }}
+            </div>
+          </div>
+
+          <div class="card-rodape">
+            <span class="data-horario">{{ formatarDataCustom(item.datahorario) }}</span>
+          </div>
+
+        </div>
+      }
+    </div>
+  }
 
 </div>
 
 <!-- Modal / Popup de Opções -->
-<div *ngIf="itemSelecionado" class="modal-overlay" (click)="fecharOpcoes()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
+@if (itemSelecionado) {
+  <div class="modal-overlay" (click)="fecharOpcoes()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
 
-    <!-- ETAPA 1: MENU DE OPÇÕES (Alterar / Excluir) -->
-    <ng-container *ngIf="!confirmandoExclusao">
-      <h3>Ações para o Lançamento</h3>
-      <p class="detalhe-item">
-        {{ itemSelecionado?.categoriaNome || 'Lançamento' }} - {{ itemSelecionado ? formatarMoedaCustom(itemSelecionado.montante) : '' }}
-      </p>
+      @if (!confirmandoExclusao) {
+        <!-- ETAPA 1: MENU DE OPÇÕES (Alterar / Excluir) -->
+        <h3>Ações para o Lançamento</h3>
+        <p class="detalhe-item">
+          {{ itemSelecionado.categoriaNome || 'Lançamento' }} - {{ formatarMoedaCustom(itemSelecionado.montante) }}
+        </p>
 
-      <div class="modal-acoes">
-        <button type="button" class="btn-opcao btn-editar" (click)="acaoAlterar()">
-          Alterar
-        </button>
+        <div class="modal-acoes">
+          <button type="button" class="btn-opcao btn-editar" (click)="acaoAlterar()">
+            Alterar
+          </button>
 
-        <button type="button" class="btn-opcao btn-excluir" (click)="solicitarConfirmacaoExclusao()">
-          Excluir
-        </button>
+          <button type="button" class="btn-opcao btn-excluir" (click)="solicitarConfirmacaoExclusao()">
+            Excluir
+          </button>
 
-        <button type="button" class="btn-opcao btn-cancelar" (click)="fecharOpcoes()">
-          Cancelar
-        </button>
-      </div>
-    </ng-container>
+          <button type="button" class="btn-opcao btn-cancelar" (click)="fecharOpcoes()">
+            Cancelar
+          </button>
+        </div>
+      } @else {
+        <!-- ETAPA 2: TELA DE CONFIRMAÇÃO DE EXCLUSÃO -->
+        <h3 class="texto-perigo">Confirmar Exclusão?</h3>
+        <p class="detalhe-item">
+          Tem certeza que deseja excluir este lançamento?<br>
+          <strong>{{ itemSelecionado.categoriaNome || 'Lançamento' }}</strong> ({{ formatarMoedaCustom(itemSelecionado.montante) }})
+        </p>
 
-    <!-- ETAPA 2: TELA DE CONFIRMAÇÃO DE EXCLUSÃO -->
-    <ng-container *ngIf="confirmandoExclusao">
-      <h3 class="texto-perigo">Confirmar Exclusão?</h3>
-      <p class="detalhe-item">
-        Tem certeza que deseja excluir este lançamento?<br>
-        <strong>{{ itemSelecionado?.categoriaNome || 'Lançamento' }}</strong> ({{ itemSelecionado ? formatarMoedaCustom(itemSelecionado.montante) : '' }})
-      </p>
+        <div class="modal-acoes">
+          <button type="button" class="btn-opcao btn-excluir" (click)="confirmarExclusao()">
+            Sim, Excluir
+          </button>
 
-      <div class="modal-acoes">
-        <button type="button" class="btn-opcao btn-excluir" (click)="confirmarExclusao()">
-          Sim, Excluir
-        </button>
+          <button type="button" class="btn-opcao btn-cancelar" (click)="fecharOpcoes()">
+            Não, Voltar
+          </button>
+        </div>
+      }
 
-        <button type="button" class="btn-opcao btn-cancelar" (click)="fecharOpcoes()">
-          Não, Voltar
-        </button>
-      </div>
-    </ng-container>
-
+    </div>
   </div>
-</div>
+}
