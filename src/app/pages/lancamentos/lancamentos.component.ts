@@ -204,20 +204,37 @@ export class LancamentosComponent implements OnInit {
     return Math.round(totalEmReais * 100);
   }
 
+  /**
+   * Saldo Líquido:
+   * Soma de TODAS as contas ativas cuja regra não ignora o saldo no total (contabilizar_totais !== null).
+   * Desconsidera apenas contas de arredondamento puras (contabilizar_totais === null).
+   */
   get saldoLiquido(): number {
-    if (!this.itensRaiz) return 0;
-    return this.extrairContasDaLista().reduce((acc, conta) => {
-      if (conta.contabilizar_totais !== null) {
+    const contas = this.extrairContasDaLista();
+    if (!contas.length) return 0;
+
+    return contas.reduce((acc, conta) => {
+      // Considera apenas contas ativas e onde contabilizar_totais não seja 'null'
+      if (conta.ativo && conta.contabilizar_totais !== null) {
         return acc + (conta.saldo_atual || 0);
       }
       return acc;
     }, 0);
   }
 
+  /**
+   * Saldo Bruto:
+   * Soma apenas das contas de liquidez imediata / tesouraria principal.
+   * (No Tipo 1: 'Caixa' | No Tipo 2: 'Espécie' e 'Banco')
+   * Identificadas com contabilizar_totais === true
+   */
   get saldoBruto(): number {
-    if (!this.itensRaiz) return 0;
-    return this.extrairContasDaLista().reduce((acc, conta) => {
-      if (conta.contabilizar_totais === true) {
+    const contas = this.extrairContasDaLista();
+    if (!contas.length) return 0;
+
+    return contas.reduce((acc, conta) => {
+      // Considera apenas contas ativas marcadas explicitamente para contabilizar totais brutos
+      if (conta.ativo && conta.contabilizar_totais === true) {
         return acc + (conta.saldo_atual || 0);
       }
       return acc;
@@ -231,6 +248,10 @@ export class LancamentosComponent implements OnInit {
     return valor > 0 ? 'saldo-positivo' : 'saldo-negativo';
   }
 
+  /**
+   * Extrai a lista unificada de objetos Conta originais (rawItem)
+   * a partir dos itens do topo (itensRaiz) ou do agregador selecionado.
+   */
   private extrairContasDaLista(): Conta[] {
     if (this.agregadorSelecionado) {
       return this.agregadorSelecionado.contasFilhas || [];
@@ -240,7 +261,7 @@ export class LancamentosComponent implements OnInit {
     if (this.itensRaiz) {
       for (const item of this.itensRaiz) {
         if (item.type === 'conta') {
-          contas.push(item as unknown as Conta);
+          contas.push(item.rawItem as Conta);
         } else if (item.type === 'agregador' && item.contasFilhas) {
           contas.push(...item.contasFilhas);
         }
