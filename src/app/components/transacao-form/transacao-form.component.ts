@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router'; // Injetado
+import { ActivatedRoute } from '@angular/router';
 import { db } from '../../core/db/app-database';
 import { Conta } from '../../models/conta.model';
 import { Favorecido } from '../../models/favorecido.model';
@@ -18,7 +18,11 @@ import { Lancamento } from '../../models/lancamento.model';
 export class TransacaoFormComponent implements OnInit {
   private location = inject(Location);
   private cdr = inject(ChangeDetectorRef);
-  private route = inject(ActivatedRoute); // Injeção do ActivatedRoute
+  private route = inject(ActivatedRoute);
+
+  // Controle de Edição
+  idEdicao: number | null = null;
+  private montanteOriginal: number = 0; // Armazena o valor anterior para recalcular saldo ao editar
 
   // Listas dos Selects
   contas: Conta[] = [];
@@ -50,28 +54,20 @@ export class TransacaoFormComponent implements OnInit {
   }
 
   private async carregarDados(): Promise<void> {
-    // 1. Ler parâmetros passados pela URL (queryParams)
+    // 1. Verificar se é Edição (ID na rota /lancamentos/editar/:id)
+    const idRoute = this.route.snapshot.paramMap.get('id');
+    if (idRoute) {
+      this.idEdicao = Number(idRoute);
+    }
+
+    // 2. Ler parâmetros passados pela URL (queryParams) para o caso de criação com pré-seleção
     const queryParams = this.route.snapshot.queryParams;
     const contaIdQuery = queryParams['contaId'] ? Number(queryParams['contaId']) : null;
     const categoriaNomeQuery = queryParams['categoriaNome'] as string | undefined;
 
-    // 2. Carregar Contas
-    const listaContas = await db.contas.filter(c => c.ativo !== false).toArray();
-    this.contas = listaContas;
-
-    // Define a conta selecionada: se veio parâmetro na URL, usa ele; senão, pega a primeira
-    if (contaIdQuery && this.contas.some(c => c.id === contaIdQuery)) {
-      this.contaSelecionadaId = contaIdQuery;
-    } else if (this.contas.length > 0 && this.contas[0].id !== undefined) {
-      this.contaSelecionadaId = this.contas[0].id;
-    }
-
-    // 3. Carregar Favorecidos
+    // 3. Carregar Listas Auxiliares (Contas, Favorecidos, Categorias)
+    this.contas = await db.contas.filter(c => c.ativo !== false).toArray();
     this.favorecidos = await db.favorecidos.filter(f => f.ativo !== false).toArray();
-
-    // 4. Carregar Categorias
-    // Permite buscar categorias ativas e não automáticas (auto === false),
-    // OU explicitamente a categoria informada na URL (mesmo que auto === true)
     this.categorias = await db.categorias
       .filter(c => {
         if (c.ativo === false) return false;
@@ -80,12 +76,50 @@ export class TransacaoFormComponent implements OnInit {
       })
       .toArray();
 
-    // 5. Pre-selecionar a Categoria se enviada via URL
-    if (categoriaNomeQuery) {
-      const catEncontrada = this.categorias.find(c => c.titulo === categoriaNomeQuery);
-      if (catEncontrada && catEncontrada.id) {
-        this.categoriaSelecionadaId = catEncontrada.id;
-        this.onCategoriaChange(); // Ajusta o sinal (+/-) automaticamente
+    // 4. Se for EDIÇÃO, busca o registro no banco e preenche o formulário
+    if (this.idEdicao) {
+      const lancamento = await db.lancamentos.get(this.idEdicao);
+      if (lancamento) {
+        // Preencher data e hora
+        if (lancamento.datahorario) {
+          const [dataPart, horaPart] = lancamento.datahorario.split('T');
+          this.dataIso = dataPart;
+          this.horaIso = horaPart ? horaPart.substring(0, 5) : '00:00';
+          this.atualizarDataExtenso();
+        }
+
+        // Preencher selects (usando ?? null para evitar o erro de undefined)
+        this.contaSelecionadaId = lancamento.origem_conta_id;
+        this.favorecidoSelecionadoId = lancamento.favorecido_id ?? null;
+        this.categoriaSelecionadaId = lancamento.categoria_id ?? null;
+        this.nota = lancamento.nota || '';
+        this.ataLivroCaixaId = lancamento.ata_livro_caixa_id ?? null;
+
+        // Preencher valor e sinal
+        const valCentavosAbs = Math.abs(lancamento.origem_montante);
+        this.montanteOriginal = lancamento.origem_montante;
+        this.isDespesa = lancamento.origem_montante < 0;
+
+        const valorInteiro = Math.floor(valCentavosAbs / 100);
+        const valorCentavos = valCentavosAbs % 100;
+
+        this.inteiros = valorInteiro > 0 ? String(valorInteiro) : '';
+        this.centavos = String(valorCentavos).padStart(2, '0');
+      }
+    } else {
+      // 5. Se for NOVO REGISTRO, aplicar valores padrão de queryParams (se existirem)
+      if (contaIdQuery && this.contas.some(c => c.id === contaIdQuery)) {
+        this.contaSelecionadaId = contaIdQuery;
+      } else if (this.contas.length > 0 && this.contas[0].id !== undefined) {
+        this.contaSelecionadaId = this.contas[0].id;
+      }
+
+      if (categoriaNomeQuery) {
+        const catEncontrada = this.categorias.find(c => c.titulo === categoriaNomeQuery);
+        if (catEncontrada && catEncontrada.id) {
+          this.categoriaSelecionadaId = catEncontrada.id;
+          this.onCategoriaChange();
+        }
       }
     }
 
@@ -253,29 +287,71 @@ export class TransacaoFormComponent implements OnInit {
           throw new Error('Conta selecionada não foi encontrada no banco de dados.');
         }
 
-        const novoLancamento: Lancamento = {
-          datahorario: dataHorarioIso,
-          origem_conta_id: contaId,
-          destino_conta_id: null,
-          favorecido_id: this.favorecidoSelecionadoId ? Number(this.favorecidoSelecionadoId) : null,
-          categoria_id: this.categoriaSelecionadaId ? Number(this.categoriaSelecionadaId) : null,
-          origem_montante: totalCentavos,
-          destino_montante: 0,
-          nota: this.nota.trim() || null,
-          ata_livro_caixa_id: this.ataLivroCaixaId,
-          arredondamento_id: null,
-          sincronizado: false,
-          updatedAt: this.obterDataIsoLocal()
-        };
+        if (this.idEdicao) {
+          // --- MODO EDIÇÃO ---
+          const lancamentoExistente = await db.lancamentos.get(this.idEdicao);
+          const contaAntigaId = lancamentoExistente?.origem_conta_id;
 
-        await db.lancamentos.add(novoLancamento);
+          await db.lancamentos.update(this.idEdicao, {
+            datahorario: dataHorarioIso,
+            origem_conta_id: contaId,
+            favorecido_id: this.favorecidoSelecionadoId ? Number(this.favorecidoSelecionadoId) : null,
+            categoria_id: this.categoriaSelecionadaId ? Number(this.categoriaSelecionadaId) : null,
+            origem_montante: totalCentavos,
+            nota: this.nota.trim() || null,
+            sincronizado: false,
+            updatedAt: this.obterDataIsoLocal()
+          });
 
-        const saldoAtualizado = (conta.saldo_atual || 0) + totalCentavos;
+          if (contaAntigaId === contaId) {
+            // Se a conta não mudou, ajusta a diferença no saldo
+            const diferencaMontante = totalCentavos - this.montanteOriginal;
+            await db.contas.update(contaId, {
+              saldo_atual: (conta.saldo_atual || 0) + diferencaMontante,
+              updatedAt: this.obterDataIsoLocal()
+            });
+          } else {
+            // Se a conta mudou, estorna da conta antiga e aplica na conta nova
+            if (contaAntigaId) {
+              const contaAntiga = await db.contas.get(contaAntigaId);
+              if (contaAntiga) {
+                await db.contas.update(contaAntigaId, {
+                  saldo_atual: (contaAntiga.saldo_atual || 0) - this.montanteOriginal,
+                  updatedAt: this.obterDataIsoLocal()
+                });
+              }
+            }
+            await db.contas.update(contaId, {
+              saldo_atual: (conta.saldo_atual || 0) + totalCentavos,
+              updatedAt: this.obterDataIsoLocal()
+            });
+          }
+        } else {
+          // --- MODO INSERÇÃO ---
+          const novoLancamento: Lancamento = {
+            datahorario: dataHorarioIso,
+            origem_conta_id: contaId,
+            destino_conta_id: null,
+            favorecido_id: this.favorecidoSelecionadoId ? Number(this.favorecidoSelecionadoId) : null,
+            categoria_id: this.categoriaSelecionadaId ? Number(this.categoriaSelecionadaId) : null,
+            origem_montante: totalCentavos,
+            destino_montante: 0,
+            nota: this.nota.trim() || null,
+            ata_livro_caixa_id: this.ataLivroCaixaId,
+            arredondamento_id: null,
+            sincronizado: false,
+            updatedAt: this.obterDataIsoLocal()
+          };
 
-        await db.contas.update(contaId, {
-          saldo_atual: saldoAtualizado,
-          updatedAt: this.obterDataIsoLocal()
-        });
+          await db.lancamentos.add(novoLancamento);
+
+          const saldoAtualizado = (conta.saldo_atual || 0) + totalCentavos;
+
+          await db.contas.update(contaId, {
+            saldo_atual: saldoAtualizado,
+            updatedAt: this.obterDataIsoLocal()
+          });
+        }
       });
 
       this.cancelar();

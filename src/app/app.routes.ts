@@ -17,7 +17,17 @@ export const routes: Routes = [
       import('./components/transacao-form/transacao-form.component').then((m) => m.TransacaoFormComponent)
   },
   {
+    path: 'lancamentos/editar/:id',
+    loadComponent: () =>
+      import('./components/transacao-form/transacao-form.component').then((m) => m.TransacaoFormComponent)
+  },
+  {
     path: 'lancamentos/transferencia',
+    loadComponent: () =>
+      import('./components/transferencia-form/transferencia-form.component').then((m) => m.TransferenciaFormComponent)
+  },
+  {
+    path: 'lancamentos/transferencia/editar/:id',
     loadComponent: () =>
       import('./components/transferencia-form/transferencia-form.component').then((m) => m.TransferenciaFormComponent)
   },
@@ -71,15 +81,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/contas/contas.component').then((m) => m.ContasComponent)
   },
-
-  // 🆕 Nova funcionalidade: Extrato filtrado de uma conta específica
   {
     path: 'contas/:id/extrato',
     loadComponent: () =>
       import('./pages/conta-extrato/conta-extrato.component').then((m) => m.ContaExtratoComponent)
   },
-
-  // Fallback para rotas desconhecidas
   {
     path: '**',
     redirectTo: ''

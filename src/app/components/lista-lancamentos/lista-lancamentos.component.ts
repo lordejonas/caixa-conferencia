@@ -22,57 +22,91 @@ export interface ItemExtrato {
 })
 export class ListaLancamentosComponent {
   @Input() lancamentos: ItemExtrato[] = [];
-  @Input() carregando: boolean = false;
-  @Input() mensagemVazia: string = 'Nenhum lançamento encontrado.';
+  @Input() carregando = false;
+  @Input() mensagemVazia = 'Nenhum lançamento encontrado.';
+  @Input() exibirBotaoSaldoAbertura = false;
 
-  // NOVOS INPUT/OUTPUT
-  @Input() exibirBotaoSaldoAbertura: boolean = false;
   @Output() aoClicarSaldoAbertura = new EventEmitter<void>();
+  @Output() aoAlterar = new EventEmitter<ItemExtrato>();
+  @Output() aoExcluir = new EventEmitter<ItemExtrato>();
 
-  // A descrição adequada da conta (origem >> destino em transferências)
+  itemSelecionado: ItemExtrato | null = null;
+  confirmandoExclusao = false;
+  private timerLongPress: any = null;
+
+  iniciarPressionar(item: ItemExtrato): void {
+    this.cancelarPressionar();
+    this.timerLongPress = setTimeout(() => {
+      this.itemSelecionado = item;
+      this.confirmandoExclusao = false;
+    }, 400);
+  }
+
+  cancelarPressionar(): void {
+    if (this.timerLongPress) {
+      clearTimeout(this.timerLongPress);
+      this.timerLongPress = null;
+    }
+  }
+
+  fecharOpcoes(): void {
+    this.itemSelecionado = null;
+    this.confirmandoExclusao = false;
+  }
+
+  acaoAlterar(): void {
+    if (this.itemSelecionado) {
+      this.aoAlterar.emit(this.itemSelecionado);
+    }
+    this.fecharOpcoes();
+  }
+
+  /* --- FLUXO DE EXCLUSÃO --- */
+
+  solicitarConfirmacaoExclusao(): void {
+    this.confirmandoExclusao = true;
+  }
+
+  confirmarExclusao(): void {
+    if (this.itemSelecionado) {
+      this.aoExcluir.emit(this.itemSelecionado);
+    }
+    this.fecharOpcoes();
+  }
+
+  /* --- MÉTODOS AUXILIARES --- */
+
   obterDescricaoConta(item: ItemExtrato): string {
     if (item.tipoMovimentacao === 'transferencia' && item.nomeContaDestino) {
-      return `${item.nomeContaOrigem} >> ${item.nomeContaDestino}`;
+      return `${item.nomeContaOrigem} ➔ ${item.nomeContaDestino}`;
     }
     return item.nomeContaOrigem;
   }
 
   getIconeClass(item: ItemExtrato): string {
-    if (item.tipoMovimentacao === 'transferencia') {
-      return 'fa-solid fa-right-left';
+    switch (item.tipoMovimentacao) {
+      case 'entrada': return 'bi bi-arrow-down-left-circle-fill';
+      case 'saida': return 'bi bi-arrow-up-right-circle-fill';
+      case 'transferencia': return 'bi bi-arrow-left-right';
+      default: return 'bi bi-circle';
     }
-    return item.montante < 0 ? 'fa-solid fa-arrow-up' : 'fa-solid fa-arrow-down';
   }
 
   formatarMoedaCustom(valor: number): string {
-    const valorAbsoluto = Math.abs(valor);
-    const partes = valorAbsoluto.toFixed(2).split('.');
-    const inteiroComEspaco = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-    const centavos = partes[1];
-    const prefixo = valor < 0 ? '-' : '';
-    return `${prefixo}${inteiroComEspaco},${centavos} R$`;
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(valor);
   }
 
-  formatarDataCustom(dataInput: string | Date): string {
-    const data = new Date(dataInput);
-    if (isNaN(data.getTime())) return '';
-
-    const anoAtual = new Date().getFullYear();
-    const anoData = data.getFullYear();
-
-    const diasSemana = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
-    const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-
-    const diaSemana = diasSemana[data.getDay()];
-    const dia = data.getDate();
-    const mes = meses[data.getMonth()];
-    const horas = String(data.getHours()).padStart(2, '0');
-    const minutos = String(data.getMinutes()).padStart(2, '0');
-
-    if (anoData === anoAtual) {
-      return `${diaSemana}, ${dia} de ${mes} ${horas}:${minutos}`;
-    } else {
-      return `${diaSemana}, ${dia} de ${mes} de ${anoData} ${horas}:${minutos}`;
-    }
+  formatarDataCustom(data: string | Date): string {
+    const d = new Date(data);
+    return d.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
 }

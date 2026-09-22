@@ -91,7 +91,6 @@
   }
 }
 
-// Espaçamento no final do componente para não cobrir o último item
 :host {
   display: block;
 }
@@ -117,6 +116,27 @@
   padding: 12px 0;
   z-index: 1000;
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+
+  // Bloco de Informações do Saldo
+  .info-saldo {
+    display: flex;
+    flex-direction: column;
+
+    .label-saldo {
+      font-size: 0.75rem;
+      color: #6c757d;
+      text-transform: uppercase;
+      font-weight: 600;
+      line-height: 1;
+      margin-bottom: 3px;
+    }
+
+    .valor-saldo {
+      font-size: 1.15rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+  }
 
   // Botão de Transferência (Cinza / Secundário)
   .btn-transferencia {

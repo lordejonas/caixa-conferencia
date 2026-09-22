@@ -23,6 +23,10 @@
     flex-direction: column;
     gap: 0.25rem;
     transition: background-color 0.15s ease-in-out;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    cursor: pointer;
 
     &:active {
       background-color: #f8f9fa;
@@ -48,13 +52,13 @@
         justify-content: center;
 
         &.saida {
-          color: #dc3545; // Vermelho
+          color: #dc3545;
         }
         &.entrada {
-          color: #198754; // Verde
+          color: #198754;
         }
         &.transferencia {
-          color: #fd7e14; // Laranja
+          color: #fd7e14;
         }
       }
     }
@@ -111,6 +115,77 @@
         font-size: 0.75rem;
         color: #8c959f;
       }
+    }
+  }
+}
+
+/* ---------------- MODAL / POPUP DE OPÇÕES (FORA DA LISTA-CONTAINER) ---------------- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  width: 85%;
+  max-width: 320px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  text-align: center;
+
+  h3 {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    color: #212529;
+
+    &.texto-perigo {
+      color: #dc3545;
+    }
+  }
+
+  .detalhe-item {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 20px;
+  }
+}
+
+.modal-acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  .btn-opcao {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+
+    &.btn-editar {
+      background-color: #0d6efd;
+      color: #ffffff;
+    }
+
+    &.btn-excluir {
+      background-color: #dc3545;
+      color: #ffffff;
+    }
+
+    &.btn-cancelar {
+      background-color: #e9ecef;
+      color: #495057;
     }
   }
 }

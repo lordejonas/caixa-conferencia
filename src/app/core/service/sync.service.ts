@@ -548,6 +548,23 @@ export class SyncService {
     }
   }
 
+  public async removerLancamentoRemoto(firebaseId: string): Promise<void> {
+    if (!this.isOnline) return;
+
+    try {
+      const config = this.configService.obterConfiguracaoFirebase();
+      if (!config) return;
+
+      const app = getApps().length === 0 ? initializeApp(config) : getApp();
+      const firestore = getFirestore(app);
+
+      await deleteDoc(doc(firestore, 'lancamentos', firebaseId));
+      console.log('[SyncEngine] Lançamento excluído do Firestore:', firebaseId);
+    } catch (e) {
+      console.error('[SyncEngine] Erro ao excluir lançamento remoto:', e);
+    }
+  }
+
   /**
    * Métodos internos para LANÇAMENTOS
    */

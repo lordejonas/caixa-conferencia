@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { InternalLayoutComponent } from '../../components/internal-layout/internal-layout.component';
 import { ListaLancamentosComponent, ItemExtrato } from '../../components/lista-lancamentos/lista-lancamentos.component';
+import { MoedaCentavosPipe } from '../../pipes/moeda-centavos.pipe';
 import { db } from '../../core/db/app-database';
 import { Conta } from '../../models/conta.model';
+import { LancamentoService } from '../../core/service/lancamento.service';
 
 @Component({
   selector: 'app-conta-extrato',
@@ -13,7 +15,8 @@ import { Conta } from '../../models/conta.model';
     CommonModule,
     RouterModule,
     InternalLayoutComponent,
-    ListaLancamentosComponent
+    ListaLancamentosComponent,
+    MoedaCentavosPipe
   ],
   templateUrl: './conta-extrato.component.html',
   styleUrls: ['./conta-extrato.component.scss']
@@ -26,7 +29,8 @@ export class ContaExtratoComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private lancamentoService: LancamentoService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -39,7 +43,14 @@ export class ContaExtratoComponent implements OnInit {
     }
   }
 
-  // Ação disparada ao clicar no botão
+  // Define a classe CSS baseada no saldo atual
+  obterClasseSaldo(valor: number | null | undefined): string {
+    if (valor === null || valor === undefined || valor === 0) {
+      return 'saldo-zero';
+    }
+    return valor > 0 ? 'saldo-positivo' : 'saldo-negativo';
+  }
+
   irParaSaldoAbertura(): void {
     if (!this.conta) return;
 
@@ -109,7 +120,7 @@ export class ContaExtratoComponent implements OnInit {
           id: l.id!,
           datahorario: l.datahorario,
           nomeContaOrigem: nomeOrigem,
-          nomeContaDestino: nomeDestino, // Passado aqu
+          nomeContaDestino: nomeDestino,
           tipoMovimentacao: tipoMov,
           categoriaNome: l.categoria_id ? mapaCategorias.get(l.categoria_id) : undefined,
           favorecidoNome: l.favorecido_id ? mapaFavorecidos.get(l.favorecido_id) : undefined,
@@ -123,5 +134,23 @@ export class ContaExtratoComponent implements OnInit {
       this.carregando = false;
       this.cdr.detectChanges();
     }
+  }
+
+  async excluirLancamento(item: ItemExtrato): Promise<void> {
+    if (!this.conta || !this.conta.id) return;
+
+    try {
+      const idContaAtual = this.conta.id;
+
+      await this.lancamentoService.excluirLancamento(item.id);
+      await this.carregarExtratoDaConta(idContaAtual);
+    } catch (error) {
+      console.error('Erro ao excluir lançamento:', error);
+      alert('Ocorreu um erro ao tentar excluir o lançamento.');
+    }
+  }
+
+  alterarLancamento(item: ItemExtrato): void {
+    this.router.navigate(['/lancamentos/editar', item.id]);
   }
 }

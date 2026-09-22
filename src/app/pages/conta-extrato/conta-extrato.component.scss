@@ -19,6 +19,39 @@
   z-index: 1000;
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
 
+  // Bloco de Informações do Saldo (Alinhado à esquerda)
+  .info-saldo {
+    display: flex;
+    flex-direction: column;
+
+    .label-saldo {
+      font-size: 0.75rem;
+      color: #6c757d;
+      text-transform: uppercase;
+      font-weight: 600;
+      line-height: 1;
+      margin-bottom: 3px;
+    }
+
+    .valor-saldo {
+      font-size: 1.15rem;
+      font-weight: 700;
+      line-height: 1.2;
+
+      &.saldo-positivo {
+        color: #28a745; // Verde
+      }
+
+      &.saldo-negativo {
+        color: #dc3545; // Vermelho
+      }
+
+      &.saldo-zero {
+        color: #6c757d; // Cinza
+      }
+    }
+  }
+
   // Botão de Transferência
   .btn-transferencia {
     width: 48px;

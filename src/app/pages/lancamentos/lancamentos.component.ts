@@ -7,6 +7,7 @@ import { MoedaCentavosPipe } from '../../pipes/moeda-centavos.pipe';
 import { db } from '../../core/db/app-database';
 import { Conta } from '../../models/conta.model';
 import { Agregador } from '../../models/agregador.model';
+import { LancamentoService } from '../../core/service/lancamento.service';
 
 type TipoAba = 'contas' | 'lancamentos';
 
@@ -48,7 +49,8 @@ export class LancamentosComponent implements OnInit {
 
   constructor(
     private cdr: ChangeDetectorRef,
-    private router: Router
+    private router: Router,
+    private lancamentoService: LancamentoService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -130,10 +132,8 @@ export class LancamentosComponent implements OnInit {
     try {
       this.carregandoLancamentos = true;
 
-      // 1. Busca todos os lançamentos
       const lancamentosBrutos = await db.lancamentos.toArray();
 
-      // Mapeamentos para buscar nomes de contas, categorias e favorecidos
       const todasContas = await db.contas.toArray();
       const mapaContas = new Map<number, string>(todasContas.map(c => [c.id!, c.titulo]));
 
@@ -143,12 +143,10 @@ export class LancamentosComponent implements OnInit {
       const favorecidos = await db.favorecidos.toArray();
       const mapaFavorecidos = new Map<number, string>(favorecidos.map(f => [f.id!, f.titulo]));
 
-      // Ordenação decrescente por data/horário
       lancamentosBrutos.sort(
         (a, b) => new Date(b.datahorario).getTime() - new Date(a.datahorario).getTime()
       );
 
-      // 2. Mapeamento dividindo o valor por 100
       this.todosLancamentos = lancamentosBrutos.map((l) => {
         const orig = l.origem_montante || 0;
         const dest = l.destino_montante || 0;
@@ -165,19 +163,17 @@ export class LancamentosComponent implements OnInit {
         }
 
         const nomeOrigem = mapaContas.get(l.origem_conta_id) || 'Sem Conta';
-        // Captura o nome da conta de destino se houver destino_conta_id
         const nomeDestino = l.destino_conta_id ? mapaContas.get(l.destino_conta_id) : undefined;
 
         return {
           id: l.id!,
           datahorario: l.datahorario,
           nomeContaOrigem: nomeOrigem,
-          nomeContaDestino: nomeDestino, // 🟢 Mapeia a conta de destino para formar "ORIGEM >> DESTINO"
+          nomeContaDestino: nomeDestino,
           tipoMovimentacao: tipoMov,
           categoriaNome: l.categoria_id ? mapaCategorias.get(l.categoria_id) : undefined,
           favorecidoNome: l.favorecido_id ? mapaFavorecidos.get(l.favorecido_id) : undefined,
           nota: l.nota || undefined,
-          // Converte de centavos para reais antes de passar para a lista
           montante: montanteEmCentavos / 100
         };
       });
@@ -187,6 +183,25 @@ export class LancamentosComponent implements OnInit {
       this.carregandoLancamentos = false;
       this.cdr.detectChanges();
     }
+  }
+
+  /**
+   * Calcula o saldo total baseado apenas nos lançamentos visíveis/listados em tela.
+   * Transferências somam 0 no geral (pois uma conta entra e a outra sai).
+   * Lançamentos comuns somam entradas (+ / receita) e saídas (- / despesa).
+   */
+  get saldoTotalLancamentos(): number {
+    if (!this.todosLancamentos || this.todosLancamentos.length === 0) return 0;
+
+    const totalEmReais = this.todosLancamentos.reduce((acc, item) => {
+      if (item.tipoMovimentacao === 'transferencia') {
+        return acc; // Transferência não altera o saldo global
+      }
+      return acc + (item.montante || 0);
+    }, 0);
+
+    // Multiplica por 100 para converter em centavos antes do Pipe MoedaCentavos
+    return Math.round(totalEmReais * 100);
   }
 
   get saldoLiquido(): number {
@@ -239,7 +254,6 @@ export class LancamentosComponent implements OnInit {
       this.agregadorSelecionado = item;
       this.contaSelecionadaAviso = null;
     } else {
-      // Navega para o extrato da conta clicada
       this.router.navigate(['/contas', item.id, 'extrato']);
     }
   }
@@ -247,5 +261,24 @@ export class LancamentosComponent implements OnInit {
   voltarParaRaizAgregador(): void {
     this.agregadorSelecionado = null;
     this.contaSelecionadaAviso = null;
+  }
+
+  async excluirLancamento(item: ItemExtrato): Promise<void> {
+    try {
+      await this.lancamentoService.excluirLancamento(item.id);
+      await this.carregarTodosLancamentos();
+      await this.carregarDadosContas();
+    } catch (error) {
+      console.error('Erro ao excluir lançamento:', error);
+      alert('Ocorreu um erro ao tentar excluir o lançamento.');
+    }
+  }
+
+  alterarLancamento(item: ItemExtrato): void {
+    if (item.tipoMovimentacao === 'transferencia') {
+      this.router.navigate(['/lancamentos/transferencia/editar', item.id]);
+    } else {
+      this.router.navigate(['/lancamentos/editar', item.id]);
+    }
   }
 }

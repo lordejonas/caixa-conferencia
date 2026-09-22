@@ -5,31 +5,44 @@
       [carregando]="carregando"
       mensagemVazia="Nenhum lançamento encontrado para esta conta."
       [exibirBotaoSaldoAbertura]="true"
-      (aoClicarSaldoAbertura)="irParaSaldoAbertura()">
+      (aoClicarSaldoAbertura)="irParaSaldoAbertura()"
+      (aoExcluir)="excluirLancamento($event)"
+      (aoAlterar)="alterarLancamento($event)">
     </app-lista-lancamentos>
   </div>
 
   <!-- PAINEL FIXO NO RODAPÉ -->
   <div class="rodape-fixo" (click)="$event.stopPropagation()">
-    <div class="container d-flex align-items-center justify-content-end gap-2">
+    <div class="container d-flex align-items-center justify-content-between">
 
-      <!-- Botão de Transferência (Passa a conta de origem via QueryParam) -->
-      <a
-        [routerLink]="['/lancamentos/transferencia']"
-        [queryParams]="{ contaId: conta?.id }"
-        class="btn-transferencia"
-        aria-label="Nova transferência">
-        <span>⇄</span>
-      </a>
+      <!-- Saldo da Conta (Alinhado à Esquerda) -->
+      <div class="info-saldo d-flex flex-column" *ngIf="conta">
 
-      <!-- Botão de Novo Lançamento (Passa a conta via QueryParam) -->
-      <a
-        [routerLink]="['/lancamentos/novo']"
-        [queryParams]="{ contaId: conta?.id }"
-        class="btn-adicionar"
-        aria-label="Adicionar lançamento">
-        <span>+</span>
-      </a>
+        <span class="valor-saldo" [ngClass]="obterClasseSaldo(conta.saldo_atual)">
+          {{ (conta.saldo_atual || 0) | moedaCentavos }}
+        </span>
+      </div>
+
+      <!-- Botões de Ação (Alinhados à Direita) -->
+      <div class="d-flex align-items-center gap-2">
+        <!-- Botão de Transferência -->
+        <a
+          [routerLink]="['/lancamentos/transferencia']"
+          [queryParams]="{ contaId: conta?.id }"
+          class="btn-transferencia"
+          aria-label="Nova transferência">
+          <span>⇄</span>
+        </a>
+
+        <!-- Botão de Novo Lançamento -->
+        <a
+          [routerLink]="['/lancamentos/novo']"
+          [queryParams]="{ contaId: conta?.id }"
+          class="btn-adicionar"
+          aria-label="Adicionar lançamento">
+          <span>+</span>
+        </a>
+      </div>
 
     </div>
   </div>
