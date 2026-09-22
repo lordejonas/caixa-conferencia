@@ -46,19 +46,24 @@
       }
 
       .icone-fluxo {
-        font-size: 0.60rem;
+        font-size: 0.55rem; /* Reduzido de 0.95rem para 0.70rem */
         display: flex;
         align-items: center;
         justify-content: center;
 
+        i {
+          /* Ajustado para ficar encorpado proporcionalmente ao tamanho menor */
+          -webkit-text-stroke: 0.5px;
+        }
+
         &.saida {
-          color: #dc3545;
+          color: #dc3545; /* Vermelho */
         }
         &.entrada {
-          color: #198754;
+          color: #198754; /* Verde */
         }
         &.transferencia {
-          color: #fd7e14;
+          color: #8b4513; /* Marrom */
         }
       }
     }
@@ -119,7 +124,7 @@
   }
 }
 
-/* ---------------- MODAL / POPUP DE OPÇÕES (FORA DA LISTA-CONTAINER) ---------------- */
+/* ---------------- MODAL / POPUP DE OPÇÕES ---------------- */
 .modal-overlay {
   position: fixed;
   top: 0;

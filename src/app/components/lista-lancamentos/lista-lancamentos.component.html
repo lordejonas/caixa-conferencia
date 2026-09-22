@@ -71,7 +71,7 @@
     <ng-container *ngIf="!confirmandoExclusao">
       <h3>Ações para o Lançamento</h3>
       <p class="detalhe-item">
-        {{ itemSelecionado.categoriaNome || 'Lançamento' }} - {{ formatarMoedaCustom(itemSelecionado.montante) }}
+        {{ itemSelecionado?.categoriaNome || 'Lançamento' }} - {{ itemSelecionado ? formatarMoedaCustom(itemSelecionado.montante) : '' }}
       </p>
 
       <div class="modal-acoes">
@@ -94,7 +94,7 @@
       <h3 class="texto-perigo">Confirmar Exclusão?</h3>
       <p class="detalhe-item">
         Tem certeza que deseja excluir este lançamento?<br>
-        <strong>{{ itemSelecionado.categoriaNome || 'Lançamento' }}</strong> ({{ formatarMoedaCustom(itemSelecionado.montante) }})
+        <strong>{{ itemSelecionado?.categoriaNome || 'Lançamento' }}</strong> ({{ itemSelecionado ? formatarMoedaCustom(itemSelecionado.montante) : '' }})
       </p>
 
       <div class="modal-acoes">

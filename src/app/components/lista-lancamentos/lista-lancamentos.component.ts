@@ -85,9 +85,9 @@ export class ListaLancamentosComponent {
 
   getIconeClass(item: ItemExtrato): string {
     switch (item.tipoMovimentacao) {
-      case 'entrada': return 'bi bi-arrow-down-left-circle-fill';
-      case 'saida': return 'bi bi-arrow-up-right-circle-fill';
-      case 'transferencia': return 'bi bi-arrow-left-right';
+      case 'entrada': return 'bi bi-arrow-down-left';  // Sudoeste (Verde)
+      case 'saida': return 'bi bi-arrow-up-right';     // Nordeste (Vermelho)
+      case 'transferencia': return 'bi bi-arrow-left-right'; // Dupla (Marrom)
       default: return 'bi bi-circle';
     }
   }
