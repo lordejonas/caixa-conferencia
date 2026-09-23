@@ -1,11 +1,12 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router'; // 1. IMPORTANTE: Adicionado ActivatedRoute
+import { ActivatedRoute } from '@angular/router';
 import { db } from '../../core/db/app-database';
 import { Conta } from '../../models/conta.model';
 import { Categoria } from '../../models/categoria.model';
 import { Lancamento } from '../../models/lancamento.model';
+import { DecimaAutocontrolService } from '../../services/decima-autocontrol.service'; // <-- Importado
 
 @Component({
   selector: 'app-transferencia-form',
@@ -17,7 +18,8 @@ import { Lancamento } from '../../models/lancamento.model';
 export class TransferenciaFormComponent implements OnInit {
   private location = inject(Location);
   private cdr = inject(ChangeDetectorRef);
-  private route = inject(ActivatedRoute); // 2. IMPORTANTE: Injeção do ActivatedRoute
+  private route = inject(ActivatedRoute);
+  private decimaService = inject(DecimaAutocontrolService); // <-- Injetado
 
   // Listas dos Selects
   contas: Conta[] = [];
@@ -48,9 +50,7 @@ export class TransferenciaFormComponent implements OnInit {
     await this.carregarDados();
   }
 
-  // 3. ALTERADO: Método carregarDados atualizado para ler o queryParam
   private async carregarDados(): Promise<void> {
-    // Captura o parâmetro 'contaId' da URL, se existir
     const queryParams = this.route.snapshot.queryParams;
     const contaIdQuery = queryParams['contaId'] ? Number(queryParams['contaId']) : null;
 
@@ -58,7 +58,6 @@ export class TransferenciaFormComponent implements OnInit {
     this.contas = listaContas;
 
     if (this.contas.length > 0) {
-      // Se veio contaId na URL e ela existe na lista, define como Origem; senão, pega a primeira
       if (contaIdQuery && this.contas.some(c => c.id === contaIdQuery)) {
         this.contaOrigemId = contaIdQuery;
       } else {
@@ -66,13 +65,11 @@ export class TransferenciaFormComponent implements OnInit {
       }
       this.contaOrigemAnterior = this.contaOrigemId;
 
-      // Define a conta de Destino (procura a primeira conta que seja DIFERENTE da origem)
       const contaDestinoDiferente = this.contas.find(c => c.id !== this.contaOrigemId);
       this.contaDestinoId = contaDestinoDiferente ? (contaDestinoDiferente.id ?? null) : this.contaOrigemId;
       this.contaDestinoAnterior = this.contaDestinoId;
     }
 
-    // Filtra apenas categorias ativas e com auto === false
     this.categorias = await db.categorias
       .filter(c => c.ativo !== false && c.auto === false)
       .toArray();
@@ -236,6 +233,9 @@ export class TransferenciaFormComponent implements OnInit {
           updatedAt: this.obterDataIsoLocal()
         });
       });
+
+      // <-- PROCESSA A DÉCIMA AUTOMATICAMENTE APÓS CRIAR A TRANSFERÊNCIA -->
+      await this.decimaService.processarDecimaParaAta(this.ataLivroCaixaId);
 
       this.cancelar();
     } catch (error) {

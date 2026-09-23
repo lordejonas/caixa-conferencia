@@ -53,7 +53,7 @@ export const DEFAULT_CONTAS_TIPO_1: Omit<Conta, 'id'>[] = [
     icone: '👥', // Busto de pessoas representando movimentação de membros
     saldo_atual: 0,
     ativo: true,
-    contabilizar_totais: false,
+    contabilizar_totais: true,
     id_conta_arredondamento: null,
     id_agregador: null,
     minimo_arredondamento: 1,
@@ -145,7 +145,7 @@ export const DEFAULT_CONTAS_TIPO_2: Omit<Conta, 'id'>[] = [
     icone: '👥', // Pessoas/Membros
     saldo_atual: 0,
     ativo: true,
-    contabilizar_totais: false,
+    contabilizar_totais: true,
     id_conta_arredondamento: null,
     id_agregador: null,
     minimo_arredondamento: 1,

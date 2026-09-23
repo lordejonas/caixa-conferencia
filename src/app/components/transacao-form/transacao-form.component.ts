@@ -7,6 +7,7 @@ import { Conta } from '../../models/conta.model';
 import { Favorecido } from '../../models/favorecido.model';
 import { Categoria } from '../../models/categoria.model';
 import { Lancamento } from '../../models/lancamento.model';
+import { DecimaAutocontrolService } from '../../services/decima-autocontrol.service'; // <--- IMPORTADO
 
 @Component({
   selector: 'app-transacao-form',
@@ -19,10 +20,12 @@ export class TransacaoFormComponent implements OnInit {
   private location = inject(Location);
   private cdr = inject(ChangeDetectorRef);
   private route = inject(ActivatedRoute);
+  private decimaService = inject(DecimaAutocontrolService); // <--- INJETADO
 
   // Controle de Edição
   idEdicao: number | null = null;
-  private montanteOriginal: number = 0; // Armazena o valor anterior para recalcular saldo ao editar
+  private montanteOriginal: number = 0;
+  private ataAntigaId: number | null = null; // Armazena a ata anterior na edição
 
   // Listas dos Selects
   contas: Conta[] = [];
@@ -54,18 +57,15 @@ export class TransacaoFormComponent implements OnInit {
   }
 
   private async carregarDados(): Promise<void> {
-    // 1. Verificar se é Edição (ID na rota /lancamentos/editar/:id)
     const idRoute = this.route.snapshot.paramMap.get('id');
     if (idRoute) {
       this.idEdicao = Number(idRoute);
     }
 
-    // 2. Ler parâmetros passados pela URL (queryParams) para o caso de criação com pré-seleção
     const queryParams = this.route.snapshot.queryParams;
     const contaIdQuery = queryParams['contaId'] ? Number(queryParams['contaId']) : null;
     const categoriaNomeQuery = queryParams['categoriaNome'] as string | undefined;
 
-    // 3. Carregar Listas Auxiliares (Contas, Favorecidos, Categorias)
     this.contas = await db.contas.filter(c => c.ativo !== false).toArray();
     this.favorecidos = await db.favorecidos.filter(f => f.ativo !== false).toArray();
     this.categorias = await db.categorias
@@ -76,11 +76,9 @@ export class TransacaoFormComponent implements OnInit {
       })
       .toArray();
 
-    // 4. Se for EDIÇÃO, busca o registro no banco e preenche o formulário
     if (this.idEdicao) {
       const lancamento = await db.lancamentos.get(this.idEdicao);
       if (lancamento) {
-        // Preencher data e hora
         if (lancamento.datahorario) {
           const [dataPart, horaPart] = lancamento.datahorario.split('T');
           this.dataIso = dataPart;
@@ -88,14 +86,13 @@ export class TransacaoFormComponent implements OnInit {
           this.atualizarDataExtenso();
         }
 
-        // Preencher selects (usando ?? null para evitar o erro de undefined)
         this.contaSelecionadaId = lancamento.origem_conta_id;
         this.favorecidoSelecionadoId = lancamento.favorecido_id ?? null;
         this.categoriaSelecionadaId = lancamento.categoria_id ?? null;
         this.nota = lancamento.nota || '';
         this.ataLivroCaixaId = lancamento.ata_livro_caixa_id ?? null;
+        this.ataAntigaId = lancamento.ata_livro_caixa_id ?? null;
 
-        // Preencher valor e sinal
         const valCentavosAbs = Math.abs(lancamento.origem_montante);
         this.montanteOriginal = lancamento.origem_montante;
         this.isDespesa = lancamento.origem_montante < 0;
@@ -107,7 +104,6 @@ export class TransacaoFormComponent implements OnInit {
         this.centavos = String(valorCentavos).padStart(2, '0');
       }
     } else {
-      // 5. Se for NOVO REGISTRO, aplicar valores padrão de queryParams (se existirem)
       if (contaIdQuery && this.contas.some(c => c.id === contaIdQuery)) {
         this.contaSelecionadaId = contaIdQuery;
       } else if (this.contas.length > 0 && this.contas[0].id !== undefined) {
@@ -304,14 +300,12 @@ export class TransacaoFormComponent implements OnInit {
           });
 
           if (contaAntigaId === contaId) {
-            // Se a conta não mudou, ajusta a diferença no saldo
             const diferencaMontante = totalCentavos - this.montanteOriginal;
             await db.contas.update(contaId, {
               saldo_atual: (conta.saldo_atual || 0) + diferencaMontante,
               updatedAt: this.obterDataIsoLocal()
             });
           } else {
-            // Se a conta mudou, estorna da conta antiga e aplica na conta nova
             if (contaAntigaId) {
               const contaAntiga = await db.contas.get(contaAntigaId);
               if (contaAntiga) {
@@ -353,6 +347,14 @@ export class TransacaoFormComponent implements OnInit {
           });
         }
       });
+
+      // --- RECALCULAR A DÉCIMA (10%) ---
+      await this.decimaService.processarDecimaParaAta(this.ataLivroCaixaId);
+
+      // Se a ata foi alterada na edição, recalcula a ata antiga também
+      if (this.idEdicao && (this.ataAntigaId ?? null) !== (this.ataLivroCaixaId ?? null)) {
+        await this.decimaService.processarDecimaParaAta(this.ataAntigaId);
+      }
 
       this.cancelar();
     } catch (error) {
