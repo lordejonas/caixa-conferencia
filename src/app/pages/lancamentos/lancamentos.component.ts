@@ -133,9 +133,10 @@ export class LancamentosComponent implements OnInit {
       this.carregandoLancamentos = true;
 
       const lancamentosBrutos = await db.lancamentos.toArray();
-
       const todasContas = await db.contas.toArray();
-      const mapaContas = new Map<number, string>(todasContas.map(c => [c.id!, c.titulo]));
+
+      // Mapeamos as contas por ID para acesso rápido
+      const mapaContasObj = new Map<number, Conta>(todasContas.map(c => [c.id!, c]));
 
       const categorias = await db.categorias.toArray();
       const mapaCategorias = new Map<number, string>(categorias.map(c => [c.id!, c.titulo]));
@@ -162,8 +163,25 @@ export class LancamentosComponent implements OnInit {
           tipoMov = montanteEmCentavos < 0 ? 'saida' : 'entrada';
         }
 
-        const nomeOrigem = mapaContas.get(l.origem_conta_id) || 'Sem Conta';
-        const nomeDestino = l.destino_conta_id ? mapaContas.get(l.destino_conta_id) : undefined;
+        const contaOrigem = mapaContasObj.get(l.origem_conta_id);
+        const contaDestino = l.destino_conta_id ? mapaContasObj.get(l.destino_conta_id) : undefined;
+
+        const nomeOrigem = contaOrigem?.titulo || 'Sem Conta';
+        const nomeDestino = contaDestino?.titulo;
+
+        const origContabiliza = contaOrigem ? contaOrigem.contabilizar_totais !== false : true;
+        const destContabiliza = contaDestino ? contaDestino.contabilizar_totais !== false : true;
+        let ehTransferenciaComImpacto = false;
+        let tipoImpactoTransferencia: 'entrada' | 'saida' | undefined = undefined;
+        if (ehTransferencia) {
+          if (!origContabiliza && destContabiliza) {
+            ehTransferenciaComImpacto = true;
+            tipoImpactoTransferencia = 'entrada'; // De FALSE para TRUE => Crédito (Verde)
+          } else if (origContabiliza && !destContabiliza) {
+            ehTransferenciaComImpacto = true;
+            tipoImpactoTransferencia = 'saida'; // De TRUE para FALSE => Débito (Vermelho com "-")
+          }
+        }
 
         return {
           id: l.id!,
@@ -174,7 +192,12 @@ export class LancamentosComponent implements OnInit {
           categoriaNome: l.categoria_id ? mapaCategorias.get(l.categoria_id) : undefined,
           favorecidoNome: l.favorecido_id ? mapaFavorecidos.get(l.favorecido_id) : undefined,
           nota: l.nota || undefined,
-          montante: montanteEmCentavos / 100
+          montante: montanteEmCentavos / 100,
+          // Guardamos as propriedades de contabilizar_totais
+          origemContabilizaTotais: contaOrigem ? contaOrigem.contabilizar_totais : null,
+          destinoContabilizaTotais: contaDestino ? contaDestino.contabilizar_totais : null,
+          ehTransferenciaComImpacto,
+          tipoImpactoTransferencia
         };
       });
     } catch (error) {
@@ -194,51 +217,64 @@ export class LancamentosComponent implements OnInit {
     if (!this.todosLancamentos || this.todosLancamentos.length === 0) return 0;
 
     const totalEmReais = this.todosLancamentos.reduce((acc, item) => {
+      // Normaliza status: se for explicitamente === false, consideramos NÃO contabilizável
+      const origContabiliza = item.origemContabilizaTotais !== false;
+      const destContabiliza = item.destinoContabilizaTotais !== false;
+
+      // --- CASO 1: TRANSFERÊNCIA ---
       if (item.tipoMovimentacao === 'transferencia') {
-        return acc; // Transferência não altera o saldo global
+        const valorAbsoluto = Math.abs(item.montante || 0);
+
+        // De FALSE para TRUE => CRÉDITO (+)
+        if (!origContabiliza && destContabiliza) {
+          return acc + valorAbsoluto;
+        }
+
+        // De TRUE para FALSE => DÉBITO (-)
+        if (origContabiliza && !destContabiliza) {
+          return acc - valorAbsoluto;
+        }
+
+        // Entre contas com mesmo valor (TRUE->TRUE ou FALSE->FALSE) => Ignora (0)
+        return acc;
       }
+
+      // --- CASO 2: LANÇAMENTOS COMUNS (Receita / Despesa) ---
+      // Se a conta de origem não contabiliza totais (contabilizar_totais === false), ignora o lançamento
+      if (!origContabiliza) {
+        return acc;
+      }
+
       return acc + (item.montante || 0);
     }, 0);
 
-    // Multiplica por 100 para converter em centavos antes do Pipe MoedaCentavos
+    // Multiplica por 100 para converter em centavos antes de passar pelo Pipe MoedaCentavos
     return Math.round(totalEmReais * 100);
   }
 
-  /**
-   * Saldo Líquido:
-   * Soma de TODAS as contas ativas cuja regra não ignora o saldo no total (contabilizar_totais !== null).
-   * Desconsidera apenas contas de arredondamento puras (contabilizar_totais === null).
+   /**
+   * Saldo Líquido: Soma dos saldos de todas as contas que possuem contabilizar_totais === true.
+   * (Contas com null, undefined ou false são desconsideradas)
    */
   get saldoLiquido(): number {
     const contas = this.extrairContasDaLista();
-    if (!contas.length) return 0;
+    if (!contas || contas.length === 0) return 0;
 
-    return contas.reduce((acc, conta) => {
-      // Considera apenas contas ativas e onde contabilizar_totais não seja 'null'
-      if (conta.ativo && conta.contabilizar_totais !== null) {
-        return acc + (conta.saldo_atual || 0);
-      }
-      return acc;
-    }, 0);
+    return contas
+      .filter(conta => conta.contabilizar_totais === true)
+      .reduce((acc, conta) => acc + (conta.saldo_atual || 0), 0);
   }
 
   /**
-   * Saldo Bruto:
-   * Soma apenas das contas de liquidez imediata / tesouraria principal.
-   * (No Tipo 1: 'Caixa' | No Tipo 2: 'Espécie' e 'Banco')
-   * Identificadas com contabilizar_totais === true
+   * Saldo Bruto: Soma dos saldos APENAS POSITIVOS (> 0) das contas com contabilizar_totais === true.
    */
   get saldoBruto(): number {
     const contas = this.extrairContasDaLista();
-    if (!contas.length) return 0;
+    if (!contas || contas.length === 0) return 0;
 
-    return contas.reduce((acc, conta) => {
-      // Considera apenas contas ativas marcadas explicitamente para contabilizar totais brutos
-      if (conta.ativo && conta.contabilizar_totais === true) {
-        return acc + (conta.saldo_atual || 0);
-      }
-      return acc;
-    }, 0);
+    return contas
+      .filter(conta => conta.contabilizar_totais === true && (conta.saldo_atual || 0) > 0)
+      .reduce((acc, conta) => acc + (conta.saldo_atual || 0), 0);
   }
 
   obterClasseSaldo(valor: number | null | undefined): string {

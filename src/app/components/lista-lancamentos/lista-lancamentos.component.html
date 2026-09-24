@@ -52,13 +52,8 @@
               }
             </div>
 
-            <div class="valor"
-                 [ngClass]="{
-                   'valor-zero': item.montante === 0,
-                   'valor-positivo': item.montante > 0,
-                   'valor-negativo': item.montante < 0
-                 }">
-              {{ formatarMoedaCustom(item.montante) }}
+            <div class="valor" [ngClass]="obterClasseValor(item)">
+              {{ formatarValorExibicao(item) }}
             </div>
           </div>
 

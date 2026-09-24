@@ -11,6 +11,10 @@ export interface ItemExtrato {
   favorecidoNome?: string;
   nota?: string;
   montante: number;
+  origemContabilizaTotais?: boolean | null;
+  destinoContabilizaTotais?: boolean | null;
+  ehTransferenciaComImpacto?: boolean;
+  tipoImpactoTransferencia?: 'entrada' | 'saida';
 }
 
 @Component({
@@ -109,4 +113,39 @@ export class ListaLancamentosComponent {
       minute: '2-digit'
     });
   }
+
+  obterClasseValor(item: ItemExtrato): string {
+    if (item.montante === 0) return 'valor-zero';
+
+    if (item.tipoMovimentacao === 'transferencia') {
+      if (item.ehTransferenciaComImpacto) {
+        return item.tipoImpactoTransferencia === 'entrada'
+          ? 'valor-positivo' // Verde
+          : 'valor-negativo'; // Vermelho
+      }
+      return 'valor-transferencia-neutra'; // Marrom #8b4513
+    }
+
+    return item.montante > 0 ? 'valor-positivo' : 'valor-negativo';
+  }
+
+  formatarValorExibicao(item: ItemExtrato): string {
+    const valorAbsoluto = Math.abs(item.montante);
+
+    if (item.tipoMovimentacao === 'transferencia') {
+      if (item.ehTransferenciaComImpacto) {
+        // Exibe sinal negativo (-) apenas se for saída para conta não contabilizada
+        const prefixo = item.tipoImpactoTransferencia === 'saida' ? '-' : '';
+        return `${prefixo}${this.formatarMoedaCustom(valorAbsoluto)}`;
+      }
+      // Transferências normais (neutras): valor positivo sem sinal de menos
+      return this.formatarMoedaCustom(valorAbsoluto);
+    }
+
+    if (item.montante < 0) {
+      return `-${this.formatarMoedaCustom(valorAbsoluto)}`;
+    }
+    return this.formatarMoedaCustom(valorAbsoluto);
+  }
+
 }

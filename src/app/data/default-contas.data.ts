@@ -8,7 +8,7 @@ export const DEFAULT_AGREGADORES_TIPO_2: Omit<Agregador, 'id'>[] = [
     icone: '🔃', // Mãozinhas/setas de ciclo indicando ajuste e arredondamento continuo
     descricao: 'Reúne as contas de arredondamento de espécie e banco',
     ativo: true,
-    contabilizar_totais: null,
+    contabilizar_totais: false,
     ordem_listagem: 3
   }
 ];
@@ -31,7 +31,7 @@ export const DEFAULT_CONTAS_TIPO_1: Omit<Conta, 'id'>[] = [
     icone: '🔃', // Moeda individual para representação de ajustes de centavos
     saldo_atual: 0,
     ativo: true,
-    contabilizar_totais: null,
+    contabilizar_totais: false,
     id_conta_arredondamento: 1,
     id_agregador: null,
     minimo_arredondamento: 1,
@@ -42,7 +42,7 @@ export const DEFAULT_CONTAS_TIPO_1: Omit<Conta, 'id'>[] = [
     icone: '🧮', // Edifício religioso/comunitário para contribuições/dízimos
     saldo_atual: 0,
     ativo: true,
-    contabilizar_totais: false,
+    contabilizar_totais: true,
     id_conta_arredondamento: null,
     id_agregador: null,
     minimo_arredondamento: 1,
@@ -64,7 +64,7 @@ export const DEFAULT_CONTAS_TIPO_1: Omit<Conta, 'id'>[] = [
     icone: '🏛️', // Prédio institucional/conselho representativo
     saldo_atual: 0,
     ativo: true,
-    contabilizar_totais: false,
+    contabilizar_totais: true,
     id_conta_arredondamento: null,
     id_agregador: null,
     minimo_arredondamento: 1,
@@ -75,7 +75,7 @@ export const DEFAULT_CONTAS_TIPO_1: Omit<Conta, 'id'>[] = [
     icone: '🧾', // Registro representando recursos e movimentações extras
     saldo_atual: 0,
     ativo: true,
-    contabilizar_totais: false,
+    contabilizar_totais: true,
     id_conta_arredondamento: null,
     id_agregador: null,
     minimo_arredondamento: 1,
@@ -112,7 +112,7 @@ export const DEFAULT_CONTAS_TIPO_2: Omit<Conta, 'id'>[] = [
     icone: '🪙', // Moeda para ajuste de troco/espécie
     saldo_atual: 0,
     ativo: true,
-    contabilizar_totais: null,
+    contabilizar_totais: false,
     id_conta_arredondamento: 1,
     id_agregador: 1,
     minimo_arredondamento: 5,
@@ -123,7 +123,7 @@ export const DEFAULT_CONTAS_TIPO_2: Omit<Conta, 'id'>[] = [
     icone: '💳', // Cartão/operação bancária para arredondamento digital
     saldo_atual: 0,
     ativo: true,
-    contabilizar_totais: null,
+    contabilizar_totais: false,
     id_conta_arredondamento: 2,
     id_agregador: 1,
     minimo_arredondamento: 1,
@@ -134,7 +134,7 @@ export const DEFAULT_CONTAS_TIPO_2: Omit<Conta, 'id'>[] = [
     icone: '🧮', // Edifício comunitário/religioso
     saldo_atual: 0,
     ativo: true,
-    contabilizar_totais: false,
+    contabilizar_totais: true,
     id_conta_arredondamento: null,
     id_agregador: null,
     minimo_arredondamento: 1,
@@ -156,7 +156,7 @@ export const DEFAULT_CONTAS_TIPO_2: Omit<Conta, 'id'>[] = [
     icone: '🏛️', // Prédio institucional/conselho
     saldo_atual: 0,
     ativo: true,
-    contabilizar_totais: false,
+    contabilizar_totais: true,
     id_conta_arredondamento: null,
     id_agregador: null,
     minimo_arredondamento: 1,
@@ -167,7 +167,7 @@ export const DEFAULT_CONTAS_TIPO_2: Omit<Conta, 'id'>[] = [
     icone: '🧾', // Registro/Caixa extra
     saldo_atual: 0,
     ativo: true,
-    contabilizar_totais: false,
+    contabilizar_totais: true,
     id_conta_arredondamento: null,
     id_agregador: null,
     minimo_arredondamento: 1,
