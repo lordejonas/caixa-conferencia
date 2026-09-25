@@ -21,7 +21,7 @@ export const DEFAULT_CONTAS_TIPO_1: Omit<Conta, 'id'>[] = [
     saldo_atual: 0,
     ativo: true,
     contabilizar_totais: true,
-    id_conta_arredondamento: null,
+    id_conta_arredondamento: 2,
     id_agregador: null,
     minimo_arredondamento: 1,
     ordem_listagem: 1
@@ -32,7 +32,7 @@ export const DEFAULT_CONTAS_TIPO_1: Omit<Conta, 'id'>[] = [
     saldo_atual: 0,
     ativo: true,
     contabilizar_totais: false,
-    id_conta_arredondamento: 1,
+    id_conta_arredondamento: null,
     id_agregador: null,
     minimo_arredondamento: 1,
     ordem_listagem: 2
@@ -91,7 +91,7 @@ export const DEFAULT_CONTAS_TIPO_2: Omit<Conta, 'id'>[] = [
     saldo_atual: 0,
     ativo: true,
     contabilizar_totais: true,
-    id_conta_arredondamento: null,
+    id_conta_arredondamento: 3,
     id_agregador: null,
     minimo_arredondamento: 5,
     ordem_listagem: 1
@@ -102,7 +102,7 @@ export const DEFAULT_CONTAS_TIPO_2: Omit<Conta, 'id'>[] = [
     saldo_atual: 0,
     ativo: true,
     contabilizar_totais: true,
-    id_conta_arredondamento: null,
+    id_conta_arredondamento: 4,
     id_agregador: null,
     minimo_arredondamento: 1,
     ordem_listagem: 2
@@ -113,7 +113,7 @@ export const DEFAULT_CONTAS_TIPO_2: Omit<Conta, 'id'>[] = [
     saldo_atual: 0,
     ativo: true,
     contabilizar_totais: false,
-    id_conta_arredondamento: 1,
+    id_conta_arredondamento: null,
     id_agregador: 1,
     minimo_arredondamento: 5,
     ordem_listagem: 3
@@ -124,7 +124,7 @@ export const DEFAULT_CONTAS_TIPO_2: Omit<Conta, 'id'>[] = [
     saldo_atual: 0,
     ativo: true,
     contabilizar_totais: false,
-    id_conta_arredondamento: 2,
+    id_conta_arredondamento: null,
     id_agregador: 1,
     minimo_arredondamento: 1,
     ordem_listagem: 4

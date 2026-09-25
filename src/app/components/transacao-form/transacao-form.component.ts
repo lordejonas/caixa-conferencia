@@ -7,7 +7,8 @@ import { Conta } from '../../models/conta.model';
 import { Favorecido } from '../../models/favorecido.model';
 import { Categoria } from '../../models/categoria.model';
 import { Lancamento } from '../../models/lancamento.model';
-import { DecimaAutocontrolService } from '../../services/decima-autocontrol.service'; // <--- IMPORTADO
+import { DecimaAutocontrolService } from '../../services/decima-autocontrol.service';
+import { ArredondamentoAutocontrolService } from '../../services/arredondamento-autocontrol.service';
 
 @Component({
   selector: 'app-transacao-form',
@@ -20,7 +21,8 @@ export class TransacaoFormComponent implements OnInit {
   private location = inject(Location);
   private cdr = inject(ChangeDetectorRef);
   private route = inject(ActivatedRoute);
-  private decimaService = inject(DecimaAutocontrolService); // <--- INJETADO
+  private decimaService = inject(DecimaAutocontrolService);
+  private arredondamentoService = inject(ArredondamentoAutocontrolService);
 
   // Controle de Edição
   idEdicao: number | null = null;
@@ -274,6 +276,7 @@ export class TransacaoFormComponent implements OnInit {
 
     const dataHorarioIso = `${this.dataIso}T${this.horaIso}:00`;
     const contaId = Number(this.contaSelecionadaId);
+    let idLancamentoSalvo: number | null = null;
 
     try {
       await db.transaction('rw', [db.lancamentos, db.contas], async () => {
@@ -298,6 +301,8 @@ export class TransacaoFormComponent implements OnInit {
             sincronizado: false,
             updatedAt: this.obterDataIsoLocal()
           });
+
+          idLancamentoSalvo = this.idEdicao;
 
           if (contaAntigaId === contaId) {
             const diferencaMontante = totalCentavos - this.montanteOriginal;
@@ -337,7 +342,7 @@ export class TransacaoFormComponent implements OnInit {
             updatedAt: this.obterDataIsoLocal()
           };
 
-          await db.lancamentos.add(novoLancamento);
+          idLancamentoSalvo = await db.lancamentos.add(novoLancamento);
 
           const saldoAtualizado = (conta.saldo_atual || 0) + totalCentavos;
 
@@ -348,7 +353,12 @@ export class TransacaoFormComponent implements OnInit {
         }
       });
 
-      // --- RECALCULAR A DÉCIMA (10%) ---
+      // --- 1. RECALCULAR O ARREDONDAMENTO ---
+      if (idLancamentoSalvo) {
+        await this.arredondamentoService.processarArredondamento(idLancamentoSalvo);
+      }
+
+      // --- 2. RECALCULAR A DÉCIMA (10%) ---
       await this.decimaService.processarDecimaParaAta(this.ataLivroCaixaId);
 
       // Se a ata foi alterada na edição, recalcula a ata antiga também

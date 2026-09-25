@@ -1,14 +1,16 @@
 import { Injectable, inject } from '@angular/core';
 import { db } from '../db/app-database';
 import { SyncService } from './sync.service';
-import { DecimaAutocontrolService } from '../../services/decima-autocontrol.service'; // <-- Importado
+import { DecimaAutocontrolService } from '../../services/decima-autocontrol.service';
+import { ArredondamentoAutocontrolService } from '../../services/arredondamento-autocontrol.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class LancamentoService {
   private syncService = inject(SyncService);
-  private decimaService = inject(DecimaAutocontrolService); // <-- Injetado
+  private decimaService = inject(DecimaAutocontrolService);
+  private arredondamentoService = inject(ArredondamentoAutocontrolService);
 
   /**
    * Exclui um lançamento pelo ID, reajusta o saldo das contas e atualiza a décima.
@@ -51,14 +53,17 @@ export class LancamentoService {
         }
       }
 
-      // 3. Excluir o lançamento do banco local
+      // 3. Excluir o lançamento de arredondamento filho (se existir) e reverter o saldo da conta de destino dele
+      await this.arredondamentoService.removerArredondamentoDoPai(id);
+
+      // 4. Excluir o lançamento pai do banco local
       await db.lancamentos.delete(id);
     });
 
-    // 4. Recalcular e atualizar a décima referente a esta ata
+    // 5. Recalcular e atualizar a décima referente a esta ata
     await this.decimaService.processarDecimaParaAta(ataLivroCaixaId);
 
-    // 5. Se o lançamento já estava sincronizado na nuvem, remove do Firestore
+    // 6. Se o lançamento já estava sincronizado na nuvem, remove do Firestore
     if (firebaseIdParaRemover) {
       await this.syncService.removerLancamentoRemoto(firebaseIdParaRemover);
     }
