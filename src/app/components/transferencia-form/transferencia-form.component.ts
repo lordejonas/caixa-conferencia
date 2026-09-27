@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { db } from '../../core/db/app-database';
 import { Conta } from '../../models/conta.model';
 import { Categoria } from '../../models/categoria.model';
@@ -19,7 +19,8 @@ export class TransferenciaFormComponent implements OnInit {
   private location = inject(Location);
   private cdr = inject(ChangeDetectorRef);
   private route = inject(ActivatedRoute);
-  private decimaService = inject(DecimaAutocontrolService); // <-- Injetado
+  private decimaService = inject(DecimaAutocontrolService);
+  private router = inject(Router);
 
   // Listas dos Selects
   contas: Conta[] = [];
@@ -245,7 +246,13 @@ export class TransferenciaFormComponent implements OnInit {
   }
 
   cancelar(): void {
-    this.location.back();
+    const returnUrl = this.route.snapshot.queryParams['returnUrl'];
+
+    if (returnUrl) {
+      this.router.navigateByUrl(returnUrl);
+    } else {
+      this.location.back();
+    }
   }
 
   private atualizarDataExtenso(): void {

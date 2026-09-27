@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { InternalLayoutComponent } from '../../components/internal-layout/internal-layout.component';
 import { ListaLancamentosComponent, ItemExtrato } from '../../components/lista-lancamentos/lista-lancamentos.component';
@@ -50,11 +50,21 @@ export class LancamentosComponent implements OnInit {
   constructor(
     private cdr: ChangeDetectorRef,
     private router: Router,
+    private route: ActivatedRoute,
     private lancamentoService: LancamentoService
   ) {}
 
   async ngOnInit(): Promise<void> {
     await this.carregarDadosContas();
+
+    // Lê a aba dos queryParams
+    const abaQuery = this.route.snapshot.queryParams['aba'] as TipoAba | undefined;
+
+    if (abaQuery) {
+      await this.selecionarAba(abaQuery);
+    } else {
+      this.abaAtiva = 'contas'; // Padrão se for acesso direto sem parâmetros
+    }
   }
 
   async selecionarAba(aba: TipoAba): Promise<void> {
@@ -332,10 +342,21 @@ export class LancamentosComponent implements OnInit {
   }
 
   alterarLancamento(item: ItemExtrato): void {
-    if (item.tipoMovimentacao === 'transferencia') {
+    /*if (item.tipoMovimentacao === 'transferencia') {
       this.router.navigate(['/lancamentos/transferencia/editar', item.id]);
     } else {
       this.router.navigate(['/lancamentos/editar', item.id]);
+    }*/
+    const returnUrl = this.router.url; // Pega a URL exata atual (ex: '/lancamentos?aba=lancamentos' ou '/lancamentos?aba=contas')
+
+    if (item.tipoMovimentacao === 'transferencia') {
+      this.router.navigate(['/lancamentos/transferencia/editar', item.id], {
+        queryParams: { returnUrl }
+      });
+    } else {
+      this.router.navigate(['/lancamentos/editar', item.id], {
+        queryParams: { returnUrl }
+      });
     }
   }
 }

@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { db } from '../../core/db/app-database';
 import { Conta } from '../../models/conta.model';
 import { Favorecido } from '../../models/favorecido.model';
@@ -23,6 +23,7 @@ export class TransacaoFormComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private decimaService = inject(DecimaAutocontrolService);
   private arredondamentoService = inject(ArredondamentoAutocontrolService);
+  private router = inject(Router);
 
   // Controle de Edição
   idEdicao: number | null = null;
@@ -374,7 +375,15 @@ export class TransacaoFormComponent implements OnInit {
   }
 
   cancelar(): void {
-    this.location.back();
+    // 1. Tenta pegar a URL de retorno exata enviada quem abriu o formulário
+    const returnUrl = this.route.snapshot.queryParams['returnUrl'];
+
+    if (returnUrl) {
+      this.router.navigateByUrl(returnUrl);
+    } else {
+      // 2. Fallback usando o Location.back() padrão do navegador
+      this.location.back();
+    }
   }
 
   private atualizarDataExtenso(): void {
