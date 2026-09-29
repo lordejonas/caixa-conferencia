@@ -8,6 +8,7 @@ export interface ItemExtrato {
   nomeContaDestino?: string;
   tipoMovimentacao: 'entrada' | 'saida' | 'transferencia';
   categoriaNome?: string;
+  descricao_customizada?: string | null;
   favorecidoNome?: string;
   nota?: string;
   montante: number;
@@ -79,6 +80,22 @@ export class ListaLancamentosComponent {
   }
 
   /* --- MÉTODOS AUXILIARES --- */
+
+  /**
+   * Retorna o nome da categoria. Se houver `descricao_customizada`, substitui a palavra 'Outros'
+   * mantendo a máscara de prefixo (número e traço).
+   */
+  obterCategoriaExibicao(item: ItemExtrato): string {
+    if (!item.categoriaNome) return '';
+
+    const descCustom = item.descricao_customizada?.trim();
+    if (!descCustom) {
+      return item.categoriaNome;
+    }
+
+    // Regex insensível a maiúsculas/minúsculas para substituir "Outros"
+    return item.categoriaNome.replace(/Outros/i, descCustom);
+  }
 
   obterDescricaoConta(item: ItemExtrato): string {
     if (item.tipoMovimentacao === 'transferencia' && item.nomeContaDestino) {

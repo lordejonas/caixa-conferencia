@@ -260,6 +260,8 @@ export class SyncService {
             positivo: item.positivo ?? true,
             auto: item.auto ?? false,
             decimavel: item.decimavel ?? false,
+            versao_livro: item.versao_livro,
+            permite_descricao_livre : item.permite_descricao_livre ?? false,
             descricao: item.descricao || null,
             updatedAt: item.updatedAt || new Date().toISOString()
           }, { merge: true });
@@ -299,6 +301,8 @@ export class SyncService {
               positivo: data.positivo ?? true,
               auto: data.auto ?? false,
               decimavel: data.decimavel ?? false,
+              versao_livro: data.versao_livro,
+              permite_descricao_livre : data.permite_descricao_livre ?? false,
               descricao: data.descricao || null,
               updatedAt: data.updatedAt || new Date().toISOString()
             };
@@ -595,6 +599,7 @@ export class SyncService {
             datahorario: item.datahorario,
             favorecido_id: item.favorecido_id ?? null,
             categoria_id: item.categoria_id ?? null,
+            descricao_customizada: item.descricao_customizada || null,
             origem_conta_id: item.origem_conta_id,
             destino_conta_id: item.destino_conta_id ?? null,
             origem_montante: item.origem_montante ?? 0,
@@ -637,6 +642,7 @@ export class SyncService {
               datahorario: data.datahorario,
               favorecido_id: data.favorecido_id ?? null,
               categoria_id: data.categoria_id ?? null,
+              descricao_customizada: data.descricao_customizada || null,
               origem_conta_id: data.origem_conta_id,
               destino_conta_id: data.destino_conta_id ?? null,
               origem_montante: data.origem_montante ?? 0,

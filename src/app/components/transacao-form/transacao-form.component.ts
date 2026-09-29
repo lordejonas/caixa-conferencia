@@ -54,6 +54,9 @@ export class TransacaoFormComponent implements OnInit {
   novoFavorecidoNome: string = '';
   dataExtenso: string = '';
 
+  descricaoCustomizada: string = '';
+  exibirDescricaoCustomizada: boolean = false;
+
   async ngOnInit(): Promise<void> {
     this.atualizarDataExtenso();
     await this.carregarDados();
@@ -92,6 +95,10 @@ export class TransacaoFormComponent implements OnInit {
         this.contaSelecionadaId = lancamento.origem_conta_id;
         this.favorecidoSelecionadoId = lancamento.favorecido_id ?? null;
         this.categoriaSelecionadaId = lancamento.categoria_id ?? null;
+        //ins
+        this.descricaoCustomizada = lancamento.descricao_customizada || '';
+        this.verificarPermissaoDescricaoCustomizada();
+
         this.nota = lancamento.nota || '';
         this.ataLivroCaixaId = lancamento.ata_livro_caixa_id ?? null;
         this.ataAntigaId = lancamento.ata_livro_caixa_id ?? null;
@@ -130,6 +137,9 @@ export class TransacaoFormComponent implements OnInit {
   }
 
   onCategoriaChange(): void {
+    //ins
+    this.verificarPermissaoDescricaoCustomizada();
+
     if (!this.categoriaSelecionadaId) return;
 
     const categoria = this.categorias.find(
@@ -147,6 +157,24 @@ export class TransacaoFormComponent implements OnInit {
       event.preventDefault();
       elementCentavos.focus();
       elementCentavos.select();
+    }
+  }
+
+  //ins
+  verificarPermissaoDescricaoCustomizada(): void {
+    if (!this.categoriaSelecionadaId) {
+      this.exibirDescricaoCustomizada = false;
+      this.descricaoCustomizada = '';
+      return;
+    }
+
+    const categoria = this.categorias.find(
+      c => c.id === Number(this.categoriaSelecionadaId)
+    );
+
+    this.exibirDescricaoCustomizada = !!categoria?.permite_descricao_livre;
+    if (!this.exibirDescricaoCustomizada) {
+      this.descricaoCustomizada = '';
     }
   }
 
@@ -279,6 +307,11 @@ export class TransacaoFormComponent implements OnInit {
     const contaId = Number(this.contaSelecionadaId);
     let idLancamentoSalvo: number | null = null;
 
+    //ins
+    const descCustomizadaValor = this.exibirDescricaoCustomizada && this.descricaoCustomizada.trim()
+      ? this.descricaoCustomizada.trim()
+      : null;
+
     try {
       await db.transaction('rw', [db.lancamentos, db.contas], async () => {
         const conta = await db.contas.get(contaId);
@@ -297,6 +330,7 @@ export class TransacaoFormComponent implements OnInit {
             origem_conta_id: contaId,
             favorecido_id: this.favorecidoSelecionadoId ? Number(this.favorecidoSelecionadoId) : null,
             categoria_id: this.categoriaSelecionadaId ? Number(this.categoriaSelecionadaId) : null,
+            descricao_customizada: descCustomizadaValor,
             origem_montante: totalCentavos,
             nota: this.nota.trim() || null,
             sincronizado: false,
@@ -334,6 +368,7 @@ export class TransacaoFormComponent implements OnInit {
             destino_conta_id: null,
             favorecido_id: this.favorecidoSelecionadoId ? Number(this.favorecidoSelecionadoId) : null,
             categoria_id: this.categoriaSelecionadaId ? Number(this.categoriaSelecionadaId) : null,
+            descricao_customizada: descCustomizadaValor,
             origem_montante: totalCentavos,
             destino_montante: 0,
             nota: this.nota.trim() || null,

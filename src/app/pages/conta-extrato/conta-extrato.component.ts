@@ -123,6 +123,7 @@ export class ContaExtratoComponent implements OnInit {
           nomeContaDestino: nomeDestino,
           tipoMovimentacao: tipoMov,
           categoriaNome: l.categoria_id ? mapaCategorias.get(l.categoria_id) : undefined,
+          descricao_customizada: l.descricao_customizada || undefined,
           favorecidoNome: l.favorecido_id ? mapaFavorecidos.get(l.favorecido_id) : undefined,
           nota: l.nota || undefined,
           montante: montanteEmCentavos / 100

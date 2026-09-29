@@ -3,6 +3,7 @@ export interface Lancamento {
   datahorario: string; // Formato ISO 8601 (ex: '2026-08-20T11:37:18.000Z')
   favorecido_id?: number | null;
   categoria_id?: number | null;
+  descricao_customizada?: string | null;
   origem_conta_id: number;
   destino_conta_id?: number | null;
   origem_montante: number; // Padrão: 0

@@ -41,8 +41,8 @@
 
           <div class="card-meio">
             <div class="descricao">
-              @if (item.categoriaNome) {
-                <span class="categoria">{{ item.categoriaNome }} </span>
+              @if (obterCategoriaExibicao(item)) {
+                <span class="categoria">{{ obterCategoriaExibicao(item) }} </span>
               }
               @if (item.favorecidoNome) {
                 <span class="favorecido">{{ item.favorecidoNome }} </span>
@@ -77,7 +77,7 @@
         <!-- ETAPA 1: MENU DE OPÇÕES (Alterar / Excluir) -->
         <h3>Ações para o Lançamento</h3>
         <p class="detalhe-item">
-          {{ itemSelecionado.categoriaNome || 'Lançamento' }} - {{ formatarMoedaCustom(itemSelecionado.montante) }}
+          {{ obterCategoriaExibicao(itemSelecionado) || 'Lançamento' }} - {{ formatarMoedaCustom(itemSelecionado.montante) }}
         </p>
 
         <div class="modal-acoes">
@@ -98,7 +98,7 @@
         <h3 class="texto-perigo">Confirmar Exclusão?</h3>
         <p class="detalhe-item">
           Tem certeza que deseja excluir este lançamento?<br>
-          <strong>{{ itemSelecionado.categoriaNome || 'Lançamento' }}</strong> ({{ formatarMoedaCustom(itemSelecionado.montante) }})
+          <strong>{{ obterCategoriaExibicao(itemSelecionado) || 'Lançamento' }}</strong> ({{ formatarMoedaCustom(itemSelecionado.montante) }})
         </p>
 
         <div class="modal-acoes">

@@ -7,6 +7,8 @@ export interface Categoria {
   positivo: boolean;
   auto: boolean;
   decimavel: boolean;
+  versao_livro: string;
+  permite_descricao_livre : boolean;
   descricao: string | null;
   updatedAt?: string;
 }

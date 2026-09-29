@@ -46,6 +46,10 @@ export class TransferenciaFormComponent implements OnInit {
 
   dataExtenso: string = '';
 
+  //ins
+  descricaoCustomizada: string = '';
+  exibirDescricaoCustomizada: boolean = false;
+
   async ngOnInit(): Promise<void> {
     this.atualizarDataExtenso();
     await this.carregarDados();
@@ -174,6 +178,24 @@ export class TransferenciaFormComponent implements OnInit {
     }
   }
 
+  //ins
+  onCategoriaChange(): void {
+    if (!this.categoriaSelecionadaId) {
+      this.exibirDescricaoCustomizada = false;
+      this.descricaoCustomizada = '';
+      return;
+    }
+
+    const categoria = this.categorias.find(
+      c => c.id === Number(this.categoriaSelecionadaId)
+    );
+
+    this.exibirDescricaoCustomizada = !!categoria?.permite_descricao_livre;
+    if (!this.exibirDescricaoCustomizada) {
+      this.descricaoCustomizada = '';
+    }
+  }
+
   async salvar(): Promise<void> {
     if (!this.contaOrigemId || !this.contaDestinoId) {
       alert('Por favor, selecione as contas de origem e destino.');
@@ -198,6 +220,10 @@ export class TransferenciaFormComponent implements OnInit {
     const origemId = Number(this.contaOrigemId);
     const destinoId = Number(this.contaDestinoId);
 
+    const descCustomizadaValor = this.exibirDescricaoCustomizada && this.descricaoCustomizada.trim()
+      ? this.descricaoCustomizada.trim()
+      : null;
+
     try {
       await db.transaction('rw', [db.lancamentos, db.contas], async () => {
         const contaOrigem = await db.contas.get(origemId);
@@ -213,6 +239,7 @@ export class TransferenciaFormComponent implements OnInit {
           destino_conta_id: destinoId,
           favorecido_id: null,
           categoria_id: this.categoriaSelecionadaId ? Number(this.categoriaSelecionadaId) : null,
+          descricao_customizada: descCustomizadaValor,
           origem_montante: -valorTransferencia,
           destino_montante: valorTransferencia,
           nota: this.nota.trim() || null,

@@ -79,6 +79,15 @@
       }
     </select>
   </div>
+  <!-- Linha Condicional: Descrição Customizada -->
+  <div class="row-linha flex-col" *ngIf="exibirDescricaoCustomizada">
+    <label class="field-label">Descrição da Categoria</label>
+    <input
+      type="text"
+      class="input-field"
+      placeholder="Informe a descrição..."
+      [(ngModel)]="descricaoCustomizada" />
+  </div>
 
   <!-- 6ª Linha: Valor da Transferência -->
   <div class="row-linha flex-col">

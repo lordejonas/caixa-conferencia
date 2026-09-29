@@ -186,10 +186,10 @@ export class LancamentosComponent implements OnInit {
         if (ehTransferencia) {
           if (!origContabiliza && destContabiliza) {
             ehTransferenciaComImpacto = true;
-            tipoImpactoTransferencia = 'entrada'; // De FALSE para TRUE => Crédito (Verde)
+            tipoImpactoTransferencia = 'entrada';
           } else if (origContabiliza && !destContabiliza) {
             ehTransferenciaComImpacto = true;
-            tipoImpactoTransferencia = 'saida'; // De TRUE para FALSE => Débito (Vermelho com "-")
+            tipoImpactoTransferencia = 'saida';
           }
         }
 
@@ -200,10 +200,10 @@ export class LancamentosComponent implements OnInit {
           nomeContaDestino: nomeDestino,
           tipoMovimentacao: tipoMov,
           categoriaNome: l.categoria_id ? mapaCategorias.get(l.categoria_id) : undefined,
+          descricao_customizada: l.descricao_customizada || undefined,
           favorecidoNome: l.favorecido_id ? mapaFavorecidos.get(l.favorecido_id) : undefined,
           nota: l.nota || undefined,
           montante: montanteEmCentavos / 100,
-          // Guardamos as propriedades de contabilizar_totais
           origemContabilizaTotais: contaOrigem ? contaOrigem.contabilizar_totais : null,
           destinoContabilizaTotais: contaDestino ? contaDestino.contabilizar_totais : null,
           ehTransferenciaComImpacto,
