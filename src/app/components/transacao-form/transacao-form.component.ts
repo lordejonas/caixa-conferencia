@@ -9,6 +9,7 @@ import { Categoria } from '../../models/categoria.model';
 import { Lancamento } from '../../models/lancamento.model';
 import { DecimaAutocontrolService } from '../../services/decima-autocontrol.service';
 import { ArredondamentoAutocontrolService } from '../../services/arredondamento-autocontrol.service';
+import { CategoriaEspelhadaAutocontrolService } from '../../services/categoria-automatica-autocontrol.service';
 
 @Component({
   selector: 'app-transacao-form',
@@ -23,6 +24,7 @@ export class TransacaoFormComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private decimaService = inject(DecimaAutocontrolService);
   private arredondamentoService = inject(ArredondamentoAutocontrolService);
+  private categoriaEspelhadaService = inject(CategoriaEspelhadaAutocontrolService);
   private router = inject(Router);
 
   // Controle de Edição
@@ -307,7 +309,6 @@ export class TransacaoFormComponent implements OnInit {
     const contaId = Number(this.contaSelecionadaId);
     let idLancamentoSalvo: number | null = null;
 
-    //ins
     const descCustomizadaValor = this.exibirDescricaoCustomizada && this.descricaoCustomizada.trim()
       ? this.descricaoCustomizada.trim()
       : null;
@@ -389,15 +390,17 @@ export class TransacaoFormComponent implements OnInit {
         }
       });
 
-      // --- 1. RECALCULAR O ARREDONDAMENTO ---
       if (idLancamentoSalvo) {
+        // --- 1. RECALCULAR O ARREDONDAMENTO ---
         await this.arredondamentoService.processarArredondamento(idLancamentoSalvo);
+
+        // --- 2. RECALCULAR O LANÇAMENTO ESPELHADO DE CATEGORIA ---
+        await this.categoriaEspelhadaService.processarCategoriaEspelhada(idLancamentoSalvo);
       }
 
-      // --- 2. RECALCULAR A DÉCIMA (10%) ---
+      // --- 3. RECALCULAR A DÉCIMA (10%) ---
       await this.decimaService.processarDecimaParaAta(this.ataLivroCaixaId);
 
-      // Se a ata foi alterada na edição, recalcula a ata antiga também
       if (this.idEdicao && (this.ataAntigaId ?? null) !== (this.ataLivroCaixaId ?? null)) {
         await this.decimaService.processarDecimaParaAta(this.ataAntigaId);
       }

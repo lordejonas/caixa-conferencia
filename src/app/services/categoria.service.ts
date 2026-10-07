@@ -21,7 +21,8 @@ export class CategoriaService {
         ...cat,
         updatedAt: now
       }));
-      await db.categorias.bulkAdd(categoriasComData as Categoria[]);
+      // bulkPut preserva as chaves 'id' especificadas
+      await db.categorias.bulkPut(categoriasComData as Categoria[]);
     }
   }
 }

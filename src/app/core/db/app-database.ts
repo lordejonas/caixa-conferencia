@@ -41,6 +41,11 @@ export class AppDatabase extends Dexie {
       agregadores: '++id, firebaseId, nome, ativo, ordem_listagem, contabilizar_totais',
       lancamentos: '++id, firebaseId, sincronizado, datahorario, origem_conta_id, destino_conta_id, favorecido_id, categoria_id'
     });
+
+    // 🟢 Versão 10: Remove o '++' de categorias para aceitar IDs manuais
+    this.version(10).stores({
+      categorias: 'id, titulo, pai, ativo' // Apenas 'id', sem '++'
+    });
   }
 }
 
