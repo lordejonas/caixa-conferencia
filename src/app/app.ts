@@ -42,5 +42,5 @@ import { RouterOutlet } from '@angular/router'; // <-- USA O ROUTER OUTLET
   styleUrl: './app.scss'
 })
 export class App {
-  title = 'livro-caixa';
+  title = 'caixa-conferencia';
 }
