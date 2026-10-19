@@ -391,12 +391,12 @@ export class TransacaoFormComponent implements OnInit {
       });
 
       if (idLancamentoSalvo) {
-        // --- 1. RECALCULAR O ARREDONDAMENTO ---
+        // 1. Processa Arredondamento
         await this.arredondamentoService.processarArredondamento(idLancamentoSalvo);
+        await new Promise(resolve => setTimeout(resolve, 50));
 
-        // --- 2. RECALCULAR O LANÇAMENTO ESPELHADO DE CATEGORIA ---
-        //await this.categoriaEspelhadaService.processarCategoriaEspelhada(idLancamentoSalvo);
-        // 2. Aguarda um pequeno ciclo de evento (tick) para o Dexie efetivar o commit
+        // 2. Processa Categoria Espelhada
+        await this.categoriaEspelhadaService.processarCategoriaEspelhada(idLancamentoSalvo);
         await new Promise(resolve => setTimeout(resolve, 50));
       }
 
