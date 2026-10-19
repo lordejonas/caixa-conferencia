@@ -6,7 +6,8 @@ import { db } from '../../core/db/app-database';
 import { Conta } from '../../models/conta.model';
 import { Categoria } from '../../models/categoria.model';
 import { Lancamento } from '../../models/lancamento.model';
-import { DecimaAutocontrolService } from '../../services/decima-autocontrol.service'; // <-- Importado
+import { DecimaAutocontrolService } from '../../services/decima-autocontrol.service';
+import { SyncService } from '../../core/service/sync.service';
 
 @Component({
   selector: 'app-transferencia-form',
@@ -21,6 +22,7 @@ export class TransferenciaFormComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private decimaService = inject(DecimaAutocontrolService);
   private router = inject(Router);
+  private syncService = inject(SyncService);
 
   // Listas dos Selects
   contas: Conta[] = [];
@@ -262,8 +264,13 @@ export class TransferenciaFormComponent implements OnInit {
         });
       });
 
-      // <-- PROCESSA A DÉCIMA AUTOMATICAMENTE APÓS CRIAR A TRANSFERÊNCIA -->
+      // 1. Processa a Décima (10% de transferência em categorias decimáveis)
       await this.decimaService.processarDecimaParaAta(this.ataLivroCaixaId);
+
+      // 🟢 2. SINCRONIZAÇÃO EM SEGUNDO PLANO
+      this.syncService.sincronizar().catch(err => {
+        console.error('[TransferenciaForm] Erro ao sincronizar em segundo plano:', err);
+      });
 
       this.cancelar();
     } catch (error) {

@@ -10,6 +10,7 @@ import { Lancamento } from '../../models/lancamento.model';
 import { DecimaAutocontrolService } from '../../services/decima-autocontrol.service';
 import { ArredondamentoAutocontrolService } from '../../services/arredondamento-autocontrol.service';
 import { CategoriaEspelhadaAutocontrolService } from '../../services/categoria-automatica-autocontrol.service';
+import { SyncService } from '../../core/service/sync.service';
 
 @Component({
   selector: 'app-transacao-form',
@@ -26,6 +27,7 @@ export class TransacaoFormComponent implements OnInit {
   private arredondamentoService = inject(ArredondamentoAutocontrolService);
   private categoriaEspelhadaService = inject(CategoriaEspelhadaAutocontrolService);
   private router = inject(Router);
+  private syncService = inject(SyncService);
 
   // Controle de Edição
   idEdicao: number | null = null;
@@ -407,8 +409,10 @@ export class TransacaoFormComponent implements OnInit {
         await this.decimaService.processarDecimaParaAta(this.ataAntigaId);
       }
 
-      // 🟢 ADICIONE UM PEQUENO DELAY ANTES DE NAVEGAR PARA O DEXIE FLUSH
-      //await new Promise(resolve => setTimeout(resolve, 300));
+      // 🟢 4. SINCRONIZAÇÃO EM SEGUNDO PLANO (Não bloqueia a navegação do usuário)
+      this.syncService.sincronizar().catch(err => {
+        console.error('[TransacaoForm] Erro ao sincronizar em segundo plano:', err);
+      });
 
       this.cancelar();
     } catch (error) {

@@ -67,5 +67,10 @@ export class LancamentoService {
     if (firebaseIdParaRemover) {
       await this.syncService.removerLancamentoRemoto(firebaseIdParaRemover);
     }
+
+    // 🟢 Sincroniza em segundo plano as alterações de saldo de contas e eventual ajuste da décima
+    this.syncService.sincronizar().catch(err => {
+      console.error('[LancamentoService] Erro ao sincronizar após exclusão:', err);
+    });
   }
 }
