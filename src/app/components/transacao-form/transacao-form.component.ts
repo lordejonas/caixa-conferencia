@@ -395,7 +395,9 @@ export class TransacaoFormComponent implements OnInit {
         await this.arredondamentoService.processarArredondamento(idLancamentoSalvo);
 
         // --- 2. RECALCULAR O LANÇAMENTO ESPELHADO DE CATEGORIA ---
-        await this.categoriaEspelhadaService.processarCategoriaEspelhada(idLancamentoSalvo);
+        //await this.categoriaEspelhadaService.processarCategoriaEspelhada(idLancamentoSalvo);
+        // 2. Aguarda um pequeno ciclo de evento (tick) para o Dexie efetivar o commit
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
 
       // --- 3. RECALCULAR A DÉCIMA (10%) ---
@@ -404,6 +406,9 @@ export class TransacaoFormComponent implements OnInit {
       if (this.idEdicao && (this.ataAntigaId ?? null) !== (this.ataLivroCaixaId ?? null)) {
         await this.decimaService.processarDecimaParaAta(this.ataAntigaId);
       }
+
+      // 🟢 ADICIONE UM PEQUENO DELAY ANTES DE NAVEGAR PARA O DEXIE FLUSH
+      //await new Promise(resolve => setTimeout(resolve, 300));
 
       this.cancelar();
     } catch (error) {
