@@ -7,17 +7,11 @@ import { Lancamento } from '../models/lancamento.model';
 })
 export class ArredondamentoAutocontrolService {
 
-  /**
-   * Processa o arredondamento de centavos para um lançamento recém-criado ou editado.
-   * Deve ser chamado DEPOIS que o lançamento pai já foi salvo no Dexie.
-   *
-   * @param lancamentoPaiId ID do lançamento principal.
-   */
   async processarArredondamento(lancamentoPaiId: number): Promise<void> {
     if (!lancamentoPaiId) return;
 
     try {
-      // 1. CARREGAR DADOS E CONSULTAR BANCO FORA DA TRANSAÇÃO (Igual ao DecimaService)
+      // 1. CARREGAR DADOS TOTALMENTE FORA DA TRANSAÇÃO
       const lancamentoPai = await db.lancamentos.get(lancamentoPaiId);
       if (!lancamentoPai || !lancamentoPai.id) return;
 
@@ -27,7 +21,6 @@ export class ArredondamentoAutocontrolService {
       const categoria = categoriaId ? await db.categorias.get(categoriaId) : null;
       const contaOrigem = await db.contas.get(contaOrigemId);
 
-      // Busca lançamento filho de arredondamento já existente
       const arredondamentoExistente = await db.lancamentos
         .filter(l => Number(l.arredondamento_id) === Number(lancamentoPai.id))
         .first();
@@ -38,6 +31,13 @@ export class ArredondamentoAutocontrolService {
         ? Number(contaOrigem.id_conta_arredondamento)
         : null;
 
+      console.log('🔍 [Arredondamento] Elegibilidade:', {
+        categoria: categoria?.titulo,
+        decimavel: eDecimavel,
+        contaOrigem: contaOrigem?.titulo,
+        contaArredondamentoId
+      });
+
       if (!eDecimavel || !contaArredondamentoId) {
         if (arredondamentoExistente) {
           await this.removerArredondamento(arredondamentoExistente);
@@ -45,12 +45,18 @@ export class ArredondamentoAutocontrolService {
         return;
       }
 
-      // Busca Categoria 53-Arredondamento
+      // Busca Categoria 53-Arredondamento fora da transação
       const categorias = await db.categorias.toArray();
-      const categoriaArredondamento = categorias.find(
-        c => c.titulo.includes('53') || c.titulo.toLowerCase().includes('arredondamento')
-      );
-      const categoriaArredondamentoId = categoriaArredondamento?.id ?? null;
+      const categoriaArredondamento = categorias.find((c: any) => {
+        const texto = String(c.titulo || c.nome || c.descricao || '').toLowerCase();
+        return texto.includes('53') || texto.includes('arredondamento');
+      });
+      const categoriaArredondamentoId = categoriaArredondamento?.id ? Number(categoriaArredondamento.id) : null;
+
+      if (!categoriaArredondamentoId) {
+        console.warn('⚠️ [Arredondamento] Categoria 53 não encontrada no Dexie.');
+        return;
+      }
 
       // 3. CÁLCULO DOS CENTAVOS
       const montantePaiCentavos = Number(lancamentoPai.origem_montante || 0);
@@ -66,20 +72,21 @@ export class ArredondamentoAutocontrolService {
 
       const novoMontantePaiRedondo = montantePaiCentavos - centavosRestantes;
 
-      // 4. TRANSAÇÃO LIMPA E DIRETA PARA GRAVAÇÃO (SEM ASYNCS INTERMEDIÁRIOS)
+      // 4. TRANSAÇÃO DE ESCRITA NO DEXIE
       await db.transaction('rw', [db.lancamentos, db.contas], async () => {
-        // A. Atualiza Lançamento Pai com o valor arredondado (ex: R$ 7,00)
+        // A. Atualiza Lançamento Pai com valor redondo (ex: 700 centavos)
         await db.lancamentos.update(lancamentoPai.id!, {
           origem_montante: novoMontantePaiRedondo,
           updatedAt: this.obterDataIsoLocal(),
           sincronizado: false
         });
 
-        // B. Estorna os centavos do saldo da Conta de Origem
+        // B. Estorna os centavos da Conta de Origem
         const contaAtualOrigem = await db.contas.get(contaOrigemId);
         if (contaAtualOrigem) {
           await db.contas.update(contaOrigemId, {
             saldo_atual: (contaAtualOrigem.saldo_atual || 0) - centavosRestantes,
+            sincronizado: false,
             updatedAt: this.obterDataIsoLocal()
           });
         }
@@ -103,39 +110,33 @@ export class ArredondamentoAutocontrolService {
           if (contaArred) {
             await db.contas.update(contaArredondamentoId, {
               saldo_atual: (contaArred.saldo_atual || 0) + diferencaSaldoArred,
+              sincronizado: false,
               updatedAt: this.obterDataIsoLocal()
             });
           }
         } else {
-          // Cria o novo Lançamento Filho
           const novoArredondamento: Lancamento = {
-            datahorario: lancamentoPai.datahorario,
+            categoria_id: categoriaArredondamentoId,
             origem_conta_id: contaArredondamentoId,
             destino_conta_id: null,
             favorecido_id: lancamentoPai.favorecido_id ?? null,
-            categoria_id: categoriaArredondamentoId,
             origem_montante: centavosRestantes,
             destino_montante: 0,
+            datahorario: lancamentoPai.datahorario,
+            ata_livro_caixa_id: null, // 👈 OBRIGATÓRIO: null para não ser varrido/deletado pelo DecimaService!
             nota: `Arredondamento referente ao lançamento #${lancamentoPai.id}`,
             arredondamento_id: lancamentoPai.id,
-            ata_livro_caixa_id: lancamentoPai.ata_livro_caixa_id ?? null,
             sincronizado: false,
             updatedAt: this.obterDataIsoLocal()
           };
 
-          // Limpa chaves undefined
-          Object.keys(novoArredondamento).forEach(key => {
-            if ((novoArredondamento as any)[key] === undefined) {
-              delete (novoArredondamento as any)[key];
-            }
-          });
-
           const idFilho = await db.lancamentos.add(novoArredondamento);
-          console.log('✅ [Arredondamento] Lançamento filho PERSISTIDO COM SUCESSO! ID:', idFilho);
+          console.log('✅ [Arredondamento] Lançamento filho PERSISTIDO! ID:', idFilho);
 
           if (contaArred) {
             await db.contas.update(contaArredondamentoId, {
               saldo_atual: (contaArred.saldo_atual || 0) + centavosRestantes,
+              sincronizado: false,
               updatedAt: this.obterDataIsoLocal()
             });
           }
@@ -143,13 +144,10 @@ export class ArredondamentoAutocontrolService {
       });
 
     } catch (err) {
-      console.error('[Arredondamento] Erro na transação Dexie:', err);
+      console.error('❌ [Arredondamento] Erro na transação Dexie:', err);
     }
   }
 
-  /**
-   * Remove o lançamento de arredondamento e estorna o saldo da conta de arredondamento.
-   */
   async removerArredondamento(arredondamento: Lancamento): Promise<void> {
     if (!arredondamento || !arredondamento.id) return;
 
@@ -158,6 +156,7 @@ export class ArredondamentoAutocontrolService {
       if (contaArred && contaArred.id !== undefined) {
         await db.contas.update(contaArred.id, {
           saldo_atual: (contaArred.saldo_atual || 0) - (arredondamento.origem_montante || 0),
+          sincronizado: false,
           updatedAt: this.obterDataIsoLocal()
         });
       }
@@ -165,9 +164,6 @@ export class ArredondamentoAutocontrolService {
     });
   }
 
-  /**
-   * Método auxiliar para exclusão de lançamentos Pai a partir da tela de listagem/exclusão.
-   */
   async removerArredondamentoDoPai(lancamentoPaiId: number): Promise<void> {
     const arredondamento = await db.lancamentos
       .filter(l => Number(l.arredondamento_id) === Number(lancamentoPaiId))
