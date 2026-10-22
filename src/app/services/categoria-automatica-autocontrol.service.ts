@@ -7,10 +7,6 @@ import { Lancamento } from '../models/lancamento.model';
 })
 export class CategoriaEspelhadaAutocontrolService {
 
-  /**
-   * Mapeamento de regras por ID da Categoria/Subcategoria conforme DEFAULT_CATEGORIAS:
-   * Chave: ID Categoria Origem -> Valor: ID Categoria Destino Espelhada
-   */
   private readonly MAPEAMENTO_CATEGORIAS: Record<number, number> = {
     16: 42, // '10-Doações Materiais recebidas' -> '25-Doações materiais distribuídas'
     12: 43, // '08-Contrib. da Solidariedade e Col. de Ozanam' -> '26-Repasses Cont. Solidariedade / Col. Ozanam'
@@ -19,15 +15,13 @@ export class CategoriaEspelhadaAutocontrolService {
     18: 46  // '12-Recebimentos para Repasses' -> '27-Repasses efetuados (linha 12)'
   };
 
-  /**
-   * Lista de IDs de categorias que DEVEM ser direcionadas obrigatoriamente para a conta 'Conselhos'
-   */
   private readonly REGRAS_CONTA_CONSELHOS = [12, 13, 14, 18];
 
   async processarCategoriaEspelhada(lancamentoPaiId: number): Promise<void> {
     if (!lancamentoPaiId) return;
 
-    await db.transaction('rw', [db.lancamentos, db.contas], async () => {
+    try {
+      // 1. CONSULTAS E BUSCAS FORA DA TRANSAÇÃO (Evita abortar a transação)
       const lancamentoPai = await db.lancamentos.get(lancamentoPaiId);
       if (!lancamentoPai || !lancamentoPai.categoria_id) return;
 
@@ -38,7 +32,7 @@ export class CategoriaEspelhadaAutocontrolService {
         .filter(l => Number(l.arredondamento_id) === Number(lancamentoPaiId))
         .first();
 
-      // Se a categoria do Pai não exige mais espelhamento
+      // Se a categoria do Pai não exige espelhamento
       if (!categoriaDestinoId) {
         if (espelhadoExistente && espelhadoExistente.id) {
           await this.removerEspelhadoEEstornarSaldo(espelhadoExistente);
@@ -46,8 +40,7 @@ export class CategoriaEspelhadaAutocontrolService {
         return;
       }
 
-      // Determina qual conta deve ser usada no lançamento espelhado:
-      // Se for uma das regras 08, 08.1, 08.2 ou 12, usa a conta 'Conselhos'; caso contrário, usa a conta de origem do pai.
+      // Determina a conta destino (se for regra de conselhos, busca ID fora da transação)
       let contaEspelhoId = lancamentoPai.origem_conta_id;
       if (this.REGRAS_CONTA_CONSELHOS.includes(lancamentoPai.categoria_id)) {
         const idContaConselhos = await this.obterIdContaConselhos();
@@ -56,79 +49,82 @@ export class CategoriaEspelhadaAutocontrolService {
         }
       }
 
-      // Incrementa 1 minuto no timestamp para ordenação visual
+      // Timestamp +1 minuto
       const dataOriginal = new Date(lancamentoPai.datahorario);
       const dataMaisUmMinuto = new Date(dataOriginal.getTime() + 60 * 1000);
       const dataHorarioFormatado = this.formatarDataIsoLocal(dataMaisUmMinuto);
 
-      // Inverte o valor do montante
+      // Inverte o montante
       const valorInvertido = (lancamentoPai.origem_montante || 0) * -1;
 
-      if (espelhadoExistente && espelhadoExistente.id) {
-        // --- EDIÇÃO DE ESPELHADO EXISTENTE ---
-        const valorAnterior = espelhadoExistente.origem_montante || 0;
-        const contaAnteriorId = espelhadoExistente.origem_conta_id;
+      // 2. TRANSAÇÃO LIMPA APENAS PARA ESCRITA
+      await db.transaction('rw', [db.lancamentos, db.contas], async () => {
+        if (espelhadoExistente && espelhadoExistente.id) {
+          // --- EDIÇÃO DE ESPELHADO EXISTENTE ---
+          const valorAnterior = espelhadoExistente.origem_montante || 0;
+          const contaAnteriorId = espelhadoExistente.origem_conta_id;
 
-        // Se a conta mudou durante a edição, reajusta os saldos das duas contas envolvidas
-        if (contaAnteriorId !== contaEspelhoId) {
-          // Estorna o valor da conta antiga
-          await this.atualizarSaldoConta(contaAnteriorId, -valorAnterior);
-          // Aplica o valor na nova conta
-          await this.atualizarSaldoConta(contaEspelhoId, valorInvertido);
+          if (contaAnteriorId !== contaEspelhoId) {
+            await this.atualizarSaldoConta(contaAnteriorId, -valorAnterior);
+            await this.atualizarSaldoConta(contaEspelhoId, valorInvertido);
+          } else {
+            const diferencaMontante = valorInvertido - valorAnterior;
+            await this.atualizarSaldoConta(contaEspelhoId, diferencaMontante);
+          }
+
+          await db.lancamentos.update(espelhadoExistente.id, {
+            datahorario: dataHorarioFormatado,
+            origem_conta_id: contaEspelhoId,
+            categoria_id: categoriaDestinoId,
+            origem_montante: valorInvertido,
+            favorecido_id: lancamentoPai.favorecido_id ?? null,
+            ata_livro_caixa_id: lancamentoPai.ata_livro_caixa_id ?? null,
+            sincronizado: false,
+            updatedAt: this.obterDataIsoLocal()
+          });
+
         } else {
-          // Ajusta a diferença na mesma conta
-          const diferencaMontante = valorInvertido - valorAnterior;
-          await this.atualizarSaldoConta(contaEspelhoId, diferencaMontante);
+          // --- INSERÇÃO DE NOVO ESPELHADO ---
+          const novoEspelhado: Lancamento = {
+            datahorario: dataHorarioFormatado,
+            origem_conta_id: contaEspelhoId,
+            destino_conta_id: null,
+            favorecido_id: lancamentoPai.favorecido_id ?? null,
+            categoria_id: categoriaDestinoId,
+            origem_montante: valorInvertido,
+            destino_montante: 0,
+            nota: `Lançamento automático espelhado referente ao lançamento #${lancamentoPai.id}`,
+            arredondamento_id: lancamentoPai.id,
+            ata_livro_caixa_id: lancamentoPai.ata_livro_caixa_id ?? null,
+            sincronizado: false,
+            updatedAt: this.obterDataIsoLocal()
+          };
+
+          // Sanitiza chaves undefined
+          Object.keys(novoEspelhado).forEach(key => {
+            if ((novoEspelhado as any)[key] === undefined) {
+              delete (novoEspelhado as any)[key];
+            }
+          });
+
+          const idNovoEspelhado = await db.lancamentos.add(novoEspelhado);
+          //console.log('✅ [CategoriaEspelhada] Lançamento espelhado PERSISTIDO! ID:', idNovoEspelhado);
+
+          await this.atualizarSaldoConta(contaEspelhoId, valorInvertido);
         }
+      });
 
-        await db.lancamentos.update(espelhadoExistente.id, {
-          datahorario: dataHorarioFormatado,
-          origem_conta_id: contaEspelhoId,
-          categoria_id: categoriaDestinoId,
-          origem_montante: valorInvertido,
-          favorecido_id: lancamentoPai.favorecido_id ?? null,
-          ata_livro_caixa_id: lancamentoPai.ata_livro_caixa_id ?? null,
-          sincronizado: false,
-          updatedAt: this.obterDataIsoLocal()
-        });
-
-      } else {
-        // --- INSERÇÃO DE NOVO ESPELHADO ---
-        const novoEspelhado: Lancamento = {
-          datahorario: dataHorarioFormatado,
-          origem_conta_id: contaEspelhoId,
-          destino_conta_id: null,
-          favorecido_id: lancamentoPai.favorecido_id ?? null,
-          categoria_id: categoriaDestinoId,
-          origem_montante: valorInvertido,
-          destino_montante: 0,
-          nota: `Lançamento automático espelhado referente ao lançamento #${lancamentoPai.id}`,
-          arredondamento_id: lancamentoPai.id,
-          ata_livro_caixa_id: lancamentoPai.ata_livro_caixa_id ?? null,
-          sincronizado: false,
-          updatedAt: this.obterDataIsoLocal()
-        };
-
-        await db.lancamentos.add(novoEspelhado);
-        await this.atualizarSaldoConta(contaEspelhoId, valorInvertido);
-      }
-    });
+    } catch (err) {
+      console.error('[CategoriaEspelhada] Erro na transação Dexie:', err);
+    }
   }
 
-  /**
-   * Busca a conta 'Conselhos' cadastrada na tabela de contas
-   */
   private async obterIdContaConselhos(): Promise<number | null> {
-    const conta = await db.contas
-      .filter(c => c.titulo?.trim().toLowerCase() === 'conselhos')
-      .first();
-
+    const contas = await db.contas.toArray();
+    const conta = contas.find(c => c.titulo?.trim().toLowerCase() === 'conselhos');
     return conta?.id ?? null;
   }
 
-  /**
-   * Atualiza o saldo de uma conta específica no banco de dados
-   */
   private async atualizarSaldoConta(contaId: number, valorDelta: number): Promise<void> {
     const conta = await db.contas.get(Number(contaId));
     if (conta && conta.id !== undefined) {
@@ -142,8 +138,10 @@ export class CategoriaEspelhadaAutocontrolService {
   private async removerEspelhadoEEstornarSaldo(espelhado: Lancamento): Promise<void> {
     if (!espelhado || !espelhado.id) return;
 
-    await this.atualizarSaldoConta(espelhado.origem_conta_id, -(espelhado.origem_montante || 0));
-    await db.lancamentos.delete(espelhado.id);
+    await db.transaction('rw', [db.lancamentos, db.contas], async () => {
+      await this.atualizarSaldoConta(espelhado.origem_conta_id, -(espelhado.origem_montante || 0));
+      await db.lancamentos.delete(espelhado.id!);
+    });
   }
 
   private formatarDataIsoLocal(data: Date): string {

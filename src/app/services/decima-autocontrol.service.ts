@@ -26,8 +26,17 @@ export class DecimaAutocontrolService {
     const contaDecimaId = contaDecima.id;
 
     // 3. Mapear categorias decimáveis (decimavel === true)
+    const categoriaArredondamento = categorias.find((c: any) => {
+      const texto = String(c.titulo || c.nome || c.descricao || '').toLowerCase();
+      return texto.includes('53') || texto.includes('arredondamento');
+    });
+    const categoriaArredondamentoId = categoriaArredondamento?.id ?? null;
+
+    // Ignora a Categoria 53 do conjunto de decimáveis
     const idsCategoriasDecimaveis = new Set(
-      categorias.filter(c => c.decimavel === true).map(c => c.id)
+      categorias
+        .filter(c => c.decimavel === true && c.id !== categoriaArredondamentoId)
+        .map(c => c.id)
     );
 
     const categoriaDecima = categorias.find(c => c.titulo === this.CATEGORIA_DECIMA_NOME);
@@ -38,11 +47,12 @@ export class DecimaAutocontrolService {
       .filter(l => (l.ata_livro_caixa_id ?? null) === ataTarget)
       .toArray();
 
-    // Filtrar apenas os decimáveis (transações normais ou transferências, ignorando a décima automática)
+    // Filtrar apenas os decimáveis (ignorando a décima e o arredondamento)
     const lancamentosDecimaveisAta = todosLancamentosAta.filter(l => {
       const eDecimavel = l.categoria_id != null && idsCategoriasDecimaveis.has(l.categoria_id);
       const naoEDecima = l.categoria_id !== categoriaDecimaId;
-      return eDecimavel && naoEDecima;
+      const naoEArredondamento = l.categoria_id !== categoriaArredondamentoId; // 👈 Proteção extra
+      return eDecimavel && naoEDecima && naoEArredondamento;
     });
 
     const decimaExistente = todosLancamentosAta.find(l => l.categoria_id === categoriaDecimaId);
@@ -65,9 +75,9 @@ export class DecimaAutocontrolService {
       return;
     }
 
-    // 6. Soma o valor absoluto de origem_montante (para pegar 10% tanto de entradas/saídas quanto de transferências)
+    // 6. Soma os lançamentos arredondados (ex: R$ 7,00 = 700 centavos)
     const somaTotalCentavos = lancamentosDecimaveisAta.reduce((acc, l) => acc + Math.abs(l.origem_montante || 0), 0);
-    const valorDecimaCentavos = -Math.round(somaTotalCentavos * 0.10);
+    const valorDecimaCentavos = -Math.round(somaTotalCentavos * 0.10); // Gera -70 centavos (R$ -0,70)
 
     // 7. Determinar a data do lançamento decimável mais recente
     const ultimaDataIso = this.obterUltimaDataFormatada(lancamentosDecimaveisAta);

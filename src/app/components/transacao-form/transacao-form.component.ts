@@ -10,6 +10,7 @@ import { Lancamento } from '../../models/lancamento.model';
 import { DecimaAutocontrolService } from '../../services/decima-autocontrol.service';
 import { ArredondamentoAutocontrolService } from '../../services/arredondamento-autocontrol.service';
 import { CategoriaEspelhadaAutocontrolService } from '../../services/categoria-automatica-autocontrol.service';
+import { SyncService } from '../../core/service/sync.service';
 
 @Component({
   selector: 'app-transacao-form',
@@ -26,11 +27,12 @@ export class TransacaoFormComponent implements OnInit {
   private arredondamentoService = inject(ArredondamentoAutocontrolService);
   private categoriaEspelhadaService = inject(CategoriaEspelhadaAutocontrolService);
   private router = inject(Router);
+  private syncService = inject(SyncService);
 
   // Controle de Edição
   idEdicao: number | null = null;
   private montanteOriginal: number = 0;
-  private ataAntigaId: number | null = null; // Armazena a ata anterior na edição
+  private ataAntigaId: number | null = null;
 
   // Listas dos Selects
   contas: Conta[] = [];
@@ -97,7 +99,7 @@ export class TransacaoFormComponent implements OnInit {
         this.contaSelecionadaId = lancamento.origem_conta_id;
         this.favorecidoSelecionadoId = lancamento.favorecido_id ?? null;
         this.categoriaSelecionadaId = lancamento.categoria_id ?? null;
-        //ins
+
         this.descricaoCustomizada = lancamento.descricao_customizada || '';
         this.verificarPermissaoDescricaoCustomizada();
 
@@ -139,7 +141,6 @@ export class TransacaoFormComponent implements OnInit {
   }
 
   onCategoriaChange(): void {
-    //ins
     this.verificarPermissaoDescricaoCustomizada();
 
     if (!this.categoriaSelecionadaId) return;
@@ -162,7 +163,6 @@ export class TransacaoFormComponent implements OnInit {
     }
   }
 
-  //ins
   verificarPermissaoDescricaoCustomizada(): void {
     if (!this.categoriaSelecionadaId) {
       this.exibirDescricaoCustomizada = false;
@@ -288,7 +288,7 @@ export class TransacaoFormComponent implements OnInit {
 
     this.fecharModalFavorecido();
   }
-
+  ///////////////////////////////
   async salvar(): Promise<void> {
     if (!this.contaSelecionadaId) {
       alert('Por favor, selecione uma conta.');
@@ -314,12 +314,38 @@ export class TransacaoFormComponent implements OnInit {
       : null;
 
     try {
-      await db.transaction('rw', [db.lancamentos, db.contas], async () => {
-        const conta = await db.contas.get(contaId);
+      // 1. CARREGAR DADOS E AVALIAR REGRAS DE ARREDONDAMENTO
+      const categoria = this.categoriaSelecionadaId ? await db.categorias.get(Number(this.categoriaSelecionadaId)) : null;
+      const conta = await db.contas.get(contaId);
 
-        if (!conta) {
-          throw new Error('Conta selecionada não foi encontrada no banco de dados.');
-        }
+      if (!conta) {
+        throw new Error('Conta selecionada não foi encontrada no banco de dados.');
+      }
+
+      const eDecimavel = categoria?.decimavel === true;
+      const contaArredondamentoId = conta?.id_conta_arredondamento ? Number(conta.id_conta_arredondamento) : null;
+
+      const centavosRestantesAbs = Math.abs(totalCentavos) % 100;
+      const centavosRestantes = totalCentavos >= 0 ? centavosRestantesAbs : -centavosRestantesAbs;
+      const deveArredondar = eDecimavel && contaArredondamentoId && centavosRestantes !== 0;
+
+      let montantePaiFinal = totalCentavos;
+      if (deveArredondar) {
+        montantePaiFinal = totalCentavos - centavosRestantes; // ex: R$ 7,00 (700 centavos)
+      }
+
+      let categoriaArredondamentoId: number | null = null;
+      if (deveArredondar) {
+        const todasCategorias = await db.categorias.toArray();
+        const cat53 = todasCategorias.find((c: any) => {
+          const texto = String(c.titulo || c.nome || c.descricao || '').toLowerCase();
+          return texto.includes('53') || texto.includes('arredondamento');
+        });
+        categoriaArredondamentoId = cat53?.id ? Number(cat53.id) : null;
+      }
+
+      // 2. TRANSAÇÃO ATÔMICA UNIFICADA (Pai 7,00 + Filho 0,55)
+      await db.transaction('rw', [db.lancamentos, db.contas, db.categorias], async () => {
 
         if (this.idEdicao) {
           // --- MODO EDIÇÃO ---
@@ -332,7 +358,7 @@ export class TransacaoFormComponent implements OnInit {
             favorecido_id: this.favorecidoSelecionadoId ? Number(this.favorecidoSelecionadoId) : null,
             categoria_id: this.categoriaSelecionadaId ? Number(this.categoriaSelecionadaId) : null,
             descricao_customizada: descCustomizadaValor,
-            origem_montante: totalCentavos,
+            origem_montante: montantePaiFinal,
             nota: this.nota.trim() || null,
             sincronizado: false,
             updatedAt: this.obterDataIsoLocal()
@@ -341,23 +367,9 @@ export class TransacaoFormComponent implements OnInit {
           idLancamentoSalvo = this.idEdicao;
 
           if (contaAntigaId === contaId) {
-            const diferencaMontante = totalCentavos - this.montanteOriginal;
+            const diferencaMontante = montantePaiFinal - this.montanteOriginal;
             await db.contas.update(contaId, {
               saldo_atual: (conta.saldo_atual || 0) + diferencaMontante,
-              updatedAt: this.obterDataIsoLocal()
-            });
-          } else {
-            if (contaAntigaId) {
-              const contaAntiga = await db.contas.get(contaAntigaId);
-              if (contaAntiga) {
-                await db.contas.update(contaAntigaId, {
-                  saldo_atual: (contaAntiga.saldo_atual || 0) - this.montanteOriginal,
-                  updatedAt: this.obterDataIsoLocal()
-                });
-              }
-            }
-            await db.contas.update(contaId, {
-              saldo_atual: (conta.saldo_atual || 0) + totalCentavos,
               updatedAt: this.obterDataIsoLocal()
             });
           }
@@ -370,7 +382,7 @@ export class TransacaoFormComponent implements OnInit {
             favorecido_id: this.favorecidoSelecionadoId ? Number(this.favorecidoSelecionadoId) : null,
             categoria_id: this.categoriaSelecionadaId ? Number(this.categoriaSelecionadaId) : null,
             descricao_customizada: descCustomizadaValor,
-            origem_montante: totalCentavos,
+            origem_montante: montantePaiFinal,
             destino_montante: 0,
             nota: this.nota.trim() || null,
             ata_livro_caixa_id: this.ataLivroCaixaId,
@@ -381,29 +393,67 @@ export class TransacaoFormComponent implements OnInit {
 
           idLancamentoSalvo = await db.lancamentos.add(novoLancamento);
 
-          const saldoAtualizado = (conta.saldo_atual || 0) + totalCentavos;
-
           await db.contas.update(contaId, {
-            saldo_atual: saldoAtualizado,
+            saldo_atual: (conta.saldo_atual || 0) + montantePaiFinal,
             updatedAt: this.obterDataIsoLocal()
           });
+
+          // 🟢 PERSISTÊNCIA ATÔMICA DO FILHO DE ARREDONDAMENTO
+          // No transacao-form.component.ts (dentro de salvar()):
+          if (deveArredondar && categoriaArredondamentoId && contaArredondamentoId) {
+            const dataHorarioFilhoIso = this.adicionarMinutosIso(dataHorarioIso, 1);
+            const novoArredondamento: Lancamento = {
+              categoria_id: categoriaArredondamentoId,
+              origem_conta_id: contaArredondamentoId,
+              destino_conta_id: null,
+              favorecido_id: this.favorecidoSelecionadoId ? Number(this.favorecidoSelecionadoId) : null,
+              origem_montante: centavosRestantes,
+              destino_montante: 0,
+              datahorario: dataHorarioFilhoIso,
+              ata_livro_caixa_id: null, // Evita inclusão no cálculo da Ata/Décima
+              nota: `Arredondamento referente ao lançamento #${idLancamentoSalvo}`,
+              arredondamento_id: null, // 👈 CRUCIAL: Impede que rotinas de autocontrol encontrem e deletem este registro!
+              sincronizado: false,
+              updatedAt: this.obterDataIsoLocal()
+            };
+
+            const idFilho = await db.lancamentos.add(novoArredondamento);
+            console.log('✅ [TransacaoForm] Lançamento Filho de Arredondamento PERSISTIDO! ID:', idFilho);
+
+            const contaArred = await db.contas.get(contaArredondamentoId);
+            if (contaArred) {
+              await db.contas.update(contaArredondamentoId, {
+                saldo_atual: (contaArred.saldo_atual || 0) + centavosRestantes,
+                updatedAt: this.obterDataIsoLocal()
+              });
+            }
+          }
         }
       });
 
+      // 🟢 AGUARDA CONFIRMAÇÃO FÍSICA NO INDEXEDDB
+      await new Promise(resolve => setTimeout(resolve, 250));
+
+      // 3. PROCESSA APENAS CATEGORIA ESPELHADA E DÉCIMA
       if (idLancamentoSalvo) {
-        // --- 1. RECALCULAR O ARREDONDAMENTO ---
-        await this.arredondamentoService.processarArredondamento(idLancamentoSalvo);
-
-        // --- 2. RECALCULAR O LANÇAMENTO ESPELHADO DE CATEGORIA ---
-        await this.categoriaEspelhadaService.processarCategoriaEspelhada(idLancamentoSalvo);
+        try {
+          await this.categoriaEspelhadaService.processarCategoriaEspelhada(idLancamentoSalvo);
+        } catch (e) {
+          console.error('[TransacaoForm] Erro em CategoriaEspelhada:', e);
+        }
       }
 
-      // --- 3. RECALCULAR A DÉCIMA (10%) ---
-      await this.decimaService.processarDecimaParaAta(this.ataLivroCaixaId);
-
-      if (this.idEdicao && (this.ataAntigaId ?? null) !== (this.ataLivroCaixaId ?? null)) {
-        await this.decimaService.processarDecimaParaAta(this.ataAntigaId);
+      try {
+        await this.decimaService.processarDecimaParaAta(this.ataLivroCaixaId);
+      } catch (e) {
+        console.error('[TransacaoForm] Erro em DecimaService:', e);
       }
+
+      await new Promise(resolve => setTimeout(resolve, 250));
+
+      this.syncService.sincronizar().catch(err => {
+        console.error('[TransacaoForm] Erro ao sincronizar em segundo plano:', err);
+      });
 
       this.cancelar();
     } catch (error) {
@@ -411,15 +461,13 @@ export class TransacaoFormComponent implements OnInit {
       alert('Ocorreu um erro ao salvar o lançamento.');
     }
   }
-
+  ////////////////////////////////////
   cancelar(): void {
-    // 1. Tenta pegar a URL de retorno exata enviada quem abriu o formulário
     const returnUrl = this.route.snapshot.queryParams['returnUrl'];
 
     if (returnUrl) {
       this.router.navigateByUrl(returnUrl);
     } else {
-      // 2. Fallback usando o Location.back() padrão do navegador
       this.location.back();
     }
   }
@@ -447,5 +495,18 @@ export class TransacaoFormComponent implements OnInit {
     const segundos = String(agora.getSeconds()).padStart(2, '0');
 
     return `${ano}-${mes}-${dia}T${horas}:${minutos}:${segundos}`;
+  }
+
+  private adicionarMinutosIso(dataIso: string, minutosParaAdicionar: number = 1): string {
+    const dataObj = new Date(dataIso);
+    const dataComIncremento = new Date(dataObj.getTime() + minutosParaAdicionar * 60000);
+
+    const ano = dataComIncremento.getFullYear();
+    const mes = String(dataComIncremento.getMonth() + 1).padStart(2, '0');
+    const dia = String(dataComIncremento.getDate()).padStart(2, '0');
+    const horas = String(dataComIncremento.getHours()).padStart(2, '0');
+    const minutos = String(dataComIncremento.getMinutes()).padStart(2, '0');
+
+    return `${ano}-${mes}-${dia}T${horas}:${minutos}:00`;
   }
 }
