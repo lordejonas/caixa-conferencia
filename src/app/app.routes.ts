@@ -36,6 +36,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/livro-caixa/livro-caixa').then((m) => m.LivroCaixaComponent)
   },
+   {
+    path: 'configuracao-versao-livro',
+    loadComponent: () =>
+      import('./pages/configuracao-versao-livro/configuracao-versao-livro.component').then((m) => m.ConfiguracaoVersaoLivroComponent)
+  },
   {
     path: 'configuracao-nuvem',
     loadComponent: () =>

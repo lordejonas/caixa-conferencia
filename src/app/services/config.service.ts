@@ -6,6 +6,7 @@ import { FirebaseUserConfig } from '../models/firebase-config.model';
 })
 export class ConfigService {
   private readonly STORAGE_KEY = 'ssvp_firebase_config';
+  private readonly VERSAO_LIVRO_KEY = 'app_versao_livro';
 
   salvarConfiguracaoFirebase(config: FirebaseUserConfig): void {
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(config));
@@ -18,5 +19,13 @@ export class ConfigService {
 
   removerConexao(): void {
     localStorage.removeItem(this.STORAGE_KEY);
+  }
+
+  obterVersaoLivro(): string {
+    return localStorage.getItem(this.VERSAO_LIVRO_KEY) || 'v1'; // valor padrão
+  }
+
+  salvarVersaoLivro(versao: string): void {
+    localStorage.setItem(this.VERSAO_LIVRO_KEY, versao);
   }
 }

@@ -1,0 +1,29 @@
+<app-internal-layout titulo="Versão do Livro">
+
+  <div class="container-conteudo p-3">
+    <p class="text-muted mb-4">Escolha qual versão do livro caixa deseja utilizar no sistema:</p>
+
+    <div class="list-group mb-3">
+      <label class="list-group-item d-flex align-items-center gap-3 py-3" style="cursor: pointer;">
+        <input type="radio" name="versaoLivro" value="V1" [(ngModel)]="versaoSelecionada" (change)="salvarVersao()" class="form-check-input mt-0">
+        <div>
+          <div class="fw-bold">Versão V1</div>
+          <div class="text-muted small">Padrão clássico do livro caixa.</div>
+        </div>
+      </label>
+
+      <label class="list-group-item d-flex align-items-center gap-3 py-3" style="cursor: pointer;">
+        <input type="radio" name="versaoLivro" value="V2" [(ngModel)]="versaoSelecionada" (change)="salvarVersao()" class="form-check-input mt-0">
+        <div>
+          <div class="fw-bold">Versão V2</div>
+          <div class="text-muted small">Nova versão do livro caixa.</div>
+        </div>
+      </label>
+    </div>
+
+    <div *ngIf="mensagemSucesso" class="alert alert-success py-2 text-center" role="alert">
+      {{ mensagemSucesso }}
+    </div>
+  </div>
+
+</app-internal-layout>
