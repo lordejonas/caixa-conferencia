@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { StorageService } from './storage.service';
-import { LivroCaixa, TotaisCaixa, ItemLancamento } from '../models/livro-caixa.model';
+import { LivroCaixa, TotaisCaixa, ItemLancamento } from '../models/livro-caixa.model_old';
 
 const CAIXA_STORAGE_KEY = 'livro_caixa_ssvp';
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { LivroCaixa, TotaisCaixa, ItemLancamento } from '../models/livro-caixa.model';
+import { LivroCaixa, TotaisCaixa, ItemLancamento } from '../models/livro-caixa.model_old';
 import { CaixaService } from './caixa.service';
 import { OpcoesExportacao } from '../models/export.model';
 

@@ -94,7 +94,7 @@ export const DEFAULT_CATEGORIAS: Categoria[] = [
   },
   {
     id: 8,
-    titulo: '04-Resultado líquido com realização de evento',/*08*/
+    titulo: '04-Resultado líquido com realização de eventos',/*08*/
     titulo_dois: '04-Resultado líquidos com eventos',
     pai: null,
     ativo: true,
@@ -261,16 +261,17 @@ export const DEFAULT_CATEGORIAS: Categoria[] = [
     permite_descricao_livre : false,
     descricao: 'Igual ao Saldo final do MÊS anterior'
   },
+
   {
     id: 21,
-    titulo: '15-Total da Receita',/*21*/
+    titulo: '15-Total da Receita (Soma dos Nº 13 e 14)',/*21*/
     titulo_dois: '15-Total Recebimentos + Saldo início do mês',
     pai: null,
     ativo: true,
     positivo: true,
     auto: true,
     decimavel: false,
-    versao_livro: 'all',
+    versao_livro: 'v2',
     permite_descricao_livre : false,
     descricao: 'soma da linha 13 + linha 14'
   },
@@ -367,7 +368,7 @@ export const DEFAULT_CATEGORIAS: Categoria[] = [
   },
   {
     id: 29,
-    titulo: '19-Despesas com Obras Especiais',/*29*/
+    titulo: '19-Obras Especiais',/*29*/
     titulo_dois: '19-Despesas com Obras Especiais',
     pai: null,
     ativo: true,
@@ -588,7 +589,7 @@ export const DEFAULT_CATEGORIAS: Categoria[] = [
   },
   {
     id: 46,
-    titulo: '27-Repasses efetuados (linha 12)',/*46*/
+    titulo: '27-Repasses efetuados (= Nº12)',/*46*/
     titulo_dois: '27-Repasses efetuados (linha 12)',
     pai: null,
     ativo: true,
@@ -614,27 +615,27 @@ export const DEFAULT_CATEGORIAS: Categoria[] = [
   },
   {
     id: 48,
-    titulo: '29-Saldo no final da semana',/*48*/
+    titulo: '29-Saldo final da semana da atual',/*48*/
     titulo_dois: '29-Saldo no final do mês',
     pai: null,
     ativo: true,
     positivo: false,
     auto: true,
     decimavel: false,
-    versao_livro: 'all',
+    versao_livro: 'v1',
     permite_descricao_livre : false,
     descricao: 'linha 15 menos linha 28'
   },
   {
     id: 49,
-    titulo: '30-Balanço Despesas',/*49*/
-    titulo_dois: '30-Balanço Despesas',
+    titulo: '30-Balanço',/*49*/
+    titulo_dois: 'Total dos Pagamentos + Saldo Final do mês (Somar linha 28 + linha 29)',
     pai: null,
     ativo: true,
     positivo: false,
     auto: true,
     decimavel: false,
-    versao_livro: 'all',
+    versao_livro: 'v1',
     permite_descricao_livre : false,
     descricao: 'Somar linha 28 + linha 29'
   },
@@ -923,5 +924,123 @@ export const DEFAULT_CATEGORIAS: Categoria[] = [
     versao_livro: 'all',
     permite_descricao_livre : false,
     descricao: null
+  },
+  ////Categorias para versão 1 do livro
+  {
+    id: 72,
+    titulo: '15-Balanço',/*21*/
+    titulo_dois: '15-Total Recebimentos + Saldo início do mês',
+    pai: null,
+    ativo: true,
+    positivo: true,
+    auto: true,
+    decimavel: false,
+    versao_livro: 'v1',
+    permite_descricao_livre : false,
+    descricao: 'soma da linha 13 + linha 14'
+  },
+  {
+    id: 73,
+    titulo: '29-Saldo negativo anterior',/*48*/
+    titulo_dois: '29-Saldo final do mês (linha 15 a 28)',
+    pai: null,
+    ativo: true,
+    positivo: false,
+    auto: true,
+    decimavel: false,
+    versao_livro: 'v2',
+    permite_descricao_livre : false,
+    descricao: 'linha 15 menos linha 28'
+  },
+  {
+    id: 74,
+    titulo: '30-Total da Despesa (soma dos Nº 28 e 29)',/*49*/
+    titulo_dois: '30-Total das Despesas + Saldo Final do mês (Somar linhas 28 e 29)',
+    pai: null,
+    ativo: true,
+    positivo: false,
+    auto: true,
+    decimavel: false,
+    versao_livro: 'v2',
+    permite_descricao_livre : false,
+    descricao: 'Somar linha 28 + linha 29'
+  },
+  {
+    id: 75,
+    titulo: '34-Décimas a serem enviadas ao conselho particular',
+    titulo_dois: '34-Décimas a serem enviadas ao conselho particular',
+    pai: null,
+    ativo: true,
+    positivo: false,
+    auto: true,
+    decimavel: false,
+    versao_livro: 'v1',
+    permite_descricao_livre : false,
+    descricao: 'Soma das décimas'
+  },
+  {
+    id: 76,
+    titulo: '34-Total das Receitas (=Nº 15)',
+    titulo_dois: '34-Total das Receitas (=Nº 15)',
+    pai: null,
+    ativo: true,
+    positivo: false,
+    auto: true,
+    decimavel: false,
+    versao_livro: 'v2',
+    permite_descricao_livre : false,
+    descricao: 'Soma das décimas acumuladas'
+  },
+  {
+    id: 77,
+    titulo: '35-Outras contribuições a enviar ao Conselho Particular',
+    titulo_dois: '35-Outras contribuições a enviar ao Conselho Particular',
+    pai: null,
+    ativo: true,
+    positivo: false,
+    auto: true,
+    decimavel: false,
+    versao_livro: 'v1',
+    permite_descricao_livre : false,
+    descricao: 'Coleta de Ozanam, Contribuição da solidaridariedade'
+  },
+  {
+    id: 78,
+    titulo: '35-Total das Despesas(= Nº 30)',
+    titulo_dois: '35-Total das Despesas(= Nº 30)',
+    pai: null,
+    ativo: true,
+    positivo: false,
+    auto: true,
+    decimavel: false,
+    versao_livro: 'v2',
+    permite_descricao_livre : false,
+    descricao: 'Coleta de Ozanam, Contribuição da solidaridariedade'
+  },
+  {
+    id: 79,
+    titulo: '36-Total de recursos com a Tesouraria',
+    titulo_dois: '36-Total de recursos com a Tesouraria',
+    pai: null,
+    ativo: true,
+    positivo: false,
+    auto: true,
+    decimavel: false,
+    versao_livro: 'v1',
+    permite_descricao_livre : false,
+    descricao: 'Soma linhas 29, 34 e 35'
+  },
+  {
+    id: 80,
+    titulo: '36-Saldo disponível ou déficit acuulado',
+    titulo_dois: '36-Saldo disponível ou déficit acuulado',
+    pai: null,
+    ativo: true,
+    positivo: false,
+    auto: true,
+    decimavel: false,
+    versao_livro: 'v2',
+    permite_descricao_livre : false,
+    descricao: 'diminuição do Nº 15 - Nº 30'
   }
 ];

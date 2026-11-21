@@ -5,6 +5,7 @@ import { Categoria } from '../../models/categoria.model';
 import { Conta } from '../../models/conta.model';
 import { Agregador } from '../../models/agregador.model';
 import { Lancamento } from '../../models/lancamento.model';
+import {LivroCaixa} from '../../models/livro-caixa.model'
 
 export class AppDatabase extends Dexie {
   unidades!: Table<UnidadeLocal, string>;
@@ -13,6 +14,7 @@ export class AppDatabase extends Dexie {
   contas!: Table<Conta, number>;
   agregadores!: Table<Agregador, number>;
   lancamentos!: Table<Lancamento, number>;
+  livros_caixas!: Table<LivroCaixa, number>;
 
   constructor() {
     super('LivroCaixaDB');
@@ -46,6 +48,13 @@ export class AppDatabase extends Dexie {
     this.version(10).stores({
       categorias: 'id, titulo, pai, ativo' // Apenas 'id', sem '++'
     });
+
+
+    this.version(11).stores({
+    // ... suas tabelas existentes (contas, categorias, lancamentos, favorecidos) ...
+    livros_caixas: '++id, dataReuniao, versaoLivro, sincronizado'
+    });
+
   }
 }
 

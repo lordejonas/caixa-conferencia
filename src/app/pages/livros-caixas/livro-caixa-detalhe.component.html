@@ -1,0 +1,166 @@
+<app-internal-layout [titulo]="'Ata #' + (ataId || '')" [exibirFooterPadrao]="false">
+
+  @if (carregando) {
+    <div class="text-center py-5 text-muted">
+      <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+      <span>Apurando valores da Ata...</span>
+    </div>
+  } @else if (livro) {
+
+    <div class="container p-3 pb-5 mb-5">
+
+      <!-- CABEÇALHO RESUMO DA ATA -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+              <span class="text-muted small d-block">Data da Reunião</span>
+              <strong class="fs-6">{{ livro.dataReuniao | date:'dd/MM/yyyy \'às\' HH:mm' }}</strong>
+            </div>
+            <span class="badge bg-primary text-uppercase px-3 py-2">
+              Livro {{ versaoAtiva }}
+            </span>
+          </div>
+
+          <hr class="my-2">
+
+          <div class="row text-center g-2 pt-1">
+            <div class="col-6 border-end">
+              <span class="text-muted small d-block">Famílias Assistidas</span>
+              <strong class="fs-5 text-dark">{{ totalFamilias }}</strong>
+              <small class="text-muted d-block">
+                ({{ livro.familiasAjudaMaterial }} mat. / {{ livro.familiasAjudaEspiritual }} esp.)
+              </small>
+              <small class="text-primary fw-semibold d-block">
+                {{ livro.totalPessoasAssistidas || 0 }} pessoas assistidas
+              </small>
+            </div>
+            <div class="col-6">
+              <span class="text-muted small d-block">Presentes na Reunião</span>
+              <strong class="fs-5 text-dark">{{ totalPresentes }}</strong>
+              <small class="text-muted d-block">
+                ({{ livro.confrades }}C / {{ livro.consorcias }}Cs / {{ livro.aspirantes }}A / {{ livro.visitantes }}V)
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEÇÃO 1: RECEITAS -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-success text-white fw-bold">
+          📥 Receitas (Linhas 00 a 15)
+        </div>
+        <div class="list-group list-group-flush">
+          @for (linha of linhasReceitas; track linha.categoria.id) {
+            <div
+              class="list-group-item d-flex justify-content-between align-items-center py-2"
+              [class.bg-light]="linha.ehTotalizador"
+              [class.fw-bold]="linha.ehTotalizador"
+              [class.ps-4]="linha.ehSubcategoria">
+              <span class="small" [class.text-muted]="linha.ehSubcategoria">
+                {{ linha.tituloExibicao }}
+              </span>
+              <span class="text-nowrap ms-2" [class.text-success]="linha.ehTotalizador">
+                {{ linha.valorCentavos | moedaCentavos }}
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- SEÇÃO 2: DESPESAS E BALANÇO -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-danger text-white fw-bold">
+          📤 Despesas e Balanço (Linhas 16 a 30)
+        </div>
+        <div class="list-group list-group-flush">
+          @for (linha of linhasDespesas; track linha.categoria.id) {
+            <div
+              class="list-group-item d-flex justify-content-between align-items-center py-2"
+              [class.bg-light]="linha.ehTotalizador"
+              [class.fw-bold]="linha.ehTotalizador"
+              [class.ps-4]="linha.ehSubcategoria">
+              <span class="small" [class.text-muted]="linha.ehSubcategoria">
+                {{ linha.tituloExibicao }}
+              </span>
+              <span class="text-nowrap ms-2" [class.text-danger]="linha.ehTotalizador">
+                {{ linha.valorCentavos | moedaCentavos }}
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+
+     <!-- SEÇÃO 3: CONTROLE DA DISTRIBUIÇÃO DE BENS MATERIAIS (Linhas 31 a 33) -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-info text-dark fw-bold">
+          📦 Controle da distribuição de bens materiais
+        </div>
+        <div class="list-group list-group-flush">
+          @for (linha of linhasBensMateriais; track linha.categoria.id) {
+            <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+              <span class="small">
+                {{ linha.tituloExibicao }}
+              </span>
+              <span class="text-nowrap ms-2 fw-semibold">
+                {{ linha.valorCentavos }}
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- SEÇÃO 4: RESUMO DA SITUAÇÃO DO CAIXA (Linhas 34 a 36) -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white fw-bold">
+          💰 Resumo da Situação do Caixa
+        </div>
+        <div class="list-group list-group-flush">
+          @for (linha of linhasResumoCaixa; track linha.categoria.id) {
+            <div
+              class="list-group-item d-flex justify-content-between align-items-center py-2"
+              [class.bg-light]="linha.ehTotalizador"
+              [class.fw-bold]="linha.ehTotalizador">
+              <span class="small">
+                {{ linha.tituloExibicao }}
+              </span>
+              <span class="text-nowrap ms-2">
+                {{ linha.valorCentavos | moedaCentavos }}
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RODAPÉ FIXO DE AÇÕES -->
+    <div class="rodape-fixo">
+      <div class="container d-flex justify-content-between gap-2">
+        <button
+          type="button"
+          class="btn btn-outline-danger"
+          (click)="excluirAta()"
+          [disabled]="excluindo"
+          aria-label="Excluir Ata">
+          🗑️
+        </button>
+
+        <a [routerLink]="['/caixa/editar', livro.id]" class="btn btn-outline-primary flex-grow-1">
+          ✏️ Editar
+        </a>
+
+        <button
+          type="button"
+          class="btn btn-primary flex-grow-1 fw-bold"
+          (click)="recalcularManualmente()"
+          [disabled]="recalculando || excluindo">
+          {{ recalculando ? 'Apurando...' : '🔄 Recalcular' }}
+        </button>
+      </div>
+    </div>
+
+  }
+
+</app-internal-layout>

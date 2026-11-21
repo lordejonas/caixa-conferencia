@@ -31,12 +31,36 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/transferencia-form/transferencia-form.component').then((m) => m.TransferenciaFormComponent)
   },
+  /*
   {
     path: 'caixa',
     loadComponent: () =>
       import('./components/livro-caixa/livro-caixa').then((m) => m.LivroCaixaComponent)
   },
-   {
+  */
+
+  {
+    path: 'caixa',
+    loadComponent: () =>
+      import('./pages/livros-caixas/livros-caixas.component').then((m) => m.LivrosCaixasComponent)
+  },
+  {
+    path: 'caixa/novo',
+    loadComponent: () =>
+      import('./pages/livros-caixas/livro-caixa-form.component').then((m) => m.LivroCaixaFormComponent)
+  },
+  {
+    path: 'caixa/editar/:id',
+    loadComponent: () =>
+      import('./pages/livros-caixas/livro-caixa-form.component').then((m) => m.LivroCaixaFormComponent)
+  },
+  {
+    path: 'caixa/:id',
+    loadComponent: () =>
+      import('./pages/livros-caixas/livro-caixa-detalhe.component').then((m) => m.LivroCaixaDetalheComponent)
+  },
+
+  {
     path: 'configuracao-versao-livro',
     loadComponent: () =>
       import('./pages/configuracao-versao-livro/configuracao-versao-livro.component').then((m) => m.ConfiguracaoVersaoLivroComponent)

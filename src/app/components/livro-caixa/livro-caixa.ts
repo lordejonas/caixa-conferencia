@@ -5,7 +5,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { CaixaService } from '../../services/caixa.service';
 import { ExportWhatsappService } from '../../services/export-whatsapp.service';
-import { LivroCaixa, TotaisCaixa } from '../../models/livro-caixa.model';
+import { LivroCaixa, TotaisCaixa } from '../../models/livro-caixa.model_old';
 import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-livro-caixa',

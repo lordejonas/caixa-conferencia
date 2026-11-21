@@ -1,0 +1,303 @@
+<app-internal-layout [titulo]="idEdicao ? 'Editar Ata #' + idEdicao : 'Nova Ata do Livro Caixa'" [exibirFooterPadrao]="false">
+
+  <form (ngSubmit)="salvar()" class="container p-3 pb-5 mb-5">
+
+    <!-- BLOCO 1: IDENTIFICAÇÃO DA ATA E DATA -->
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-light fw-bold">
+        📋 Identificação da Reunião
+      </div>
+      <div class="card-body">
+        <div class="row g-3 align-items-center">
+          <!-- Campo Número da Ata alinhado horizontalmente com o Label -->
+          <div class="col-12">
+            <div class="d-flex align-items-center gap-3">
+              <label for="numeroAta" class="form-label fw-semibold mb-0 text-nowrap">
+                Número da Ata *
+              </label>
+              <input
+                type="number"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                id="numeroAta"
+                name="numeroAta"
+                class="form-control text-center fw-bold"
+                style="max-width: 120px;"
+                [(ngModel)]="numeroAta"
+                (ngModelChange)="aoAlterarNumeroAta()"
+                [readonly]="!!idEdicao"
+                min="1"
+                required>
+            </div>
+          </div>
+
+          <div class="col-6">
+            <label for="dataReuniao" class="form-label fw-semibold">Data da Reunião *</label>
+            <input
+              type="date"
+              id="dataReuniao"
+              name="dataReuniao"
+              class="form-control"
+              [(ngModel)]="dataIso"
+              required>
+          </div>
+
+          <div class="col-6">
+            <label for="horaReuniao" class="form-label fw-semibold">Hora *</label>
+            <input
+              type="time"
+              id="horaReuniao"
+              name="horaReuniao"
+              class="form-control"
+              [(ngModel)]="horaIso"
+              required>
+          </div>
+
+          <!-- Saldo Anterior (Linha 14) -->
+          <div class="col-12 pt-1">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <div>
+                <label for="saldoAnteriorReais" class="form-label small fw-semibold mb-0">
+                  14 - Saldo Anterior (R$)
+                </label>
+                <small class="text-muted d-block" style="font-size: 0.75rem;">
+                  {{ possuiAtaAnterior ? 'Puxado automaticamente da Ata anterior' : 'Informe o saldo inicial (1ª Ata)' }}
+                </small>
+              </div>
+              <input
+                type="text"
+                inputmode="decimal"
+                id="saldoAnteriorReais"
+                name="saldoAnteriorReais"
+                class="form-control text-end fw-semibold"
+                style="max-width: 130px;"
+                [(ngModel)]="saldoAnteriorReais"
+                [readonly]="possuiAtaAnterior"
+                placeholder="0,00">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCO 2: FAMÍLIAS ASSISTIDAS -->
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <span class="fw-bold">🏠 Famílias Assistidas</span>
+        <span class="badge bg-primary fs-6">Total: {{ totalFamiliasAssistidas }}</span>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12 col-md-4">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <label for="familiasMaterial" class="form-label small fw-semibold mb-0">
+                Ajuda Material
+              </label>
+              <input
+                type="number"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                id="familiasMaterial"
+                name="familiasMaterial"
+                class="form-control text-center px-1"
+                style="max-width: 85px;"
+                [(ngModel)]="familiasAjudaMaterial"
+                min="0">
+            </div>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <label for="familiasEspiritual" class="form-label small fw-semibold mb-0">
+                Ajuda Espiritual
+              </label>
+              <input
+                type="number"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                id="familiasEspiritual"
+                name="familiasEspiritual"
+                class="form-control text-center px-1"
+                style="max-width: 85px;"
+                [(ngModel)]="familiasAjudaEspiritual"
+                min="0">
+            </div>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <label for="totalPessoasAssistidas" class="form-label small fw-semibold mb-0">
+                Total de Pessoas Assistidas
+              </label>
+              <input
+                type="number"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                id="totalPessoasAssistidas"
+                name="totalPessoasAssistidas"
+                class="form-control text-center px-1"
+                style="max-width: 85px;"
+                [(ngModel)]="totalPessoasAssistidas"
+                min="0">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCO 3: PRESENTES NA REUNIÃO -->
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <span class="fw-bold">👥 Presentes na Reunião</span>
+        <span class="badge bg-success fs-6">Total: {{ totalPresentesReuniao }}</span>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <!-- Linha 1: Confrades | Consórcias -->
+          <div class="col-6">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <label for="confrades" class="form-label small fw-semibold mb-0">Confrades</label>
+              <input
+                type="number"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                id="confrades"
+                name="confrades"
+                class="form-control text-center px-1"
+                style="max-width: 72px;"
+                [(ngModel)]="confrades"
+                min="0">
+            </div>
+          </div>
+
+          <div class="col-6">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <label for="consorcias" class="form-label small fw-semibold mb-0">Consórcias</label>
+              <input
+                type="number"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                id="consorcias"
+                name="consorcias"
+                class="form-control text-center px-1"
+                style="max-width: 72px;"
+                [(ngModel)]="consorcias"
+                min="0">
+            </div>
+          </div>
+
+          <!-- Linha 2: Aspirantes | Visitantes -->
+          <div class="col-6">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <label for="aspirantes" class="form-label small fw-semibold mb-0">Aspirantes</label>
+              <input
+                type="number"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                id="aspirantes"
+                name="aspirantes"
+                class="form-control text-center px-1"
+                style="max-width: 72px;"
+                [(ngModel)]="aspirantes"
+                min="0">
+            </div>
+          </div>
+
+          <div class="col-6">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <label for="visitantes" class="form-label small fw-semibold mb-0">Visitantes</label>
+              <input
+                type="number"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                id="visitantes"
+                name="visitantes"
+                class="form-control text-center px-1"
+                style="max-width: 72px;"
+                [(ngModel)]="visitantes"
+                min="0">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCO 4: CONTROLE DA DISTRIBUIÇÃO DE BENS MATERIAIS -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-light fw-bold">
+        📦 Distribuição de Bens Materiais
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <label for="cestasBasicasKg" class="form-label small fw-semibold mb-0">
+                31 - Cestas básicas (em kg)
+              </label>
+              <input
+                type="number"
+                inputmode="decimal"
+                id="cestasBasicasKg"
+                name="cestasBasicasKg"
+                class="form-control text-center px-1"
+                style="max-width: 90px;"
+                [(ngModel)]="cestasBasicasKg"
+                min="0"
+                step="0.1">
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <label for="roupasCalcadosUnid" class="form-label small fw-semibold mb-0">
+                32 - Roupas, calçados (unid.)
+              </label>
+              <input
+                type="number"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                id="roupasCalcadosUnid"
+                name="roupasCalcadosUnid"
+                class="form-control text-center px-1"
+                style="max-width: 90px;"
+                [(ngModel)]="roupasCalcadosUnid"
+                min="0">
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <label for="outrosBensMateriais" class="form-label small fw-semibold mb-0">
+                33 - Outros (unid.)
+              </label>
+              <input
+                type="number"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                id="outrosBensMateriais"
+                name="outrosBensMateriais"
+                class="form-control text-center px-1"
+                style="max-width: 90px;"
+                [(ngModel)]="outrosBensMateriais"
+                min="0">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RODAPÉ FIXO DE AÇÕES -->
+    <div class="rodape-fixo">
+      <div class="container d-flex justify-content-between gap-2">
+        <button type="button" class="btn btn-outline-secondary w-50" (click)="cancelar()">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary w-50 fw-bold" [disabled]="isSalvando">
+          {{ isSalvando ? 'Salvando...' : 'Salvar Ata' }}
+        </button>
+      </div>
+    </div>
+
+  </form>
+
+</app-internal-layout>
