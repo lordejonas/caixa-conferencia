@@ -222,6 +222,152 @@
       </div>
     </div>
 
+    <!-- BLOCO 3.5: LANÇAMENTOS E TRANSFERÊNCIAS PARA ASSOCIAR À ATA -->
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <span class="fw-bold">💸 Lançamentos e Transferências</span>
+        <span class="badge bg-secondary fs-6">
+          {{ totalLancamentosSelecionados }} / {{ totalLancamentosDisponiveis }}
+        </span>
+      </div>
+
+      <div class="card-body p-0">
+        @if (totalLancamentosDisponiveis > 0) {
+          <div class="px-3 py-2 bg-white border-bottom d-flex justify-content-end gap-2">
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-primary py-0 px-2"
+              (click)="alternarTodosLancamentos(true)">
+              Marcar todos
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary py-0 px-2"
+              (click)="alternarTodosLancamentos(false)">
+              Desmarcar
+            </button>
+          </div>
+
+          <div style="max-height: 360px; overflow-y: auto;">
+            <!-- SUB-BLOCO 1: RECEITAS (positivo: true) -->
+            @if (itensReceitas.length > 0) {
+              <div class="px-3 py-1 bg-success-subtle text-success fw-bold small border-bottom">
+                📈 Receitas ({{ itensReceitas.length }})
+              </div>
+              <div class="list-group list-group-flush">
+                @for (item of itensReceitas; track item.lancamento.id) {
+                  <label
+                    [for]="'lanc_rec_' + item.lancamento.id"
+                    class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2 px-3 mb-0"
+                    style="cursor: pointer;">
+                    <div class="text-truncate overflow-hidden me-2">
+                      <div class="fw-semibold small text-dark text-truncate">
+                        {{ item.nomeCategoria }}
+                      </div>
+                      <div class="text-muted text-truncate" style="font-size: 0.74rem;">
+                        {{ item.lancamento.datahorario | date:'dd/MM/yyyy' }} · {{ item.lancamento.descricao_customizada || item.lancamento.nota || 'Sem descrição' }}
+                      </div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3 flex-shrink-0">
+                      <span class="fw-bold small text-nowrap text-success">
+                        {{ (item.lancamento.origem_montante || 0) | moedaCentavos }}
+                      </span>
+                      <input
+                        type="checkbox"
+                        class="form-check-input m-0"
+                        [id]="'lanc_rec_' + item.lancamento.id"
+                        [name]="'lanc_rec_' + item.lancamento.id"
+                        [(ngModel)]="item.selecionado">
+                    </div>
+                  </label>
+                }
+              </div>
+            }
+
+            <!-- SUB-BLOCO 2: DESPESAS (positivo: false) -->
+            @if (itensDespesas.length > 0) {
+              <div class="px-3 py-1 bg-danger-subtle text-danger fw-bold small border-top border-bottom">
+                📉 Despesas ({{ itensDespesas.length }})
+              </div>
+              <div class="list-group list-group-flush">
+                @for (item of itensDespesas; track item.lancamento.id) {
+                  <label
+                    [for]="'lanc_desp_' + item.lancamento.id"
+                    class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2 px-3 mb-0"
+                    style="cursor: pointer;">
+                    <div class="text-truncate overflow-hidden me-2">
+                      <div class="fw-semibold small text-dark text-truncate">
+                        {{ item.nomeCategoria }}
+                      </div>
+                      <div class="text-muted text-truncate" style="font-size: 0.74rem;">
+                        {{ item.lancamento.datahorario | date:'dd/MM/yyyy' }} · {{ item.lancamento.descricao_customizada || item.lancamento.nota || 'Sem descrição' }}
+                      </div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3 flex-shrink-0">
+                      <span class="fw-bold small text-nowrap text-danger">
+                        {{ (item.lancamento.origem_montante || 0) | moedaCentavos }}
+                      </span>
+                      <input
+                        type="checkbox"
+                        class="form-check-input m-0"
+                        [id]="'lanc_desp_' + item.lancamento.id"
+                        [name]="'lanc_desp_' + item.lancamento.id"
+                        [(ngModel)]="item.selecionado">
+                    </div>
+                  </label>
+                }
+              </div>
+            }
+
+            <!-- SUB-BLOCO 3: TRANSFERÊNCIAS -->
+            @if (itensTransferencias.length > 0) {
+              <div class="px-3 py-1 bg-primary-subtle text-primary fw-bold small border-top border-bottom">
+                🔄 Transferências ({{ itensTransferencias.length }})
+              </div>
+              <div class="list-group list-group-flush">
+                @for (item of itensTransferencias; track item.lancamento.id) {
+                  <label
+                    [for]="'lanc_transf_' + item.lancamento.id"
+                    class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2 px-3 mb-0"
+                    style="cursor: pointer;">
+                    <div class="text-truncate overflow-hidden me-2">
+                      <div class="fw-semibold small text-dark text-truncate">
+                        {{ item.nomeCategoria }}
+                      </div>
+                      <div class="text-muted text-truncate" style="font-size: 0.74rem;">
+                        {{ item.lancamento.datahorario | date:'dd/MM/yyyy' }}
+                        @if (item.lancamento.descricao_customizada || item.lancamento.nota) {
+                          · {{ item.lancamento.descricao_customizada || item.lancamento.nota }}
+                        }
+                      </div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3 flex-shrink-0">
+                      <span class="fw-bold small text-nowrap text-primary">
+                        {{ (item.lancamento.origem_montante || 0) | moedaCentavos }}
+                      </span>
+                      <input
+                        type="checkbox"
+                        class="form-check-input m-0"
+                        [id]="'lanc_transf_' + item.lancamento.id"
+                        [name]="'lanc_transf_' + item.lancamento.id"
+                        [(ngModel)]="item.selecionado">
+                    </div>
+                  </label>
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="p-3 text-center text-muted small">
+            Nenhum lançamento ou transferência pendente de associação.
+          </div>
+        }
+      </div>
+    </div>
+
     <!-- BLOCO 4: CONTROLE DA DISTRIBUIÇÃO DE BENS MATERIAIS -->
     <div class="card shadow-sm mb-4">
       <div class="card-header bg-light fw-bold">

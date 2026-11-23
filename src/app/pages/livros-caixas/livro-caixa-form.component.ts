@@ -4,13 +4,21 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { db } from '../../core/db/app-database';
 import { LivroCaixa } from '../../models/livro-caixa.model';
+import { Lancamento } from '../../models/lancamento.model';
 import { ConfigService } from '../../services/config.service';
 import { InternalLayoutComponent } from '../../components/internal-layout/internal-layout.component';
+import { MoedaCentavosPipe } from '../../pipes/moeda-centavos.pipe';
+
+export interface ItemLancamentoSelecao {
+  lancamento: Lancamento;
+  selecionado: boolean;
+  nomeCategoria: string;
+}
 
 @Component({
   selector: 'app-livro-caixa-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, InternalLayoutComponent],
+  imports: [CommonModule, FormsModule, InternalLayoutComponent, MoedaCentavosPipe],
   templateUrl: './livro-caixa-form.component.html',
   styleUrl: './livro-caixa-form.component.scss'
 })
@@ -44,6 +52,13 @@ export class LivroCaixaFormComponent implements OnInit {
   aspirantes: number | null = null;
   visitantes: number | null = null;
 
+  // Lançamentos e transferências disponíveis para associação
+  //itensLancamentos: ItemLancamentoSelecao[] = [];
+  // Lançamentos agrupados por bloco para associação
+  itensReceitas: ItemLancamentoSelecao[] = [];
+  itensDespesas: ItemLancamentoSelecao[] = [];
+  itensTransferencias: ItemLancamentoSelecao[] = [];
+
   // Bens Materiais Distribuídos (Linhas 31, 32 e 33 -> IDs 50, 51 e 52)
   cestasBasicasKg: number | null = null;
   roupasCalcadosUnid: number | null = null;
@@ -65,6 +80,7 @@ export class LivroCaixaFormComponent implements OnInit {
       await this.atualizarSaldoAnteriorAutomatico(this.numeroAta);
     }
 
+    await this.carregarLancamentosDisponiveis();
     this.cdr.detectChanges();
   }
 
@@ -136,6 +152,96 @@ export class LivroCaixaFormComponent implements OnInit {
     return isNaN(numero) ? 0 : Math.round(numero * 100);
   }
 
+  private async carregarLancamentosDisponiveis(): Promise<void> {
+    const [todasCategorias, todosLancamentos, todasContas] = await Promise.all([
+      db.categorias.toArray(),
+      db.lancamentos.toArray(),
+      db.contas.toArray()
+    ]);
+
+    const versaoAtual = this.configService.obterVersaoLivro().toLowerCase();
+    const mapaCategorias = new Map<number, { titulo: string; positivo: boolean }>();
+
+    for (const cat of todasCategorias) {
+      if (cat.id !== undefined) {
+        const titulo = versaoAtual === 'v2' && cat.titulo_dois ? cat.titulo_dois : cat.titulo;
+        mapaCategorias.set(cat.id, {
+          titulo,
+          positivo: cat.positivo === true
+        });
+      }
+    }
+
+    const mapaContas = new Map<number, string>();
+    for (const conta of todasContas) {
+      if (conta.id !== undefined) {
+        mapaContas.set(conta.id, conta.titulo);
+      }
+    }
+
+    const filtrados = todosLancamentos.filter(l => {
+      const ataId = l.ata_livro_caixa_id;
+      const semVinculo = ataId === null || ataId === undefined;
+      const pertenceAEsteLivro = this.idEdicao !== null && Number(ataId) === this.idEdicao;
+      return semVinculo || pertenceAEsteLivro;
+    });
+
+    filtrados.sort((a, b) => (b.datahorario || '').localeCompare(a.datahorario || ''));
+
+    this.itensReceitas = [];
+    this.itensDespesas = [];
+    this.itensTransferencias = [];
+
+    for (const lanc of filtrados) {
+      const selecionado = this.idEdicao !== null && Number(lanc.ata_livro_caixa_id) === this.idEdicao;
+      const ehTransferencia = lanc.destino_conta_id !== null && lanc.destino_conta_id !== undefined;
+
+      if (ehTransferencia) {
+        const nomeOrigem = mapaContas.get(Number(lanc.origem_conta_id)) || 'Conta origem';
+        const nomeDestino = mapaContas.get(Number(lanc.destino_conta_id)) || 'Conta destino';
+
+        this.itensTransferencias.push({
+          lancamento: lanc,
+          selecionado,
+          nomeCategoria: `${nomeOrigem} → ${nomeDestino}`
+        });
+        continue;
+      }
+
+      const infoCat = lanc.categoria_id ? mapaCategorias.get(Number(lanc.categoria_id)) : undefined;
+      const item: ItemLancamentoSelecao = {
+        lancamento: lanc,
+        selecionado,
+        nomeCategoria: infoCat ? infoCat.titulo : 'Sem categoria'
+      };
+
+      const ehReceita = infoCat ? infoCat.positivo : (lanc.origem_montante > 0);
+      if (ehReceita) {
+        this.itensReceitas.push(item);
+      } else {
+        this.itensDespesas.push(item);
+      }
+    }
+  }
+
+  get todosItensLancamentos(): ItemLancamentoSelecao[] {
+    return [...this.itensReceitas, ...this.itensDespesas, ...this.itensTransferencias];
+  }
+
+  get totalLancamentosDisponiveis(): number {
+    return this.todosItensLancamentos.length;
+  }
+
+  get totalLancamentosSelecionados(): number {
+    return this.todosItensLancamentos.filter(item => item.selecionado).length;
+  }
+
+  alternarTodosLancamentos(selecionar: boolean): void {
+    for (const item of this.todosItensLancamentos) {
+      item.selecionado = selecionar;
+    }
+  }
+
   // Getters calculados dinamicamente
   get totalFamiliasAssistidas(): number {
     return (Number(this.familiasAjudaMaterial) || 0) + (Number(this.familiasAjudaEspiritual) || 0);
@@ -177,13 +283,12 @@ export class LivroCaixaFormComponent implements OnInit {
         }
       }
 
-      // Se existir Ata anterior, garante a leitura dela; se não existir, respeita o valor digitado no campo!
       if (this.possuiAtaAnterior) {
         await this.atualizarSaldoAnteriorAutomatico(numeroAtaNumerico);
       }
+
       const saldoAnteriorCentavos = this.converterReaisParaCentavos(this.saldoAnteriorReais);
 
-      // Tipagem explícita { [categoriaId: number]: number } resolve o erro TS7053
       const valoresAtualizados: { [categoriaId: number]: number } = {
         ...this.valoresCategoriasExistentes,
         20: saldoAnteriorCentavos, // 14-Saldo anterior
@@ -193,14 +298,15 @@ export class LivroCaixaFormComponent implements OnInit {
       };
 
       if (!this.idEdicao) {
-        valoresAtualizados[21] = saldoAnteriorCentavos; // 15-Total Receita (V2)
-        valoresAtualizados[72] = saldoAnteriorCentavos; // 15-Balanço (V1)
-        valoresAtualizados[48] = saldoAnteriorCentavos; // 29-Saldo Final (V1)
-        valoresAtualizados[73] = saldoAnteriorCentavos; // 29-Saldo Final (V2)
+        valoresAtualizados[21] = saldoAnteriorCentavos;
+        valoresAtualizados[72] = saldoAnteriorCentavos;
+        valoresAtualizados[48] = saldoAnteriorCentavos;
+        valoresAtualizados[73] = saldoAnteriorCentavos;
       }
 
       const versaoAtual = this.configService.obterVersaoLivro().toLowerCase();
       const dataReuniaoIso = `${this.dataIso}T${this.horaIso}:00`;
+      const agoraIso = new Date().toISOString();
 
       const registro: LivroCaixa = {
         id: numeroAtaNumerico,
@@ -215,12 +321,32 @@ export class LivroCaixaFormComponent implements OnInit {
         valoresCategorias: valoresAtualizados,
         versaoLivro: versaoAtual,
         sincronizado: false,
-        updatedAt: new Date().toISOString()
+        updatedAt: agoraIso
       };
 
-      await db.livros_caixas.put(registro);
+      await db.transaction('rw', [db.livros_caixas, db.lancamentos], async () => {
+        // 1. Salva ou atualiza a Ata
+        await db.livros_caixas.put(registro);
 
-      this.router.navigate(['/caixa']);
+        // 2. Atualiza o vínculo ata_livro_caixa_id nos lançamentos e transferências listados
+        for (const item of this.todosItensLancamentos) {
+          if (item.lancamento.id === undefined) continue;
+
+          const novoVinculo = item.selecionado ? numeroAtaNumerico : null;
+          const vinculoAtual = item.lancamento.ata_livro_caixa_id ?? null;
+
+          if (novoVinculo !== vinculoAtual) {
+            await db.lancamentos.update(item.lancamento.id, {
+              ata_livro_caixa_id: novoVinculo,
+              sincronizado: false,
+              updatedAt: agoraIso
+            });
+          }
+        }
+      });
+
+      // Redireciona direto para a apuração/detalhamento da Ata para visualizar os cálculos
+      this.router.navigate(['/caixa', numeroAtaNumerico]);
     } catch (error) {
       console.error('Erro ao salvar Ata do Livro Caixa:', error);
       alert('Ocorreu um erro ao salvar a Ata.');

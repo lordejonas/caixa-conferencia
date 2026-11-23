@@ -204,7 +204,7 @@ export class LivroCaixaDetalheComponent implements OnInit {
     }
   }
 
-  /**
+ /**
    * Consolida os lançamentos da Ata, soma filhas nas categorias Pai
    * e calcula os totalizadores automáticos de V1 e V2.
    */
@@ -214,33 +214,28 @@ export class LivroCaixaDetalheComponent implements OnInit {
     valoresManuaisSalvos: { [id: number]: number },
     saldoFinalAtaAnterior: number | null
   ): { [id: number]: number } {
+    // 1. Inicia o mapa zerado e preserva SOMENTE os campos manuais do formulário
     const mapa: { [id: number]: number } = {};
+    const idsManuais = [20, 50, 51, 52]; // 14-Saldo anterior (1ª Ata) e Bens Materiais (31, 32, 33)
 
-    // Inicializa com valores manuais pré-existentes (ex: Saldo Anterior informado manualmente)
-    for (const key of Object.keys(valoresManuaisSalvos)) {
-      const id = Number(key);
-      mapa[id] = valoresManuaisSalvos[id] || 0;
-    }
-
-    // Soma absoluta dos lançamentos vinculados à Ata por categoria_id
-    const somaLancamentos: { [id: number]: number } = {};
-    for (const lanc of lancamentos) {
-      if (!lanc.categoria_id) continue;
-      const catId = Number(lanc.categoria_id);
-      somaLancamentos[catId] = (somaLancamentos[catId] || 0) + Math.abs(lanc.origem_montante || 0);
-    }
-
-    // Sobrescreve categorias que possuem lançamentos reais na Ata
-    for (const cat of categorias) {
-      if (!cat.id) continue;
-      if (somaLancamentos[cat.id] !== undefined) {
-        mapa[cat.id] = somaLancamentos[cat.id];
-      } else if (!cat.auto) {
-        mapa[cat.id] = mapa[cat.id] || 0;
+    for (const idManual of idsManuais) {
+      if (valoresManuaisSalvos[idManual] !== undefined) {
+        mapa[idManual] = valoresManuaisSalvos[idManual] || 0;
       }
     }
 
-    // Consolida subcategorias nas categorias Pai (ex: 03.1 + 03.2 + 03.3 -> 03)
+    // 2. Soma absoluta dos lançamentos vinculados à Ata por categoria_id (ignorando transferências)
+    for (const lanc of lancamentos) {
+      if (lanc.destino_conta_id !== null && lanc.destino_conta_id !== undefined) {
+        continue;
+      }
+      if (!lanc.categoria_id) continue;
+
+      const catId = Number(lanc.categoria_id);
+      mapa[catId] = (mapa[catId] || 0) + Math.abs(lanc.origem_montante || 0);
+    }
+
+    // 3. Consolida subcategorias nas categorias Pai (ex: 03.1 + 03.2 + 03.3 -> 03)
     for (const cat of categorias) {
       if (cat.id && cat.pai) {
         const paiId = Number(cat.pai);
@@ -266,12 +261,10 @@ export class LivroCaixaDetalheComponent implements OnInit {
 
     // 14-Saldo anterior (id: 20)
     // Se existe Ata anterior, herda o Saldo Final (linha 29) dela.
-    // Caso seja a 1ª Ata, utiliza 00-Saldo de Abertura (id: 1) se houver lançamento, ou o saldo manual salvo.
+    // Caso seja a 1ª Ata, utiliza o saldo manual salvo ou 00-Saldo de Abertura (id: 1) se houver lançamento.
     if (saldoFinalAtaAnterior !== null) {
-      // Herda automaticamente da Ata anterior (id < ataAtualId)
       mapa[20] = saldoFinalAtaAnterior;
-    } else if (mapa[1] > 0 && !(mapa[20] > 0)) {
-      // Se não foi digitado manualmente na Ata, usa 00-Saldo de Abertura se houver lançamento
+    } else if ((mapa[1] || 0) > 0 && !(mapa[20] > 0)) {
       mapa[20] = mapa[1];
     }
 
