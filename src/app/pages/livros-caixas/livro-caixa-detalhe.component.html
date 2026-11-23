@@ -53,18 +53,20 @@
         </div>
         <div class="list-group list-group-flush">
           @for (linha of linhasReceitas; track linha.categoria.id) {
-            <div
-              class="list-group-item d-flex justify-content-between align-items-center py-2"
-              [class.bg-light]="linha.ehTotalizador"
-              [class.fw-bold]="linha.ehTotalizador"
-              [class.ps-4]="linha.ehSubcategoria">
-              <span class="small" [class.text-muted]="linha.ehSubcategoria">
-                {{ linha.tituloExibicao }}
-              </span>
-              <span class="text-nowrap ms-2" [class.text-success]="linha.ehTotalizador">
-                {{ linha.valorCentavos | moedaCentavos }}
-              </span>
-            </div>
+            @if (linha.valorCentavos !== 0) {
+              <div
+                class="list-group-item d-flex justify-content-between align-items-center py-2"
+                [class.bg-light]="linha.ehTotalizador"
+                [class.fw-bold]="linha.ehTotalizador"
+                [class.ps-4]="linha.ehSubcategoria">
+                <span class="small" [class.text-muted]="linha.ehSubcategoria">
+                  {{ linha.tituloExibicao }}
+                </span>
+                <span class="text-nowrap ms-2" [class.text-success]="linha.ehTotalizador">
+                  {{ linha.valorCentavos | moedaCentavos }}
+                </span>
+              </div>
+            }
           }
         </div>
       </div>
@@ -76,18 +78,20 @@
         </div>
         <div class="list-group list-group-flush">
           @for (linha of linhasDespesas; track linha.categoria.id) {
-            <div
-              class="list-group-item d-flex justify-content-between align-items-center py-2"
-              [class.bg-light]="linha.ehTotalizador"
-              [class.fw-bold]="linha.ehTotalizador"
-              [class.ps-4]="linha.ehSubcategoria">
-              <span class="small" [class.text-muted]="linha.ehSubcategoria">
-                {{ linha.tituloExibicao }}
-              </span>
-              <span class="text-nowrap ms-2" [class.text-danger]="linha.ehTotalizador">
-                {{ linha.valorCentavos | moedaCentavos }}
-              </span>
-            </div>
+            @if (linha.valorCentavos !== 0) {
+              <div
+                class="list-group-item d-flex justify-content-between align-items-center py-2"
+                [class.bg-light]="linha.ehTotalizador"
+                [class.fw-bold]="linha.ehTotalizador"
+                [class.ps-4]="linha.ehSubcategoria">
+                <span class="small" [class.text-muted]="linha.ehSubcategoria">
+                  {{ linha.tituloExibicao }}
+                </span>
+                <span class="text-nowrap ms-2" [class.text-danger]="linha.ehTotalizador">
+                  {{ linha.valorCentavos | moedaCentavos }}
+                </span>
+              </div>
+            }
           }
         </div>
       </div>
