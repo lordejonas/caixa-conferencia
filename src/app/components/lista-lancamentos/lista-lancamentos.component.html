@@ -59,6 +59,11 @@
 
           <div class="card-rodape">
             <span class="data-horario">{{ formatarDataCustom(item.datahorario) }}</span>
+             @if (item.ata_livro_caixa_id) {
+                <span class="badge bg-light text-secondary border ms-1" style="font-size: 0.6rem;">
+                  🔒 Ata #{{ item.ata_livro_caixa_id }}
+                </span>
+              }
           </div>
 
         </div>

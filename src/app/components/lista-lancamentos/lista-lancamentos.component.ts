@@ -16,6 +16,7 @@ export interface ItemExtrato {
   destinoContabilizaTotais?: boolean | null;
   ehTransferenciaComImpacto?: boolean;
   tipoImpactoTransferencia?: 'entrada' | 'saida';
+  ata_livro_caixa_id?: number | null;
 }
 
 @Component({

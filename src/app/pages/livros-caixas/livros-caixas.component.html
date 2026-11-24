@@ -1,4 +1,4 @@
-<app-internal-layout titulo="Livros Caixas" [exibirFooterPadrao]="false">
+<app-internal-layout titulo="Livros-Caixas" [exibirFooterPadrao]="false">
 
   <!-- Container Principal da Lista -->
   <div class="list-container-full p-3">
@@ -11,7 +11,7 @@
     } @else {
 
       <div class="list-group shadow-sm">
-        @for (livro of livrosCaixas; track livro.id) {
+        @for (livro of livrosCaixasFiltrados; track livro.id) {
           <a
             [routerLink]="['/caixa', livro.id]"
             class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
@@ -47,10 +47,35 @@
           </a>
         } @empty {
           <div class="p-5 text-center text-muted">
-            <p class="mb-1 fw-semibold">Nenhum livro-caixa encontrado.</p>
-            <small class="text-secondary">Utilize o botão (+) abaixo para criar um novo registro.</small>
+            <p class="mb-1 fw-semibold">Nenhum livro-caixa em {{ descricaoMesAnoReferencia }}.</p>
+            <small class="text-secondary">Use as setas abaixo para navegar entre os meses ou clique em (+).</small>
           </div>
         }
+      </div>
+
+      <!-- Navegação de Mês/Ano ao final dos itens listados -->
+      <div class="d-flex justify-content-between align-items-center bg-white border rounded shadow-sm px-3 py-2 mt-3">
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center"
+          style="width: 36px; height: 36px;"
+          title="Mês anterior"
+          (click)="alterarMesReferencia(-1)">
+          &larr;
+        </button>
+
+        <span class="fw-semibold text-dark">
+          {{ descricaoMesAnoReferencia }}
+        </span>
+
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center"
+          style="width: 36px; height: 36px;"
+          title="Próximo mês"
+          (click)="alterarMesReferencia(1)">
+          &rarr;
+        </button>
       </div>
 
     }

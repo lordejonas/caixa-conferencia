@@ -25,6 +25,13 @@ export class LancamentoService {
         throw new Error('Lançamento não encontrado.');
       }
 
+      // 🔒 Trava: impede exclusão de lançamentos já vinculados a uma Ata do Livro Caixa
+      if (lancamento.ata_livro_caixa_id !== null && lancamento.ata_livro_caixa_id !== undefined) {
+        throw new Error(
+          `Este lançamento está vinculado à Ata #${lancamento.ata_livro_caixa_id} e não pode ser excluído.`
+        );
+      }
+
       firebaseIdParaRemover = lancamento.firebaseId;
       ataLivroCaixaId = lancamento.ata_livro_caixa_id; // Armazena a ata do lançamento antes de excluir
       const agoraIso = new Date().toISOString();

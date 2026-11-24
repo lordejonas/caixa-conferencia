@@ -126,7 +126,8 @@ export class ContaExtratoComponent implements OnInit {
           descricao_customizada: l.descricao_customizada || undefined,
           favorecidoNome: l.favorecido_id ? mapaFavorecidos.get(l.favorecido_id) : undefined,
           nota: l.nota || undefined,
-          montante: montanteEmCentavos / 100
+          montante: montanteEmCentavos / 100,
+          ata_livro_caixa_id: l.ata_livro_caixa_id ?? null
         };
       });
     } catch (error) {
@@ -140,9 +141,13 @@ export class ContaExtratoComponent implements OnInit {
   async excluirLancamento(item: ItemExtrato): Promise<void> {
     if (!this.conta || !this.conta.id) return;
 
+    if (item.ata_livro_caixa_id !== null && item.ata_livro_caixa_id !== undefined) {
+      alert(`Este lançamento está vinculado à Ata #${item.ata_livro_caixa_id} e não pode ser excluído.\n\nPara excluí-lo, edite a Ata #${item.ata_livro_caixa_id} e desmarque este lançamento primeiro.`);
+      return;
+    }
+
     try {
       const idContaAtual = this.conta.id;
-
       await this.lancamentoService.excluirLancamento(item.id);
       await this.carregarExtratoDaConta(idContaAtual);
     } catch (error) {
@@ -152,6 +157,11 @@ export class ContaExtratoComponent implements OnInit {
   }
 
   alterarLancamento(item: ItemExtrato): void {
+    if (item.ata_livro_caixa_id !== null && item.ata_livro_caixa_id !== undefined) {
+      alert(`Este lançamento está vinculado à Ata #${item.ata_livro_caixa_id} e não pode ser alterado.\n\nPara editá-lo, edite a Ata #${item.ata_livro_caixa_id} e desmarque este lançamento primeiro.`);
+      return;
+    }
+
     this.router.navigate(['/lancamentos/editar', item.id]);
   }
 }
