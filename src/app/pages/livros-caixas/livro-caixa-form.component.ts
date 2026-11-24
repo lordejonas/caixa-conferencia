@@ -294,16 +294,14 @@ export class LivroCaixaFormComponent implements OnInit {
       const dataReuniaoIso = `${this.dataIso}T${this.horaIso}:00`;
       const agoraIso = new Date().toISOString();
 
-      // Filtra apenas os lançamentos/transferências marcados nesta tela
-      const lancamentosSelecionados = this.todosItensLancamentos
+      // Filtra todos os lançamentos/transferências marcados para ficarem vinculados a esta Ata
+      const lancamentosVinculados = this.todosItensLancamentos
         .filter(item => item.selecionado)
         .map(item => item.lancamento);
 
-      // Consolida todos os valores nas categorias e totalizadores da Ata ANTES de deletar os lançamentos
+      // Parte apenas dos campos manuais do formulário para evitar duplicação na edição
       const todasCategorias = await db.categorias.toArray();
-
       const valoresBaseFormulario: { [id: number]: number } = {
-        ...this.valoresCategoriasExistentes,
         20: saldoAnteriorCentavos,
         50: Number(this.cestasBasicasKg) || 0,
         51: Number(this.roupasCalcadosUnid) || 0,
@@ -312,11 +310,11 @@ export class LivroCaixaFormComponent implements OnInit {
 
       const valoresConsolidados = this.livroCaixaService.consolidarValoresAta({
         categorias: todasCategorias,
-        lancamentos: lancamentosSelecionados,
+        lancamentos: lancamentosVinculados,
         valoresBase: valoresBaseFormulario,
         saldoFinalAtaAnterior: this.possuiAtaAnterior ? saldoAnteriorCentavos : null,
         versaoLivro: versaoAtual,
-        zerarPaisAntesDeSomar: false
+        zerarPaisAntesDeSomar: true
       });
 
       const registro: LivroCaixa = {
@@ -335,53 +333,27 @@ export class LivroCaixaFormComponent implements OnInit {
         updatedAt: agoraIso
       };
 
-      await db.transaction('rw', db.livros_caixas, db.lancamentos, db.contas, async () => {
-        // 1. Atualiza o saldo_inicial das contas para preservar o saldo acumulado antes de deletar os lançamentos
-        const deltaPorConta = new Map<number, number>();
-
-        for (const lanc of lancamentosSelecionados) {
-          const origemId = Number(lanc.origem_conta_id);
-          const montanteOrigem = Number(lanc.origem_montante) || 0;
-
-          if (origemId) {
-            deltaPorConta.set(origemId, (deltaPorConta.get(origemId) || 0) + montanteOrigem);
-          }
-
-          if (lanc.destino_conta_id !== null && lanc.destino_conta_id !== undefined) {
-            const destinoId = Number(lanc.destino_conta_id);
-            const montanteDestino = Number(lanc.destino_montante) || Math.abs(montanteOrigem);
-            if (destinoId) {
-              deltaPorConta.set(destinoId, (deltaPorConta.get(destinoId) || 0) + montanteDestino);
-            }
-          }
-        }
-
-        for (const [contaId, delta] of deltaPorConta.entries()) {
-          if (delta === 0) continue;
-          const conta = await db.contas.get(contaId);
-          if (conta && 'saldo_inicial' in conta) {
-            const novoSaldoInicial = (Number((conta as any).saldo_inicial) || 0) + delta;
-            await db.contas.update(contaId, {
-              saldo_inicial: novoSaldoInicial,
-              sincronizado: false,
-              updatedAt: agoraIso
-            } as any);
-          }
-        }
-
-        // 2. Salva a Ata com todos os valores já apurados
+      await db.transaction('rw', db.livros_caixas, db.lancamentos, async () => {
+        // 1. Salva ou atualiza a Ata
         await db.livros_caixas.put(registro);
 
-        // 3. Deleta os lançamentos que acabaram de ser associados à Ata
-        const idsParaDeletar = lancamentosSelecionados
-          .map(l => l.id)
-          .filter((id): id is number => id !== undefined);
+        // 2. Atualiza o vínculo ata_livro_caixa_id nos lançamentos e transferências listados (sem deletar)
+        for (const item of this.todosItensLancamentos) {
+          if (item.lancamento.id === undefined) continue;
 
-        if (idsParaDeletar.length > 0) {
-          await db.lancamentos.bulkDelete(idsParaDeletar);
+          const novoVinculo = item.selecionado ? numeroAtaNumerico : null;
+          const vinculoAtual = item.lancamento.ata_livro_caixa_id ?? null;
+
+          if (novoVinculo !== vinculoAtual) {
+            await db.lancamentos.update(item.lancamento.id, {
+              ata_livro_caixa_id: novoVinculo,
+              sincronizado: false,
+              updatedAt: agoraIso
+            });
+          }
         }
 
-        // 4. Propaga o recálculo em cascata para todas as Atas posteriores
+        // 3. Propaga o recálculo em cascata para todas as Atas posteriores
         const novoSaldoFinal = this.livroCaixaService.extrairSaldoFinal(valoresConsolidados, versaoAtual);
         await this.livroCaixaService.recalcularAtasPosteriores(numeroAtaNumerico, novoSaldoFinal);
       });

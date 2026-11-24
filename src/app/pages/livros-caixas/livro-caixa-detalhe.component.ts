@@ -83,7 +83,7 @@ export class LivroCaixaDetalheComponent implements OnInit {
       const versaoConfig = this.configService.obterVersaoLivro().toLowerCase();
       this.versaoAtiva = versaoConfig === 'v2' ? 'v2' : 'v1';
 
-      // 1. Buscar todas as categorias ativas e eventuais lançamentos remanescentes vinculados a esta Ata
+      // 1. Buscar todas as categorias ativas e os lançamentos vinculados a esta Ata
       const todasCategorias = await db.categorias.filter(c => c.ativo !== false).toArray();
       const lancamentosDaAta = await db.lancamentos
         .filter(l => Number(l.ata_livro_caixa_id) === id)
@@ -91,11 +91,20 @@ export class LivroCaixaDetalheComponent implements OnInit {
 
       const saldoFinalAtaAnterior = await this.buscarSaldoFinalAtaAnterior(id);
 
-      // 2. Consolidar valores e totalizadores via serviço centralizado
+      // 2. Preserva apenas os campos manuais salvos; as demais categorias são apuradas do zero via lancamentosDaAta
+      const valoresSalvos = registro.valoresCategorias || {};
+      const valoresManuaisBase: { [id: number]: number } = {
+        20: valoresSalvos[20] || 0,
+        50: valoresSalvos[50] || 0,
+        51: valoresSalvos[51] || 0,
+        52: valoresSalvos[52] || 0
+      };
+
+      // 3. Consolidar valores e totalizadores via serviço centralizado
       const valoresApurados = this.livroCaixaService.consolidarValoresAta({
         categorias: todasCategorias,
         lancamentos: lancamentosDaAta,
-        valoresBase: registro.valoresCategorias || {},
+        valoresBase: valoresManuaisBase,
         saldoFinalAtaAnterior,
         versaoLivro: this.versaoAtiva,
         zerarPaisAntesDeSomar: true
@@ -113,7 +122,7 @@ export class LivroCaixaDetalheComponent implements OnInit {
       const saldoFinalAtualizado = this.livroCaixaService.extrairSaldoFinal(valoresApurados, this.versaoAtiva);
       await this.livroCaixaService.recalcularAtasPosteriores(id, saldoFinalAtualizado);
 
-      // 3. Filtrar categorias exibíveis no Livro Oficial (linhas 00 a 36) compatíveis com V1/V2
+      // 4. Filtrar categorias exibíveis no Livro Oficial (linhas 00 a 36) compatíveis com V1/V2
       const categoriasDoLivro = todasCategorias
         .filter(c => {
           const v = (c.versao_livro || 'all').toLowerCase();
@@ -123,7 +132,7 @@ export class LivroCaixaDetalheComponent implements OnInit {
         })
         .sort((a, b) => (a.id || 0) - (b.id || 0));
 
-      // 4. Separar em grupos visuais para leitura limpa
+      // 5. Separar em grupos visuais para leitura limpa
       this.linhasReceitas = [];
       this.linhasDespesas = [];
       this.linhasBensMateriais = [];
