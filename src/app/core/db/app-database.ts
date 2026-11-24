@@ -55,6 +55,11 @@ export class AppDatabase extends Dexie {
     livros_caixas: '++id, dataReuniao, versaoLivro, sincronizado'
     });
 
+    // 🟢 Versão 12: Indexa ata_livro_caixa_id em lancamentos
+    this.version(12).stores({
+      lancamentos: '++id, firebaseId, sincronizado, datahorario, origem_conta_id, destino_conta_id, favorecido_id, categoria_id, ata_livro_caixa_id'
+    });
+
   }
 }
 

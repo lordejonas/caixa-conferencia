@@ -8,6 +8,7 @@ import { Lancamento } from '../../models/lancamento.model';
 import { ConfigService } from '../../services/config.service';
 import { InternalLayoutComponent } from '../../components/internal-layout/internal-layout.component';
 import { MoedaCentavosPipe } from '../../pipes/moeda-centavos.pipe';
+import { LivroCaixaService } from '../../services/livro-caixa.service';
 
 export interface ItemLancamentoSelecao {
   lancamento: Lancamento;
@@ -28,6 +29,7 @@ export class LivroCaixaFormComponent implements OnInit {
   private router = inject(Router);
   private configService = inject(ConfigService);
   private cdr = inject(ChangeDetectorRef);
+  private livroCaixaService = inject(LivroCaixaService);
 
   isSalvando: boolean = false;
   idEdicao: number | null = null;
@@ -52,8 +54,6 @@ export class LivroCaixaFormComponent implements OnInit {
   aspirantes: number | null = null;
   visitantes: number | null = null;
 
-  // Lançamentos e transferências disponíveis para associação
-  //itensLancamentos: ItemLancamentoSelecao[] = [];
   // Lançamentos agrupados por bloco para associação
   itensReceitas: ItemLancamentoSelecao[] = [];
   itensDespesas: ItemLancamentoSelecao[] = [];
@@ -130,12 +130,14 @@ export class LivroCaixaFormComponent implements OnInit {
     if (atasAnteriores.length > 0) {
       this.possuiAtaAnterior = true;
       const ataAnterior = atasAnteriores[atasAnteriores.length - 1];
-      const versaoAnterior = (ataAnterior.versaoLivro || 'v1').toLowerCase();
-      const saldoCentavos = versaoAnterior === 'v2'
-        ? (ataAnterior.valoresCategorias?.[73] ?? ataAnterior.valoresCategorias?.[48] ?? 0)
-        : (ataAnterior.valoresCategorias?.[48] ?? ataAnterior.valoresCategorias?.[73] ?? 0);
-
-      this.saldoAnteriorReais = (saldoCentavos / 100).toFixed(2).replace('.', ',');
+      this.saldoAnteriorReais = (
+        this.livroCaixaService.extrairSaldoFinal(
+          ataAnterior.valoresCategorias || {},
+          ataAnterior.versaoLivro || 'v1'
+        ) / 100
+      )
+        .toFixed(2)
+        .replace('.', ',');
     } else {
       this.possuiAtaAnterior = false;
       const saldoSalvo = this.valoresCategoriasExistentes[20] || 0;
@@ -288,25 +290,34 @@ export class LivroCaixaFormComponent implements OnInit {
       }
 
       const saldoAnteriorCentavos = this.converterReaisParaCentavos(this.saldoAnteriorReais);
+      const versaoAtual = this.configService.obterVersaoLivro().toLowerCase();
+      const dataReuniaoIso = `${this.dataIso}T${this.horaIso}:00`;
+      const agoraIso = new Date().toISOString();
 
-      const valoresAtualizados: { [categoriaId: number]: number } = {
+      // Filtra apenas os lançamentos/transferências marcados nesta tela
+      const lancamentosSelecionados = this.todosItensLancamentos
+        .filter(item => item.selecionado)
+        .map(item => item.lancamento);
+
+      // Consolida todos os valores nas categorias e totalizadores da Ata ANTES de deletar os lançamentos
+      const todasCategorias = await db.categorias.toArray();
+
+      const valoresBaseFormulario: { [id: number]: number } = {
         ...this.valoresCategoriasExistentes,
-        20: saldoAnteriorCentavos, // 14-Saldo anterior
+        20: saldoAnteriorCentavos,
         50: Number(this.cestasBasicasKg) || 0,
         51: Number(this.roupasCalcadosUnid) || 0,
         52: Number(this.outrosBensMateriais) || 0
       };
 
-      if (!this.idEdicao) {
-        valoresAtualizados[21] = saldoAnteriorCentavos;
-        valoresAtualizados[72] = saldoAnteriorCentavos;
-        valoresAtualizados[48] = saldoAnteriorCentavos;
-        valoresAtualizados[73] = saldoAnteriorCentavos;
-      }
-
-      const versaoAtual = this.configService.obterVersaoLivro().toLowerCase();
-      const dataReuniaoIso = `${this.dataIso}T${this.horaIso}:00`;
-      const agoraIso = new Date().toISOString();
+      const valoresConsolidados = this.livroCaixaService.consolidarValoresAta({
+        categorias: todasCategorias,
+        lancamentos: lancamentosSelecionados,
+        valoresBase: valoresBaseFormulario,
+        saldoFinalAtaAnterior: this.possuiAtaAnterior ? saldoAnteriorCentavos : null,
+        versaoLivro: versaoAtual,
+        zerarPaisAntesDeSomar: false
+      });
 
       const registro: LivroCaixa = {
         id: numeroAtaNumerico,
@@ -318,34 +329,63 @@ export class LivroCaixaFormComponent implements OnInit {
         consorcias: Number(this.consorcias) || 0,
         aspirantes: Number(this.aspirantes) || 0,
         visitantes: Number(this.visitantes) || 0,
-        valoresCategorias: valoresAtualizados,
+        valoresCategorias: valoresConsolidados,
         versaoLivro: versaoAtual,
         sincronizado: false,
         updatedAt: agoraIso
       };
 
-      await db.transaction('rw', [db.livros_caixas, db.lancamentos], async () => {
-        // 1. Salva ou atualiza a Ata
-        await db.livros_caixas.put(registro);
+      await db.transaction('rw', db.livros_caixas, db.lancamentos, db.contas, async () => {
+        // 1. Atualiza o saldo_inicial das contas para preservar o saldo acumulado antes de deletar os lançamentos
+        const deltaPorConta = new Map<number, number>();
 
-        // 2. Atualiza o vínculo ata_livro_caixa_id nos lançamentos e transferências listados
-        for (const item of this.todosItensLancamentos) {
-          if (item.lancamento.id === undefined) continue;
+        for (const lanc of lancamentosSelecionados) {
+          const origemId = Number(lanc.origem_conta_id);
+          const montanteOrigem = Number(lanc.origem_montante) || 0;
 
-          const novoVinculo = item.selecionado ? numeroAtaNumerico : null;
-          const vinculoAtual = item.lancamento.ata_livro_caixa_id ?? null;
+          if (origemId) {
+            deltaPorConta.set(origemId, (deltaPorConta.get(origemId) || 0) + montanteOrigem);
+          }
 
-          if (novoVinculo !== vinculoAtual) {
-            await db.lancamentos.update(item.lancamento.id, {
-              ata_livro_caixa_id: novoVinculo,
-              sincronizado: false,
-              updatedAt: agoraIso
-            });
+          if (lanc.destino_conta_id !== null && lanc.destino_conta_id !== undefined) {
+            const destinoId = Number(lanc.destino_conta_id);
+            const montanteDestino = Number(lanc.destino_montante) || Math.abs(montanteOrigem);
+            if (destinoId) {
+              deltaPorConta.set(destinoId, (deltaPorConta.get(destinoId) || 0) + montanteDestino);
+            }
           }
         }
+
+        for (const [contaId, delta] of deltaPorConta.entries()) {
+          if (delta === 0) continue;
+          const conta = await db.contas.get(contaId);
+          if (conta && 'saldo_inicial' in conta) {
+            const novoSaldoInicial = (Number((conta as any).saldo_inicial) || 0) + delta;
+            await db.contas.update(contaId, {
+              saldo_inicial: novoSaldoInicial,
+              sincronizado: false,
+              updatedAt: agoraIso
+            } as any);
+          }
+        }
+
+        // 2. Salva a Ata com todos os valores já apurados
+        await db.livros_caixas.put(registro);
+
+        // 3. Deleta os lançamentos que acabaram de ser associados à Ata
+        const idsParaDeletar = lancamentosSelecionados
+          .map(l => l.id)
+          .filter((id): id is number => id !== undefined);
+
+        if (idsParaDeletar.length > 0) {
+          await db.lancamentos.bulkDelete(idsParaDeletar);
+        }
+
+        // 4. Propaga o recálculo em cascata para todas as Atas posteriores
+        const novoSaldoFinal = this.livroCaixaService.extrairSaldoFinal(valoresConsolidados, versaoAtual);
+        await this.livroCaixaService.recalcularAtasPosteriores(numeroAtaNumerico, novoSaldoFinal);
       });
 
-      // Redireciona direto para a apuração/detalhamento da Ata para visualizar os cálculos
       this.router.navigate(['/caixa', numeroAtaNumerico]);
     } catch (error) {
       console.error('Erro ao salvar Ata do Livro Caixa:', error);

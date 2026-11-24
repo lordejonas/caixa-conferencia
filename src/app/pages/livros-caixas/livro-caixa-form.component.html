@@ -90,6 +90,23 @@
         <div class="row g-3">
           <div class="col-12 col-md-4">
             <div class="d-flex justify-content-between align-items-center gap-2">
+              <label for="totalPessoasAssistidas" class="form-label small fw-semibold mb-0">
+                Total de Pessoas Assistidas
+              </label>
+              <input
+                type="number"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                id="totalPessoasAssistidas"
+                name="totalPessoasAssistidas"
+                class="form-control text-center px-1"
+                style="max-width: 85px;"
+                [(ngModel)]="totalPessoasAssistidas"
+                min="0">
+            </div>
+          </div>
+          <div class="col-12 col-md-4">
+            <div class="d-flex justify-content-between align-items-center gap-2">
               <label for="familiasMaterial" class="form-label small fw-semibold mb-0">
                 Ajuda Material
               </label>
@@ -105,7 +122,6 @@
                 min="0">
             </div>
           </div>
-
           <div class="col-12 col-md-4">
             <div class="d-flex justify-content-between align-items-center gap-2">
               <label for="familiasEspiritual" class="form-label small fw-semibold mb-0">
@@ -120,24 +136,6 @@
                 class="form-control text-center px-1"
                 style="max-width: 85px;"
                 [(ngModel)]="familiasAjudaEspiritual"
-                min="0">
-            </div>
-          </div>
-
-          <div class="col-12 col-md-4">
-            <div class="d-flex justify-content-between align-items-center gap-2">
-              <label for="totalPessoasAssistidas" class="form-label small fw-semibold mb-0">
-                Total de Pessoas Assistidas
-              </label>
-              <input
-                type="number"
-                inputmode="numeric"
-                pattern="[0-9]*"
-                id="totalPessoasAssistidas"
-                name="totalPessoasAssistidas"
-                class="form-control text-center px-1"
-                style="max-width: 85px;"
-                [(ngModel)]="totalPessoasAssistidas"
                 min="0">
             </div>
           </div>
