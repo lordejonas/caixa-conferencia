@@ -300,13 +300,56 @@ export class LivroCaixaFormComponent implements OnInit {
         .map(item => item.lancamento);
 
       // Parte apenas dos campos manuais do formulário para evitar duplicação na edição
-      const todasCategorias = await db.categorias.toArray();
-      const valoresBaseFormulario: { [id: number]: number } = {
+      //const todasCategorias = await db.categorias.toArray();
+      /*const valoresBaseFormulario: { [id: number]: number } = {
         20: saldoAnteriorCentavos,
         50: Number(this.cestasBasicasKg) || 0,
         51: Number(this.roupasCalcadosUnid) || 0,
         52: Number(this.outrosBensMateriais) || 0
+      };*/
+
+
+      // Verifica se existe alguma Ata posterior a esta no banco
+      const atasPosterioresCount = await db.livros_caixas
+        .where('id')
+        .above(numeroAtaNumerico)
+        .count();
+
+      const ehUltimaAta = atasPosterioresCount === 0;
+
+      // Busca categorias e contas
+      const [todasCategorias, todasContas] = await Promise.all([
+        db.categorias.toArray(),
+        db.contas.toArray()
+      ]);
+
+      let valorLinha34Decima = this.valoresCategoriasExistentes[75] || 0;
+      let valorLinha35Conselhos = this.valoresCategoriasExistentes[77] || 0;
+
+      // Só copia o saldo atual das contas 'Décima' e 'Conselhos' se esta for a última Ata
+      if (ehUltimaAta) {
+        const normalizar = (texto: string) =>
+          (texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+
+        const contaDecima = todasContas.find(c => normalizar(c.titulo) === 'decima');
+        const contaConselhos = todasContas.find(c => {
+          const tituloNormalizado = normalizar(c.titulo);
+          return tituloNormalizado === 'conselhos' || tituloNormalizado === 'concelhos';
+        });
+
+        valorLinha34Decima = Math.abs(contaDecima?.saldo_atual || 0);
+        valorLinha35Conselhos = Math.abs(contaConselhos?.saldo_atual || 0);
+      }
+
+      const valoresBaseFormulario: { [id: number]: number } = {
+        20: saldoAnteriorCentavos,
+        50: Number(this.cestasBasicasKg) || 0,
+        51: Number(this.roupasCalcadosUnid) || 0,
+        52: Number(this.outrosBensMateriais) || 0,
+        75: valorLinha34Decima,     // Linha 34: saldo da conta 'Décima' (atualizado só na última Ata)
+        77: valorLinha35Conselhos   // Linha 35: saldo da conta 'Conselhos' (atualizado só na última Ata)
       };
+
 
       const valoresConsolidados = this.livroCaixaService.consolidarValoresAta({
         categorias: todasCategorias,

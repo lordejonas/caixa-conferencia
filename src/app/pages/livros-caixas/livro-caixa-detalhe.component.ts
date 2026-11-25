@@ -92,12 +92,15 @@ export class LivroCaixaDetalheComponent implements OnInit {
       const saldoFinalAtaAnterior = await this.buscarSaldoFinalAtaAnterior(id);
 
       // 2. Preserva apenas os campos manuais salvos; as demais categorias são apuradas do zero via lancamentosDaAta
+      // 2. Preserva os campos manuais e os snapshots das contas ('Décima' e 'Conselhos') salvos na Ata
       const valoresSalvos = registro.valoresCategorias || {};
       const valoresManuaisBase: { [id: number]: number } = {
         20: valoresSalvos[20] || 0,
         50: valoresSalvos[50] || 0,
         51: valoresSalvos[51] || 0,
-        52: valoresSalvos[52] || 0
+        52: valoresSalvos[52] || 0,
+        75: valoresSalvos[75] || 0,
+        77: valoresSalvos[77] || 0
       };
 
       // 3. Consolidar valores e totalizadores via serviço centralizado

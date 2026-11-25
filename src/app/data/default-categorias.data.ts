@@ -3,7 +3,7 @@ import { Categoria } from '../models/categoria.model';
 export const DEFAULT_CATEGORIAS: Categoria[] = [
   {
     id: 1,
-    titulo: '00-Saldo de Abertura', /*01*/
+    titulo: '00-Saldo de Abertura',
     titulo_dois: '00-Saldo de Abertura',
     pai: null,
     ativo: true,
@@ -16,7 +16,7 @@ export const DEFAULT_CATEGORIAS: Categoria[] = [
   },
   {
     id: 2,
-    titulo: '01-Coleta reunião',/*02*/
+    titulo: '01-Coleta reunião',
     titulo_dois: '01-Coleta na reunião durante o mês',
     pai: null,
     ativo: true,
@@ -29,7 +29,7 @@ export const DEFAULT_CATEGORIAS: Categoria[] = [
   },
   {
     id: 3,
-    titulo: '02-Subscritores e Benfeitores',/*03*/
+    titulo: '02-Subscritores e Benfeitores',
     titulo_dois: '02-Subscritores e Benfeitores',
     pai: null,
     ativo: true,
@@ -42,7 +42,7 @@ export const DEFAULT_CATEGORIAS: Categoria[] = [
   },
   {
     id: 4,
-    titulo: '03-Outras doações Recebidas',/*04*/
+    titulo: '03-Outras doações Recebidas',
     titulo_dois: '03-Outras doações Recebidas',
     pai: null,
     ativo: true,
@@ -55,7 +55,7 @@ export const DEFAULT_CATEGORIAS: Categoria[] = [
   },
   {
     id: 5,
-    titulo: '03.1-Porta Igreja',/*05*/
+    titulo: '03.1-Porta Igreja',
     titulo_dois: '03.1-Porta Igreja',
     pai: 4,
     ativo: true,
@@ -81,7 +81,7 @@ export const DEFAULT_CATEGORIAS: Categoria[] = [
   },
   {
     id: 7,
-    titulo: '03.3-Doações Avulsas',/*07*/
+    titulo: '03.3-Doações Avulsas',
     titulo_dois: '03.3-Doações Avulsas',
     pai: 4,
     ativo: true,
@@ -93,8 +93,21 @@ export const DEFAULT_CATEGORIAS: Categoria[] = [
     descricao: null
   },
   {
+    id: 81,/*ID alto pq foi adicionado depois e evitar problemas*/
+    titulo: '03.4-Arredondamentos',
+    titulo_dois: '03.4-Arredondamentos',
+    pai: 4,
+    ativo: true,
+    positivo: true,
+    auto: false,
+    decimavel: true,
+    versao_livro: 'all',
+    permite_descricao_livre : false,
+    descricao: null
+  },
+  {
     id: 8,
-    titulo: '04-Resultado líquido com realização de eventos',/*08*/
+    titulo: '04-Resultado líquido com realização de eventos',
     titulo_dois: '04-Resultado líquidos com eventos',
     pai: null,
     ativo: true,

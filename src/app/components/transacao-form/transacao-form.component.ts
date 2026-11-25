@@ -78,6 +78,7 @@ export class TransacaoFormComponent implements OnInit {
 
     this.contas = await db.contas.filter(c => c.ativo !== false).toArray();
     this.favorecidos = await db.favorecidos.filter(f => f.ativo !== false).toArray();
+    /*
     this.categorias = await db.categorias
       .filter(c => {
         if (c.ativo === false) return false;
@@ -85,6 +86,18 @@ export class TransacaoFormComponent implements OnInit {
         return c.auto === false;
       })
       .toArray();
+      */
+    this.categorias = (
+      await db.categorias
+        .filter(c => {
+          if (c.ativo === false) return false;
+          if (categoriaNomeQuery && c.titulo === categoriaNomeQuery) return true;
+          return c.auto === false;
+        })
+        .toArray()
+    ).sort((a, b) =>
+      (a.titulo || '').localeCompare(b.titulo || '', 'pt-BR', { numeric: true, sensitivity: 'base' })
+    );
 
     if (this.idEdicao) {
       const lancamento = await db.lancamentos.get(this.idEdicao);

@@ -141,6 +141,7 @@ export class LivroCaixaService {
     mapa[74] = balanco30;
 
     // Linhas 34, 35 e 36 específicas por versão
+    /*
     if (versao === 'v1') {
       // 34-Décimas a enviar (id: 75) = 10% do Subtotal 06 menos Décima já paga (id: 41)
       const decimaDevida = Math.round(subtotal06 * 0.10) - (mapa[41] || 0);
@@ -152,6 +153,26 @@ export class LivroCaixaService {
 
       // 36-Total de recursos com a Tesouraria (id: 79) = linhas 29 + 34 + 35
       mapa[79] = saldoFinal29 + (mapa[75] || 0) + (mapa[77] || 0);
+    } else {
+      // V2: 34-Total das Receitas (=Nº 15) (id: 76)
+      mapa[76] = totalReceita15;
+      // V2: 35-Total das Despesas (=Nº 30) (id: 78)
+      mapa[78] = balanco30;
+      // V2: 36-Saldo disponível ou déficit acumulado (id: 80) = Nº 15 - Nº 30
+      mapa[80] = totalReceita15 - balanco30;
+    }
+    */
+
+    // Linhas 34, 35 e 36 específicas por versão
+    if (versao === 'v1') {
+      // 34 (id: 75) = Saldo da conta 'Décima' capturado ao salvar a Ata
+      mapa[75] = mapa[75] || 0;
+
+      // 35 (id: 77) = Saldo da conta 'Conselhos' capturado ao salvar a Ata
+      mapa[77] = mapa[77] || 0;
+
+      // 36 (id: 79) = Linha 29 (Saldo final) + Linha 34 + Linha 35
+      mapa[79] = saldoFinal29 + mapa[75] + mapa[77];
     } else {
       // V2: 34-Total das Receitas (=Nº 15) (id: 76)
       mapa[76] = totalReceita15;
